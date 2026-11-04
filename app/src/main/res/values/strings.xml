@@ -3,6 +3,15 @@
     <string name="app_name">Issuegram</string>
     <string name="welcome_message">Report and track campus issues.</string>
 
+    <!-- Bottom bar tabs -->
+    <string name="tab_home">Home</string>
+    <string name="tab_map">Map</string>
+    <string name="tab_profile">Profile</string>
+
+    <!-- Top bar actions -->
+    <string name="action_search">Search</string>
+    <string name="action_more">More options</string>
+
     <!-- App Themes -->
     <string name="theme_default">Default</string>
     <string name="theme_dynamic">Dynamic</string>
