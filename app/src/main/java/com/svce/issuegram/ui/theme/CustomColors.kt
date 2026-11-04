@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 object CustomColors {
     var isDark = false
     var black = false
-    var isNothingOs = false
 
     val topBarColors: TopAppBarColors
         @Composable get() =
@@ -35,8 +34,6 @@ object CustomColors {
     val cardContainerColor: androidx.compose.ui.graphics.Color
         @Composable get() = when {
             black -> colorScheme.surfaceContainerHigh
-            isNothingOs && isDark -> androidx.compose.ui.graphics.Color(0xFF1B1D1F)
-            isNothingOs && !isDark -> androidx.compose.ui.graphics.Color(0xFFFFFFFF)
             isDark -> colorScheme.surfaceContainerHigh
             else -> colorScheme.surfaceContainerLowest
         }
@@ -46,14 +43,6 @@ object CustomColors {
             black -> androidx.compose.foundation.BorderStroke(
                 width = 1.dp,
                 color = colorScheme.outlineVariant.copy(alpha = 0.15f)
-            )
-            isNothingOs && isDark -> androidx.compose.foundation.BorderStroke(
-                width = 1.dp,
-                color = androidx.compose.ui.graphics.Color(0xFF2B2D2F)
-            )
-            isNothingOs && !isDark -> androidx.compose.foundation.BorderStroke(
-                width = 1.dp,
-                color = androidx.compose.ui.graphics.Color(0xFFD7D8D8)
             )
             isDark -> androidx.compose.foundation.BorderStroke(
                 width = 1.dp,
@@ -68,8 +57,6 @@ object CustomColors {
     val innerCardContainerColor: androidx.compose.ui.graphics.Color
         @Composable get() = when {
             black -> colorScheme.surfaceContainer
-            isNothingOs && isDark -> androidx.compose.ui.graphics.Color(0xFF2B2D2F)
-            isNothingOs && !isDark -> androidx.compose.ui.graphics.Color(0xFFE7E9E9)
             isDark -> colorScheme.surfaceContainerLow
             else -> colorScheme.surfaceContainerLow
         }
@@ -77,8 +64,6 @@ object CustomColors {
     val innerCardBorderColor: androidx.compose.ui.graphics.Color
         @Composable get() = when {
             black -> colorScheme.outlineVariant.copy(alpha = 0.2f)
-            isNothingOs && isDark -> androidx.compose.ui.graphics.Color(0xFF33353A)
-            isNothingOs && !isDark -> androidx.compose.ui.graphics.Color(0xFFC8C8C8)
             isDark -> colorScheme.outlineVariant.copy(alpha = 0.25f)
             else -> colorScheme.outlineVariant.copy(alpha = 0.45f)
         }

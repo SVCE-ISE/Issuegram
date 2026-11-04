@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.Color
 import com.svce.issuegram.R
 
 /**
- * App themes ported from mpvEx (Aniyomi design) + Nothing OS
+ * App themes ported from mpvEx (Aniyomi design)
  */
 enum class AppTheme(
     @StringRes val titleRes: Int,
@@ -44,17 +44,6 @@ enum class AppTheme(
         backgroundLight = Color(0xFFFFFBFF),
         backgroundDark = Color(0xFF1C1B1F),
         isDynamic = true,
-    ),
-    NothingOS(
-        titleRes = R.string.theme_nothing_os,
-        primaryLight = Color(0xFFD71921),
-        primaryDark = Color(0xFFD71921),
-        secondaryLight = Color(0xFF06080A),
-        secondaryDark = Color(0xFFF0F2F2),
-        tertiaryLight = Color(0xFFD71921),
-        tertiaryDark = Color(0xFFD71921),
-        backgroundLight = Color(0xFFF0F2F2),
-        backgroundDark = Color(0xFF06080A),
     ),
     Catppuccin(
         titleRes = R.string.theme_catppuccin,
@@ -376,14 +365,10 @@ enum class AppTheme(
         backgroundDark = Color(0xFF0A0A0A),
     );
 
-    val isNothingOs: Boolean
-        get() = this == NothingOS
-
     /**
      * Get the light color scheme for this theme
      */
     fun getLightColorScheme(): ColorScheme {
-        if (this == NothingOS) return NothingLightColorScheme
         val surfaceTint = primaryLight.copy(alpha = 0.05f).compositeOver(backgroundLight)
         return lightColorScheme(
             primary = primaryLight,
@@ -425,7 +410,6 @@ enum class AppTheme(
      * Get the dark color scheme for this theme
      */
     fun getDarkColorScheme(): ColorScheme {
-        if (this == NothingOS) return NothingDarkColorScheme
         val surfaceTint = primaryDark.copy(alpha = 0.05f).compositeOver(backgroundDark)
         return darkColorScheme(
             primary = primaryDark,
@@ -467,19 +451,6 @@ enum class AppTheme(
      * Get the AMOLED (pure black) color scheme for this theme
      */
     fun getAmoledColorScheme(): ColorScheme {
-        if (this == NothingOS) {
-            return NothingDarkColorScheme.copy(
-                background = Color.Black,
-                surface = Color.Black,
-                surfaceDim = Color.Black,
-                surfaceBright = Color(0xFF181818),
-                surfaceContainerLowest = Color.Black,
-                surfaceContainerLow = Color.Black,
-                surfaceContainer = Color.Black,
-                surfaceContainerHigh = Color(0xFF141414),
-                surfaceContainerHighest = Color(0xFF1E1E1E)
-            )
-        }
         return getDarkColorScheme().copy(
             background = Color.Black,
             surface = Color.Black,
@@ -494,72 +465,6 @@ enum class AppTheme(
         )
     }
 }
-
-val NothingDarkColorScheme = darkColorScheme(
-    primary = Color(0xFFD71921),
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFF2B2D2F),
-    onPrimaryContainer = Color(0xFFF0F2F2),
-    inversePrimary = Color(0xFFD71921),
-    secondary = Color(0xFFF0F2F2),
-    onSecondary = Color(0xFF06080A),
-    secondaryContainer = Color(0xFF2B2D2F),
-    onSecondaryContainer = Color(0xFFF0F2F2),
-    tertiary = Color(0xFFD71921),
-    onTertiary = Color.White,
-    tertiaryContainer = Color(0xFF381316),
-    onTertiaryContainer = Color(0xFFFFDAD6),
-    background = Color(0xFF06080A),
-    onBackground = Color(0xFFF0F2F2),
-    surface = Color(0xFF06080A),
-    onSurface = Color(0xFFF0F2F2),
-    surfaceVariant = Color(0xFF1B1D1F),
-    onSurfaceVariant = Color(0xFFA6A8AB),
-    surfaceDim = Color(0xFF000000),
-    surfaceBright = Color(0xFF2B2D2F),
-    surfaceContainerLowest = Color(0xFF000000),
-    surfaceContainerLow = Color(0xFF06080A),
-    surfaceContainer = Color(0xFF121417),
-    surfaceContainerHigh = Color(0xFF1B1D1F),
-    surfaceContainerHighest = Color(0xFF2B2D2F),
-    outline = Color(0xFF33353A),
-    outlineVariant = Color(0xFF222428),
-    error = Color(0xFFD71921),
-    onError = Color.White
-)
-
-val NothingLightColorScheme = lightColorScheme(
-    primary = Color(0xFFD71921),
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFFFFFFF),
-    onPrimaryContainer = Color(0xFF06080A),
-    inversePrimary = Color(0xFFFFB4AB),
-    secondary = Color(0xFF06080A),
-    onSecondary = Color.White,
-    secondaryContainer = Color(0xFFE7E9E9),
-    onSecondaryContainer = Color(0xFF06080A),
-    tertiary = Color(0xFFD71921),
-    onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFFFDAD6),
-    onTertiaryContainer = Color(0xFF410002),
-    background = Color(0xFFF0F2F2),
-    onBackground = Color(0xFF06080A),
-    surface = Color(0xFFF0F2F2),
-    onSurface = Color(0xFF06080A),
-    surfaceVariant = Color(0xFFE7E9E9),
-    onSurfaceVariant = Color(0xFF44464D),
-    surfaceDim = Color(0xFFD7D8D8),
-    surfaceBright = Color.White,
-    surfaceContainerLowest = Color.White,
-    surfaceContainerLow = Color(0xFFF0F2F2),
-    surfaceContainer = Color(0xFFE7E9E9),
-    surfaceContainerHigh = Color(0xFFFFFFFF),
-    surfaceContainerHighest = Color(0xFFD7D8D8),
-    outline = Color(0xFFC8C8C8),
-    outlineVariant = Color(0xFFD7D8D8),
-    error = Color(0xFFD71921),
-    onError = Color.White
-)
 
 // Extension functions for color manipulation
 private fun Color.darken(factor: Float): Color {

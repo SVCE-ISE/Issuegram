@@ -31,11 +31,9 @@ fun IssuegramTheme(
 ) {
     val context = LocalContext.current
     val isAmoled = blackTheme && darkTheme
-    val isNothingOs = appTheme.isNothingOs
 
     CustomColors.isDark = darkTheme
     CustomColors.black = isAmoled
-    CustomColors.isNothingOs = isNothingOs
 
     val colorScheme: ColorScheme = when {
         appTheme.isDynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
@@ -61,11 +59,11 @@ fun IssuegramTheme(
     }
 
     CompositionLocalProvider(
-        LocalAppFonts provides getAppFonts(isNothingOs = isNothingOs)
+        LocalAppFonts provides getAppFonts()
     ) {
         MaterialExpressiveTheme(
             colorScheme = colorScheme,
-            typography = typography(isNothingOs = isNothingOs),
+            typography = typography(),
             motionScheme = MotionScheme.expressive(),
             content = content
         )
