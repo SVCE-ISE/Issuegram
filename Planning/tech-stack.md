@@ -1,5 +1,7 @@
 # Tech Stack for an Instagram Clone (Android)
 
+> Historical prototype brainstorm. Issuegram is now a general civic issue tracker. The implemented architecture is documented in [README.md](../README.md); current backend contracts and AI task ownership live in [AI_HANDOFF.md](AI_HANDOFF.md). Choices below are proposals, not a list of installed components.
+
 Recommendation aligned with the existing project: Kotlin + Jetpack Compose, AGP 9.5, minSdk 26.
 
 ## Client (Android)
