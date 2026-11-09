@@ -11,6 +11,7 @@ import com.svce.issuegram.ui.home.CivicIssueFeedPostCard
 
 @Composable
 fun ReportDetailScreen(issue: CivicIssueDto?, loading: Boolean, canResolve: Boolean, onToggleResolve: () -> Unit,
+                       isConfirmed: Boolean = false, onToggleConfirm: (() -> Unit)? = null,
                        onBack: () -> Unit, onRefresh: () -> Unit, actions: @Composable (CivicIssueDto) -> Unit, modifier: Modifier = Modifier) {
     LazyColumn(modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
@@ -22,7 +23,7 @@ fun ReportDetailScreen(issue: CivicIssueDto?, loading: Boolean, canResolve: Bool
         if (loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
         if (issue == null && !loading) item { Text("This report is no longer available, or could not be loaded. Refresh to try again.", Modifier.padding(16.dp)) }
         issue?.let { current -> item {
-            CivicIssueFeedPostCard(current, onToggleResolve, canResolve, actions = { actions(current) })
+            CivicIssueFeedPostCard(current, onToggleResolve, canResolve, isConfirmed = isConfirmed, onToggleConfirm = onToggleConfirm, actions = { actions(current) })
         } }
     }
 }

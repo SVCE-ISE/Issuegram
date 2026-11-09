@@ -54,6 +54,7 @@ import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.svce.issuegram.R
 import com.svce.issuegram.data.model.CivicIssueDto
+import com.svce.issuegram.domain.displayTime
 import kotlinx.coroutines.launch
 
 data class CivicIssuePin(
@@ -370,7 +371,7 @@ fun CivicMapScreen(
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
-                            text = "Reported: ${pin.timestamp} • Category: ${pin.category}",
+                            text = "Reported: ${displayTime(pin.timestamp)} • Category: ${pin.category}",
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )

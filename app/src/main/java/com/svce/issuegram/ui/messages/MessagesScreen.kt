@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.sp
 import com.svce.issuegram.R
 import com.svce.issuegram.data.model.ChannelDto
 import com.svce.issuegram.data.model.ChannelMessageDto
+import com.svce.issuegram.data.model.ConversationDto
 import com.svce.issuegram.ui.theme.IssuegramShapeDefaults
 
 @Composable
@@ -67,6 +68,11 @@ fun MessagesScreen(
     modifier: Modifier = Modifier,
     channels: List<ChannelDto> = emptyList(),
     messagesByChannel: Map<String, List<ChannelMessageDto>> = emptyMap(),
+    staffChannels: Set<String> = emptySet(),
+    departmentConversations: Map<String, List<ConversationDto>> = emptyMap(),
+    messagesByConversation: Map<String, List<ChannelMessageDto>> = emptyMap(),
+    onOpenStaffConversation: (String?) -> Unit = {},
+    onSendStaffReply: (channelId: String, conversationId: String, message: String, onSent: () -> Unit) -> Unit = { _, _, _, _ -> },
     currentUserId: String = "",
     onOpenChannel: (String?) -> Unit = {},
     onRetryMessages: () -> Unit = {},
@@ -78,16 +84,25 @@ fun MessagesScreen(
     onContextConsumed: () -> Unit = {},
 ) {
     var activeChatId by rememberSaveable { mutableStateOf(initialChannelId) }
-    LaunchedEffect(initialChannelId) { if (initialChannelId != null) activeChatId = initialChannelId }
+    var activeStaffThreadId by rememberSaveable { mutableStateOf<String?>(null) }
+    var staffInboxMode by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(initialChannelId) { if (initialChannelId != null) { activeChatId = initialChannelId; staffInboxMode = false; activeStaffThreadId = null } }
 
     val displayChannels = remember(channels) {
         channels
     }
 
-    BackHandler(activeChatId != null) { activeChatId = null }
+    BackHandler(activeStaffThreadId != null || activeChatId != null) {
+        if (activeStaffThreadId != null) activeStaffThreadId = null else activeChatId = null
+    }
     DisposableEffect(activeChatId) {
+        activeStaffThreadId = null
         onOpenChannel(activeChatId)
         onDispose { onOpenChannel(null) }
+    }
+    DisposableEffect(activeStaffThreadId) {
+        onOpenStaffConversation(activeStaffThreadId)
+        onDispose { onOpenStaffConversation(null) }
     }
     AnimatedContent(
         targetState = activeChatId,
@@ -113,20 +128,83 @@ fun MessagesScreen(
             )
         } else {
             val activeChannel = displayChannels.firstOrNull { it.id == chatId }
-            val channelMsgs = messagesByChannel[chatId].orEmpty()
-            AdminChatView(
-                channelId = chatId,
-                initialMessage = if (chatId == initialChannelId) initialMessage else "",
-                onContextConsumed = onContextConsumed,
-                sending = sending,
-                channelTitle = activeChannel?.name ?: "Civic Dispatch Admin",
-                channelSubtitle = activeChannel?.subtitle ?: "Civic Support Desk",
-                messages = channelMsgs,
-                currentUserId = currentUserId,
-                onRetryMessages = onRetryMessages,
-                onSendMessage = { msg, queued -> onSendMessage(chatId, msg, queued) },
-                onBack = { activeChatId = null }
-            )
+            val isStaffForChannel = chatId in staffChannels
+            val channelMsgs = if (isStaffForChannel && staffInboxMode && activeStaffThreadId != null) {
+                messagesByConversation[activeStaffThreadId].orEmpty()
+            } else {
+                messagesByChannel[chatId].orEmpty()
+            }
+            Column(Modifier.fillMaxSize()) {
+                if (isStaffForChannel) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.surfaceContainer)
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        androidx.compose.material3.FilterChip(
+                            selected = !staffInboxMode,
+                            onClick = { staffInboxMode = false; activeStaffThreadId = null },
+                            label = { Text("My Thread") }
+                        )
+                        androidx.compose.material3.FilterChip(
+                            selected = staffInboxMode,
+                            onClick = { staffInboxMode = true },
+                            label = { Text("Department Inbox (${departmentConversations[chatId].orEmpty().size})") }
+                        )
+                    }
+                }
+                if (isStaffForChannel && staffInboxMode && activeStaffThreadId == null) {
+                    val threads = departmentConversations[chatId].orEmpty()
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        item {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                IconButton(onClick = { activeChatId = null }, modifier = Modifier.size(36.dp)) {
+                                    Icon(painter = painterResource(R.drawable.ic_arrow_back), contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground)
+                                }
+                                Text("${activeChannel?.name ?: "Department"} — Citizen Threads", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                            }
+                        }
+                        if (threads.isEmpty()) {
+                            item { Text("No citizen conversations for this department yet.", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(16.dp)) }
+                        }
+                        items(threads, key = { it.id }) { thread ->
+                            Card(
+                                onClick = { activeStaffThreadId = thread.id },
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text("Citizen Thread · ${thread.userId.take(8)}", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                                    Text("Opened ${displayTime(thread.createdAt)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    val staffThread = activeStaffThreadId
+                    AdminChatView(
+                        channelId = staffThread ?: chatId,
+                        initialMessage = if (chatId == initialChannelId && !staffInboxMode) initialMessage else "",
+                        onContextConsumed = onContextConsumed,
+                        sending = sending,
+                        channelTitle = if (staffThread != null) "${activeChannel?.name ?: "Department"} · Citizen ${staffThread.take(8)}" else activeChannel?.name ?: "Civic Dispatch Admin",
+                        channelSubtitle = if (staffThread != null) "Staff Reply Mode" else activeChannel?.subtitle ?: "Civic Support Desk",
+                        messages = channelMsgs,
+                        currentUserId = currentUserId,
+                        onRetryMessages = onRetryMessages,
+                        onSendMessage = { msg, queued ->
+                            if (staffThread != null) onSendStaffReply(chatId, staffThread, msg, queued)
+                            else onSendMessage(chatId, msg, queued)
+                        },
+                        onBack = { if (staffThread != null) activeStaffThreadId = null else activeChatId = null }
+                    )
+                }
+            }
         }
     }
 }

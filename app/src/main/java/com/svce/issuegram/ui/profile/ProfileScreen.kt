@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.svce.issuegram.R
 import com.svce.issuegram.data.model.CivicIssueDto
+import com.svce.issuegram.data.model.IssueFlagDto
 import com.svce.issuegram.data.model.UserProfileDto
 import com.svce.issuegram.ui.components.IssuegramMediaImage
 import com.svce.issuegram.ui.theme.IssuegramShapeDefaults
@@ -59,6 +60,9 @@ fun ProfileScreen(
     onOpenIssue: (CivicIssueDto) -> Unit = {},
     onCreate: () -> Unit = {},
     errorMessage: String? = null,
+    isModerator: Boolean = false,
+    moderationFlags: List<IssueFlagDto> = emptyList(),
+    onReviewFlag: (Long, String) -> Unit = { _, _ -> },
 ) {
     val scrollState = rememberScrollState()
 
@@ -472,6 +476,106 @@ fun ProfileScreen(
                                     ),
                                     color = if (issue.isResolved) Color(0xFF4CAF50) else Color(0xFFFFA726)
                                 )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (isModerator) {
+            val pendingFlags = remember(moderationFlags) {
+                moderationFlags.filter { it.moderationStatus == "PENDING" }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Moderation Queue",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh
+                ) {
+                    Text(
+                        text = "${pendingFlags.size} pending",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
+                        ),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            if (pendingFlags.isEmpty()) {
+                Text(
+                    text = "No pending community flags.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(8.dp)
+                )
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    pendingFlags.forEach { flag ->
+                        Card(
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Issue #${flag.issueId} • ${flag.reason}",
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = com.svce.issuegram.domain.displayTime(flag.createdAt),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    androidx.compose.material3.TextButton(
+                                        onClick = { onReviewFlag(flag.id, "REVIEWED_KEPT") }
+                                    ) { Text("Keep Post") }
+                                    androidx.compose.material3.TextButton(
+                                        onClick = { onReviewFlag(flag.id, "REVIEWED_ACTIONED") }
+                                    ) { Text("Actioned") }
+                                    androidx.compose.material3.TextButton(
+                                        onClick = { onReviewFlag(flag.id, "DISMISSED") }
+                                    ) { Text("Dismiss") }
+                                }
                             }
                         }
                     }

@@ -43,6 +43,11 @@ fun IssuegramApp(viewModel: IssuegramViewModel = viewModel()) {
     val screenStates = rememberSaveableStateHolder()
     val channels by viewModel.channels.collectAsStateWithLifecycle()
     val staffChannels by viewModel.staffChannels.collectAsStateWithLifecycle()
+    val isModerator by viewModel.isModerator.collectAsStateWithLifecycle()
+    val confirmedIssueIds by viewModel.confirmedIssueIds.collectAsStateWithLifecycle()
+    val moderationFlags by viewModel.moderationFlags.collectAsStateWithLifecycle()
+    val departmentConversations by viewModel.departmentConversations.collectAsStateWithLifecycle()
+    val messagesByConversation by viewModel.messagesByConversation.collectAsStateWithLifecycle()
     val messagesByChannel by viewModel.messagesByChannel.collectAsStateWithLifecycle()
     val isAuthLoading by viewModel.isAuthLoading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
@@ -154,12 +159,15 @@ fun IssuegramApp(viewModel: IssuegramViewModel = viewModel()) {
                 issue = selectedIssue?.takeIf { it.id == openedIssueId }?.let(displayIssue), loading = openingIssue,
                 canResolve = selectedIssue?.let(canResolveIssue) == true,
                 onToggleResolve = { selectedIssue?.let(viewModel::toggleIssueResolution) },
+                isConfirmed = openedIssueId in confirmedIssueIds,
+                onToggleConfirm = { selectedIssue?.let(viewModel::toggleConfirmIssue) },
                 onBack = { openedIssueId = null }, onRefresh = { viewModel.openIssue(openedIssueId) },
                 actions = reportActions, modifier = screenModifier,
             ) else screenStates.SaveableStateProvider(selected.name) {
                 when (selected) {
                 Destination.Home -> HomeFeedScreen(issues = issues.map(displayIssue), onToggleResolve = viewModel::toggleIssueResolution,
-                    canResolve = canResolveIssue, actions = reportActions, onOpenIssue = openIssue, onCreate = { navigate(Destination.Create) },
+                    canResolve = canResolveIssue, confirmedIssueIds = confirmedIssueIds, onToggleConfirm = viewModel::toggleConfirmIssue,
+                    actions = reportActions, onOpenIssue = openIssue, onCreate = { navigate(Destination.Create) },
                     hasMore = hasMore && !isLoading, onLoadMore = viewModel::loadMore, modifier = screenModifier)
                 Destination.Create -> PixelCameraScreen(isPosting = isPostingIssue,
                     onPostIssue = { caption, category, location, detail, lat, lon, file, uri ->
@@ -170,12 +178,16 @@ fun IssuegramApp(viewModel: IssuegramViewModel = viewModel()) {
                 Destination.Map -> CivicMapScreen(issues = issues, modifier = screenModifier, onOpenIssue = openIssue)
                 Destination.Profile -> ProfileScreen(currentUser = currentUser, allIssues = ownIssues,
                     onUpdateAvatar = viewModel::updateAvatar, onUpdateName = viewModel::updateName, onRemoveAvatar = viewModel::removeAvatar,
-                    profileBusy = profileBusy, errorMessage = error, onOpenIssue = openIssue, onCreate = { navigate(Destination.Create) }, modifier = screenModifier)
+                    profileBusy = profileBusy, errorMessage = error, onOpenIssue = openIssue, onCreate = { navigate(Destination.Create) },
+                    isModerator = isModerator, moderationFlags = moderationFlags, onReviewFlag = viewModel::reviewFlag, modifier = screenModifier)
                 Destination.Messages -> MessagesScreen(channels = channels, messagesByChannel = messagesByChannel,
                     currentUserId = currentUser?.id.orEmpty(), onOpenChannel = viewModel::openChannel,
                     onSendMessage = viewModel::sendChannelMessage, onRetryMessages = viewModel::retryUploads,
                     initialChannelId = contactChannel, initialMessage = contactText,
                     sending = sendingMessage, onContextConsumed = { contactText = "" },
+                    staffChannels = staffChannels, departmentConversations = departmentConversations,
+                    messagesByConversation = messagesByConversation, onOpenStaffConversation = viewModel::openStaffConversation,
+                    onSendStaffReply = viewModel::sendStaffReply,
                     modifier = screenModifier, onBackToHome = { selected = Destination.Home })
                 }
             }

@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.svce.issuegram.R
 import com.svce.issuegram.data.model.CivicIssueDto
+import com.svce.issuegram.domain.displayTime
 import com.svce.issuegram.ui.components.IssuegramMediaImage
 import com.svce.issuegram.ui.theme.IssuegramShapeDefaults
 import java.util.Locale
@@ -67,6 +68,8 @@ fun HomeFeedScreen(
     issues: List<CivicIssueDto> = emptyList(),
     onToggleResolve: (CivicIssueDto) -> Unit = {},
     canResolve: (CivicIssueDto) -> Boolean = { false },
+    confirmedIssueIds: Set<Long> = emptySet(),
+    onToggleConfirm: (CivicIssueDto) -> Unit = {},
     hasMore: Boolean = false,
     onLoadMore: () -> Unit = {},
     onOpenIssue: (CivicIssueDto) -> Unit = {},
@@ -112,6 +115,8 @@ fun HomeFeedScreen(
                 issue = issue,
                 onToggleResolve = { onToggleResolve(issue) },
                 canResolve = canResolve(issue),
+                isConfirmed = issue.id in confirmedIssueIds,
+                onToggleConfirm = { onToggleConfirm(issue) },
                 onOpen = { onOpenIssue(issue) },
                 actions = { actions(issue) }
             )
@@ -132,6 +137,8 @@ fun CivicIssueFeedPostCard(
     issue: CivicIssueDto,
     onToggleResolve: () -> Unit,
     canResolve: Boolean,
+    isConfirmed: Boolean = false,
+    onToggleConfirm: (() -> Unit)? = null,
     onOpen: (() -> Unit)? = null,
     actions: @Composable () -> Unit = {},
 ) {
@@ -608,7 +615,7 @@ fun CivicIssueFeedPostCard(
                                     else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
                                 )
                                 Text(
-                                    text = milestone.timestampLabel,
+                                    text = displayTime(milestone.timestampLabel),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Normal
@@ -634,7 +641,35 @@ fun CivicIssueFeedPostCard(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (issue.upvotesCount == 1) "1 citizen confirmed this issue"
+                        else "${issue.upvotesCount} citizens confirmed this issue",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (onToggleConfirm != null) {
+                        androidx.compose.material3.FilterChip(
+                            selected = isConfirmed,
+                            onClick = onToggleConfirm,
+                            label = {
+                                Text(
+                                    text = if (isConfirmed) "Confirmed (${issue.upvotesCount})"
+                                    else "I also see this (${issue.upvotesCount})",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+                                )
+                            }
+                        )
+                    }
+                }
+
+                if (canResolve) {
+                Spacer(modifier = Modifier.height(12.dp))
                 HorizontalDivider(
                     thickness = 0.5.dp,
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)
@@ -642,7 +677,7 @@ fun CivicIssueFeedPostCard(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Only verified department staff receive status controls.
-                if (canResolve) Surface(
+                Surface(
                     onClick = onToggleResolve,
                     shape = MaterialTheme.shapes.extraLarge,
                     color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
@@ -679,6 +714,7 @@ fun CivicIssueFeedPostCard(
                             else MaterialTheme.colorScheme.primary
                         )
                     }
+                }
                 }
             }
         }
