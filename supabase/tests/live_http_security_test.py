@@ -75,6 +75,7 @@ def main():
         "channel_messages",
         "issues",
         "issue_milestones",
+        "issue_confirmations",
         "issue_flags",
         "moderation_audit_log",
     ):
@@ -316,6 +317,29 @@ def main():
     # User A cannot inspect flags on their report
     st, flag_leak = req("GET", f"/rest/v1/issue_flags?issue_id=eq.{issue_id}&select=*", token=tok_a)
     assert st == 200 and flag_leak == [], f"Flag leaked to issue author: {flag_leak}"
+
+    print("7b. Verifying community issue_confirmations syncs upvotes_count without advancing updated_at...")
+    st, conf_post = req(
+        "POST",
+        "/rest/v1/issue_confirmations?on_conflict=issue_id,user_id",
+        token=tok_b,
+        headers={"Prefer": "resolution=ignore-duplicates,return=minimal"},
+        data={"issue_id": issue_id, "user_id": uid_b},
+    )
+    assert st in (200, 201, 204), f"Confirm issue failed: {st} {conf_post}"
+    st, after_conf = req("GET", f"/rest/v1/issues?id=eq.{issue_id}&select=upvotes_count,updated_at&limit=1", token=tok_a)
+    assert st == 200 and after_conf[0]["upvotes_count"] == 1, f"Expected upvotes_count=1, got {after_conf}"
+    assert after_conf[0]["updated_at"] == rev_2, f"Confirmation must not advance updated_at: {rev_2} vs {after_conf[0]['updated_at']}"
+
+    st, conf_del = req(
+        "DELETE",
+        f"/rest/v1/issue_confirmations?issue_id=eq.{issue_id}&user_id=eq.{uid_b}",
+        token=tok_b,
+        headers={"Prefer": "return=minimal"},
+    )
+    assert st in (200, 204), f"Unconfirm issue failed: {st} {conf_del}"
+    st, after_unconf = req("GET", f"/rest/v1/issues?id=eq.{issue_id}&select=upvotes_count,updated_at&limit=1", token=tok_a)
+    assert st == 200 and after_unconf[0]["upvotes_count"] == 0 and after_unconf[0]["updated_at"] == rev_2
 
     print("8. Verifying B8 owner report deletion, lost-response retry, and Storage photo cleanup...")
     # User B cannot delete User A's report
