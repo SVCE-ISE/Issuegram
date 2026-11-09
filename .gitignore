@@ -9,7 +9,11 @@ build/
 .externalNativeBuild
 .cxx
 .kotlin
-local.properties
 *.keystore
 *.jks
 /dist/
+.env
+.env.*
+!.env.example
+/supabase/.temp/
+/supabase/.branches/
