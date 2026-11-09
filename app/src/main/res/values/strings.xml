@@ -5,10 +5,16 @@
 
     <!-- Bottom bar tabs -->
     <string name="tab_home">Home</string>
+    <string name="tab_create">Create</string>
     <string name="tab_map">Map</string>
     <string name="tab_profile">Profile</string>
 
+    <!-- Feed -->
+    <string name="feed_empty_message">No posts yet.</string>
+
     <!-- Top bar actions -->
+    <string name="action_messages">Messages</string>
+    <string name="action_profile">Profile</string>
     <string name="action_search">Search</string>
     <string name="action_more">More options</string>
 
