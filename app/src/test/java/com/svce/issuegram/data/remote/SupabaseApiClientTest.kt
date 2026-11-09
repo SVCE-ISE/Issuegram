@@ -209,4 +209,35 @@ class SupabaseApiClientTest {
         assertEquals(setOf("avatar_url"), body.keys)
         assertEquals(JsonNull, body["avatar_url"])
     }
+
+    @Test fun anonymousSignupFallsBackToEdgeFunctionWhenProviderDisabled() = runBlocking {
+        respond("""{"code":422,"error_code":"anonymous_provider_disabled","msg":"Anonymous sign-ins are disabled"}""", 422)
+        respond("""{"access_token":"edge-token","refresh_token":"edge-refresh","expires_in":3600,"user":{"id":"$userId"}}""")
+        val result = api.createAnonymousSession()
+        val first = server.takeRequest()
+        assertEquals("/auth/v1/signup", first.path)
+        val fallback = server.takeRequest()
+        assertEquals("/functions/v1/anonymous-session", fallback.path)
+        assertEquals("{}", fallback.body.readUtf8())
+        assertEquals("edge-token", result.accessToken)
+        assertEquals(userId, result.user.id)
+    }
+
+    @Test fun confirmIssuePostsIdempotentlyAndUnconfirmDeletesByIssueAndUser() = runBlocking {
+        respond("", 201)
+        api.confirmIssue(17L, confirmed = true)
+        val post = server.takeRequest()
+        assertEquals("POST", post.method)
+        assertEquals("issue_id,user_id", post.requestUrl!!.queryParameter("on_conflict"))
+        val postBody = api.json.parseToJsonElement(post.body.readUtf8()).jsonObject
+        assertEquals(17, postBody["issue_id"]!!.jsonPrimitive.int)
+        assertEquals(userId, postBody["user_id"]!!.jsonPrimitive.content)
+
+        respond("", 204)
+        api.confirmIssue(17L, confirmed = false)
+        val delete = server.takeRequest()
+        assertEquals("DELETE", delete.method)
+        assertEquals("eq.17", delete.requestUrl!!.queryParameter("issue_id"))
+        assertEquals("eq.$userId", delete.requestUrl!!.queryParameter("user_id"))
+    }
 }

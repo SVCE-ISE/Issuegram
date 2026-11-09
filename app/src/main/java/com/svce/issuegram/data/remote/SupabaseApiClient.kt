@@ -46,7 +46,8 @@ class SupabaseApiClient(
                         val body = it.body?.string().orEmpty()
                         if (!it.isSuccessful) {
                             val error = runCatching { json.parseToJsonElement(body).jsonObject }.getOrNull()
-                            val code = error?.get("code")?.jsonPrimitive?.contentOrNull ?: error?.get("error_code")?.jsonPrimitive?.contentOrNull
+                            val code = error?.get("error_code")?.jsonPrimitive?.contentOrNull
+                                ?: error?.get("code")?.jsonPrimitive?.contentOrNull
                             val message = when {
                                 code == "anonymous_provider_disabled" -> "Anonymous access is not enabled yet. Please try again later."
                                 it.code == 401 -> "Your session could not be renewed. Your saved identity has been kept."
@@ -79,7 +80,12 @@ class SupabaseApiClient(
         }
     }
 
-    override suspend fun createAnonymousSession(): AuthSession = json.decodeFromString(call("/auth/v1/signup", "POST", "{}", authenticated = false))
+    override suspend fun createAnonymousSession(): AuthSession = try {
+        json.decodeFromString(call("/auth/v1/signup", "POST", "{}", authenticated = false))
+    } catch (e: ApiException) {
+        if (e.serverCode != "anonymous_provider_disabled") throw e
+        json.decodeFromString(call("/functions/v1/anonymous-session", "POST", "{}", authenticated = false))
+    }
     override suspend fun refreshSession(refreshToken: String): AuthSession = json.decodeFromString(
         call("/auth/v1/token?grant_type=refresh_token", "POST", buildJsonObject { put("refresh_token", refreshToken) }.toString(), authenticated = false)
     )
@@ -157,6 +163,48 @@ class SupabaseApiClient(
     suspend fun fetchStaffChannels(): Set<String> {
         val id = auth.session().user.id
         return json.decodeFromString<List<StaffMembershipDto>>(call("/rest/v1/staff_members?user_id=eq.$id&select=channel_id")).map { it.channelId }.toSet()
+    }
+
+    suspend fun fetchIsModerator(): Boolean {
+        val id = auth.session().user.id
+        return json.decodeFromString<List<ModeratorDto>>(call("/rest/v1/moderators?user_id=eq.$id&select=user_id&limit=1")).isNotEmpty()
+    }
+
+    suspend fun fetchConfirmedIssueIds(): Set<Long> {
+        val id = auth.session().user.id
+        return json.decodeFromString<List<IssueConfirmationDto>>(call("/rest/v1/issue_confirmations?user_id=eq.$id&select=issue_id")).map { it.issueId }.toSet()
+    }
+
+    suspend fun confirmIssue(issueId: Long, confirmed: Boolean) {
+        val id = auth.session().user.id
+        if (confirmed) {
+            val body = buildJsonObject { put("issue_id", issueId); put("user_id", id) }.toString()
+            call("/rest/v1/issue_confirmations?on_conflict=issue_id,user_id", "POST", body, "resolution=ignore-duplicates,return=minimal")
+        } else {
+            call("/rest/v1/issue_confirmations?issue_id=eq.$issueId&user_id=eq.$id", "DELETE", prefer = "return=minimal")
+        }
+    }
+
+    suspend fun fetchModerationFlags(): List<IssueFlagDto> = json.decodeFromString(
+        call("/rest/v1/issue_flags?select=*&order=created_at.desc,id.desc&limit=100")
+    )
+
+    suspend fun reviewModerationFlag(flagId: Long, status: String, notes: String? = null) {
+        val body = buildJsonObject {
+            put("moderation_status", status)
+            notes?.takeIf { it.isNotBlank() }?.let { put("review_notes", it.trim().take(500)) }
+        }.toString()
+        call("/rest/v1/issue_flags?id=eq.$flagId", "PATCH", body, "return=representation")
+    }
+
+    suspend fun fetchDepartmentConversations(channelId: String): List<ConversationDto> = json.decodeFromString(
+        call("/rest/v1/conversations?channel_id=eq.${encoded(channelId)}&select=id,user_id,channel_id,created_at&order=created_at.desc&limit=50")
+    )
+
+    suspend fun fetchConversationMessages(conversationId: String): List<ChannelMessageDto> {
+        val latest = json.decodeFromString<List<ChannelMessageDto>>(call(
+            "/rest/v1/channel_messages?conversation_id=eq.${encoded(conversationId)}&order=created_at.desc,id.desc&limit=100"))
+        return latest.reversed()
     }
 
     suspend fun fetchChannels(): List<ChannelDto> = json.decodeFromString<List<ChannelDto>>(call("/rest/v1/channels?select=*&order=sort_order.asc"))

@@ -24,6 +24,11 @@ class IssuegramViewModel(application: Application) : AndroidViewModel(applicatio
     val selectedIssue = repository.selectedIssue
     val channels = repository.channels
     val staffChannels = repository.staffChannels
+    val isModerator = repository.isModerator
+    val confirmedIssueIds = repository.confirmedIssueIds
+    val moderationFlags = repository.moderationFlags
+    val departmentConversations = repository.departmentConversations
+    val messagesByConversation = repository.messagesByConversation
     val messagesByChannel = repository.messagesByChannel
     val isLoading = repository.isLoading
     val hasMore = repository.hasMore
@@ -86,12 +91,20 @@ class IssuegramViewModel(application: Application) : AndroidViewModel(applicatio
     fun editIssue(issue: CivicIssueDto, edit: EditIssueRequest, onSaved: () -> Unit) { mutate { repository.editIssue(issue, edit); onSaved() } }
     fun deleteIssue(issue: CivicIssueDto, onDeleted: () -> Unit) { mutate { repository.deleteIssue(issue); onDeleted() } }
     fun flagIssue(issue: CivicIssueDto, reason: String, onSent: () -> Unit) { mutate { repository.flagIssue(issue, reason); onSent() } }
+    fun toggleConfirmIssue(issue: CivicIssueDto) { mutate { repository.toggleConfirmIssue(issue) } }
+    fun reviewFlag(flagId: Long, status: String, notes: String? = null) { mutate { repository.reviewFlag(flagId, status, notes) } }
     fun refreshAll() { action { repository.refreshAll() } }
     fun loadMore() { action { repository.loadMore() } }
     fun retryUploads() { action { repository.retryUploads() } }
     fun discardFailedUploads() { action { repository.discardFailedUploads() } }
     fun toggleIssueResolution(issue: CivicIssueDto) { action { repository.toggleIssueResolution(issue) } }
     fun openChannel(channelId: String?) { openChat?.cancel(); openChat = action { repository.openChannel(channelId) } }
+    fun openStaffConversation(conversationId: String?) { action { repository.openStaffConversation(conversationId) } }
+    fun sendStaffReply(channelId: String, conversationId: String, message: String, onSent: () -> Unit) {
+        if (_sendingMessage.value) return
+        _sendingMessage.value = true
+        action { try { repository.sendStaffReply(channelId, conversationId, message); onSent() } finally { _sendingMessage.value = false } }
+    }
     fun sendChannelMessage(channelId: String, message: String, onQueued: () -> Unit) {
         if (_sendingMessage.value) return
         _sendingMessage.value = true

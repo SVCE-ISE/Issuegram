@@ -50,6 +50,17 @@ class IssuegramRepository private constructor(private val context: Context) {
     val channels = _channels.asStateFlow()
     private val _staffChannels = MutableStateFlow<Set<String>>(emptySet())
     val staffChannels = _staffChannels.asStateFlow()
+    private val _isModerator = MutableStateFlow(false)
+    val isModerator = _isModerator.asStateFlow()
+    private val _confirmedIssueIds = MutableStateFlow<Set<Long>>(emptySet())
+    val confirmedIssueIds = _confirmedIssueIds.asStateFlow()
+    private val _moderationFlags = MutableStateFlow<List<IssueFlagDto>>(emptyList())
+    val moderationFlags = _moderationFlags.asStateFlow()
+    private val _departmentConversations = MutableStateFlow<Map<String, List<ConversationDto>>>(emptyMap())
+    val departmentConversations = _departmentConversations.asStateFlow()
+    private val _messagesByConversation = MutableStateFlow<Map<String, List<ChannelMessageDto>>>(emptyMap())
+    val messagesByConversation = _messagesByConversation.asStateFlow()
+    @Volatile private var activeStaffConversationId: String? = null
     private val _messages = MutableStateFlow<Map<String, List<ChannelMessageDto>>>(emptyMap())
     val messagesByChannel = _messages.asStateFlow()
     private val _isLoading = MutableStateFlow(false)
@@ -144,7 +155,18 @@ class IssuegramRepository private constructor(private val context: Context) {
                 local.cache("${user.id}:channels", json.encodeToString(_channels.value))
                 // Fail closed when staff configuration is absent. No citizen gets resolution controls.
                 _staffChannels.value = try { api.fetchStaffChannels() } catch (e: CancellationException) { throw e } catch (_: ApiException) { emptySet() }
-                activeChannel?.let { loadMessagesForChannel(it) }
+                _isModerator.value = try { api.fetchIsModerator() } catch (e: CancellationException) { throw e } catch (_: ApiException) { false }
+                _confirmedIssueIds.value = try { api.fetchConfirmedIssueIds() } catch (e: CancellationException) { throw e } catch (_: ApiException) { emptySet() }
+                if (_isModerator.value) {
+                    _moderationFlags.value = try { api.fetchModerationFlags() } catch (e: CancellationException) { throw e } catch (_: ApiException) { emptyList() }
+                } else {
+                    _moderationFlags.value = emptyList()
+                }
+                activeChannel?.let {
+                    loadMessagesForChannel(it)
+                    if (it in _staffChannels.value) loadDepartmentConversations(it)
+                }
+                activeStaffConversationId?.let { loadStaffConversationMessages(it) }
                 selectedIssueId?.let { id ->
                     val refreshed = api.fetchIssue(id)
                     if (selectedIssueId == id) applyReportResult(id, refreshed, user.id)
@@ -289,6 +311,28 @@ class IssuegramRepository private constructor(private val context: Context) {
         operation { api.flagIssue(issue, reason); notices.emit("Report sent for review. Thank you.") }
     }
 
+    suspend fun toggleConfirmIssue(issue: CivicIssueDto) = withContext(Dispatchers.IO) {
+        operation {
+            val currentlyConfirmed = issue.id in _confirmedIssueIds.value
+            val nextConfirmed = !currentlyConfirmed
+            api.confirmIssue(issue.id, nextConfirmed)
+            _confirmedIssueIds.value = if (nextConfirmed) _confirmedIssueIds.value + issue.id else _confirmedIssueIds.value - issue.id
+            val fresh = api.fetchIssue(issue.id)
+            val userId = requireNotNull(_currentUser.value).id
+            if (fresh != null) applyReportResult(issue.id, fresh, userId)
+            notices.emit(if (nextConfirmed) "Issue confirmed." else "Confirmation removed.")
+        }
+    }
+
+    suspend fun reviewFlag(flagId: Long, status: String, notes: String? = null) = withContext(Dispatchers.IO) {
+        operation {
+            check(_isModerator.value) { "Only authorized moderators can review flags." }
+            api.reviewModerationFlag(flagId, status, notes)
+            _moderationFlags.value = api.fetchModerationFlags()
+            notices.emit("Moderation review saved.")
+        }
+    }
+
     suspend fun toggleIssueResolution(issue: CivicIssueDto) = withContext(Dispatchers.IO) {
         operation {
             val authorized = _channels.value.any { it.category == issue.category && it.id in _staffChannels.value }
@@ -300,7 +344,7 @@ class IssuegramRepository private constructor(private val context: Context) {
 
     suspend fun openChannel(channelId: String?) = withContext(Dispatchers.IO) {
         activeChannel = channelId
-        if (channelId == null) return@withContext
+        if (channelId == null) { activeStaffConversationId = null; return@withContext }
         val userId = _currentUser.value?.id ?: return@withContext
         local.cached("$userId:messages:$channelId")?.let { raw ->
             synchronized(messageLock) {
@@ -308,7 +352,41 @@ class IssuegramRepository private constructor(private val context: Context) {
             }
         }
         publishPending(userId)
-        try { loadMessagesForChannel(channelId) } catch (e: CancellationException) { throw e } catch (e: Exception) { _error.value = userMessage(e) }
+        try {
+            loadMessagesForChannel(channelId)
+            if (channelId in _staffChannels.value) loadDepartmentConversations(channelId)
+        } catch (e: CancellationException) { throw e } catch (e: Exception) { _error.value = userMessage(e) }
+    }
+
+    private suspend fun loadDepartmentConversations(channelId: String) {
+        val threads = api.fetchDepartmentConversations(channelId)
+        _departmentConversations.value = _departmentConversations.value + (channelId to threads)
+    }
+
+    suspend fun openStaffConversation(conversationId: String?) = withContext(Dispatchers.IO) {
+        activeStaffConversationId = conversationId
+        if (conversationId == null) return@withContext
+        try { loadStaffConversationMessages(conversationId) }
+        catch (e: CancellationException) { throw e } catch (e: Exception) { _error.value = userMessage(e) }
+    }
+
+    private suspend fun loadStaffConversationMessages(conversationId: String) {
+        val msgs = api.fetchConversationMessages(conversationId)
+        _messagesByConversation.value = _messagesByConversation.value + (conversationId to msgs)
+    }
+
+    suspend fun sendStaffReply(channelId: String, conversationId: String, text: String) = withContext(Dispatchers.IO) {
+        operation {
+            val user = requireNotNull(_currentUser.value)
+            check(channelId in _staffChannels.value) { "Only assigned department staff can reply to department threads." }
+            require(text.trim().length in 1..2000) { "Messages must contain 1–2000 characters." }
+            val reqId = UUID.randomUUID().toString()
+            val sent = api.sendChannelMessage(
+                SendMessageRequest(reqId, conversationId, channelId, user.id, user.username, text.trim(), Instant.now().toString(), isFromAdmin = true)
+            )
+            val updated = (_messagesByConversation.value[conversationId].orEmpty() + sent).distinctBy { it.id }
+            _messagesByConversation.value = _messagesByConversation.value + (conversationId to updated)
+        }
     }
 
     private suspend fun loadMessagesForChannel(channelId: String) {

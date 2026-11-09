@@ -142,10 +142,32 @@ data class SendMessageRequest(
 enum class DeliveryState { QUEUED, FAILED, SENT }
 
 @Serializable
-data class ConversationDto(val id: String)
+data class ConversationDto(
+    val id: String,
+    @SerialName("user_id") val userId: String = "",
+    @SerialName("channel_id") val channelId: String = "",
+    @SerialName("created_at") val createdAt: String? = null,
+)
 
 @Serializable
 data class StaffMembershipDto(@SerialName("channel_id") val channelId: String)
+
+@Serializable
+data class ModeratorDto(@SerialName("user_id") val userId: String)
+
+@Serializable
+data class IssueConfirmationDto(@SerialName("issue_id") val issueId: Long)
+
+@Serializable
+data class IssueFlagDto(
+    val id: Long = 0,
+    @SerialName("issue_id") val issueId: Long,
+    @SerialName("reporter_id") val reporterId: String,
+    val reason: String,
+    @SerialName("moderation_status") val moderationStatus: String = "PENDING",
+    @SerialName("review_notes") val reviewNotes: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
+)
 
 @Serializable
 data class AuthUser(val id: String)
