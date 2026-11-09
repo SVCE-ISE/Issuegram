@@ -21,6 +21,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.svce.issuegram.ui.navigation.Destination
 
+val bottomBarDestinations = listOf(
+    Destination.Home,
+    Destination.Create,
+    Destination.Map,
+)
+
 @Composable
 fun IssuegramBottomBar(
     selected: Destination,
@@ -40,7 +46,7 @@ fun IssuegramBottomBar(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
             windowInsets = WindowInsets(0),
         ) {
-            Destination.entries.forEach { destination ->
+            bottomBarDestinations.forEach { destination ->
                 NavigationBarItem(
                     selected = destination == selected,
                     onClick = { onSelect(destination) },
