@@ -18,16 +18,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -53,13 +50,16 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.svce.issuegram.R
+import com.svce.issuegram.data.model.CivicIssueDto
 import kotlinx.coroutines.launch
 
-data class CampusIssuePin(
+data class CivicIssuePin(
     val id: String,
+    val ticketCode: String,
+    val status: String,
     val title: String,
     val locationName: String,
     val position: LatLng,
@@ -69,14 +69,15 @@ data class CampusIssuePin(
 )
 
 @Composable
-fun CampusMapScreen(
+fun CivicMapScreen(
     modifier: Modifier = Modifier,
+    issues: List<CivicIssueDto> = emptyList(),
+    onOpenIssue: (CivicIssueDto) -> Unit = {},
 ) {
-    // SVCE Campus Center Coordinates (Sriperumbudur)
-    val svceCampusCenter = remember { LatLng(12.9864, 80.0031) }
+    val defaultCenter = remember { LatLng(20.5937, 78.9629) }
 
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(svceCampusCenter, 17.5f)
+        position = CameraPosition.fromLatLngZoom(defaultCenter, 4f)
     }
 
     val coroutineScope = rememberCoroutineScope()
@@ -84,56 +85,36 @@ fun CampusMapScreen(
     var isSatelliteView by remember { mutableStateOf(false) }
     var selectedFilter by remember { mutableStateOf("All") }
 
-    val campusIssues = remember {
-        listOf(
-            CampusIssuePin(
-                id = "#IG-104",
-                title = "Auditorium Audio System",
-                locationName = "Main Auditorium • Stage Left",
-                position = LatLng(12.9864, 80.0031),
-                isResolved = false,
-                category = "Tech / AV",
-                timestamp = "Nov 6 · 10:15 AM"
-            ),
-            CampusIssuePin(
-                id = "#IG-098",
-                title = "AC Cooling Malfunction",
-                locationName = "CS Block A • Lab 3",
-                position = LatLng(12.9875, 80.0042),
-                isResolved = true,
-                category = "HVAC",
-                timestamp = "Nov 5 · 2:30 PM"
-            ),
-            CampusIssuePin(
-                id = "#IG-102",
-                title = "Wi-Fi AP Intermittent Packet Loss",
-                locationName = "Central Library • 2nd Floor",
-                position = LatLng(12.9855, 80.0020),
-                isResolved = false,
-                category = "Network",
-                timestamp = "Nov 6 · 8:45 AM"
-            ),
-            CampusIssuePin(
-                id = "#IG-105",
-                title = "Water Dispenser Filter Maintenance",
-                locationName = "Dining Hall • North Wing",
-                position = LatLng(12.9848, 80.0038),
-                isResolved = true,
-                category = "Facilities",
-                timestamp = "Nov 4 · 11:20 AM"
-            )
-        )
-    }
-
-    var selectedPin by remember { mutableStateOf<CampusIssuePin?>(campusIssues.first()) }
-
-    val filteredIssues = remember(selectedFilter, campusIssues) {
-        when (selectedFilter) {
-            "In Progress" -> campusIssues.filter { !it.isResolved }
-            "Resolved" -> campusIssues.filter { it.isResolved }
-            else -> campusIssues
+    val civicPins = remember(issues) {
+        issues.map { issue ->
+            CivicIssuePin(issue.id.toString(), issue.ticketCode, issue.status, issue.title, issue.locationName,
+                LatLng(issue.latitude, issue.longitude), issue.isResolved, issue.category,
+                issue.createdAt ?: "")
         }
     }
+    var initiallyCentered by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(issues.firstOrNull()?.id) {
+        if (!initiallyCentered && issues.isNotEmpty()) {
+            val first = issues.first()
+            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(LatLng(first.latitude, first.longitude), 14f))
+            initiallyCentered = true
+        }
+    }
+
+    var selectedPinId by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
+
+    val inProgressCount = remember(civicPins) { civicPins.count { !it.isResolved } }
+    val resolvedCount = remember(civicPins) { civicPins.count { it.isResolved } }
+
+    val filteredIssues = remember(selectedFilter, civicPins) {
+        when (selectedFilter) {
+            "Active" -> civicPins.filter { !it.isResolved }
+            "Resolved" -> civicPins.filter { it.isResolved }
+            else -> civicPins
+        }
+    }
+
+    val selectedPin = filteredIssues.firstOrNull { it.id == selectedPinId }
 
     val mapProperties = remember(isSatelliteView) {
         MapProperties(
@@ -159,12 +140,13 @@ fun CampusMapScreen(
             properties = mapProperties,
             uiSettings = mapUiSettings,
             onMapClick = {
-                selectedPin = null
+                selectedPinId = null
             }
         ) {
             filteredIssues.forEach { issue ->
+                androidx.compose.runtime.key(issue.id) {
                 Marker(
-                    state = MarkerState(position = issue.position),
+                    state = rememberUpdatedMarkerState(position = issue.position),
                     title = "${issue.id} - ${issue.title}",
                     snippet = issue.locationName,
                     icon = if (issue.isResolved) {
@@ -173,7 +155,7 @@ fun CampusMapScreen(
                         BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)
                     },
                     onClick = {
-                        selectedPin = issue
+                        selectedPinId = issue.id
                         coroutineScope.launch {
                             cameraPositionState.animate(
                                 CameraUpdateFactory.newLatLng(issue.position),
@@ -183,6 +165,12 @@ fun CampusMapScreen(
                         true
                     }
                 )
+                }
+            }
+        }
+        if (filteredIssues.isEmpty()) {
+            Surface(modifier = Modifier.align(Alignment.Center), shape = MaterialTheme.shapes.medium) {
+                Text("No loaded reports match this filter.", modifier = Modifier.padding(16.dp))
             }
         }
 
@@ -194,7 +182,7 @@ fun CampusMapScreen(
                 .horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            listOf("All", "In Progress", "Resolved").forEach { filter ->
+            listOf("All", "Active", "Resolved").forEach { filter ->
                 val isSelected = selectedFilter == filter
                 FilterChip(
                     selected = isSelected,
@@ -202,9 +190,9 @@ fun CampusMapScreen(
                     label = {
                         Text(
                             text = when (filter) {
-                                "All" -> "All (${campusIssues.size})"
-                                "In Progress" -> "In Progress (2)"
-                                else -> "Resolved (2)"
+                                "All" -> "Loaded (${civicPins.size})"
+                                "Active" -> "Active ($inProgressCount)"
+                                else -> "Resolved ($resolvedCount)"
                             },
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
@@ -250,12 +238,13 @@ fun CampusMapScreen(
                 }
             }
 
-            // Recenter to SVCE Campus
+            // Recenter to Active Zone
             Surface(
                 onClick = {
                     coroutineScope.launch {
+                        val target = selectedPin?.position ?: defaultCenter
                         cameraPositionState.animate(
-                            CameraUpdateFactory.newLatLngZoom(svceCampusCenter, 17.5f),
+                            CameraUpdateFactory.newLatLngZoom(target, if (selectedPin == null) 4f else 17.5f),
                             600
                         )
                     }
@@ -288,6 +277,7 @@ fun CampusMapScreen(
         ) {
             selectedPin?.let { pin ->
                 Card(
+                    onClick = { issues.firstOrNull { it.id.toString() == pin.id }?.let(onOpenIssue) },
                     shape = MaterialTheme.shapes.large,
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
@@ -310,7 +300,7 @@ fun CampusMapScreen(
                                 color = MaterialTheme.colorScheme.surfaceContainerHighest
                             ) {
                                 Text(
-                                    text = pin.id,
+                                    text = pin.ticketCode.ifBlank { "#${pin.id}" },
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = 0.5.sp
@@ -337,7 +327,7 @@ fun CampusMapScreen(
                                             .background(Color.White, CircleShape)
                                     )
                                     Text(
-                                        text = if (pin.isResolved) "RESOLVED" else "IN PROGRESS",
+                                        text = pin.status.replace('_', ' '),
                                         style = MaterialTheme.typography.labelSmall.copy(
                                             fontSize = 9.sp,
                                             fontWeight = FontWeight.Bold

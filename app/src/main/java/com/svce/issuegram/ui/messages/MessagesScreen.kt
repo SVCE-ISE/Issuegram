@@ -8,10 +8,8 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +21,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -40,56 +37,58 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.core.graphics.toColorInt
+import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.svce.issuegram.data.model.DeliveryState
+import com.svce.issuegram.domain.displayTime
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.svce.issuegram.R
+import com.svce.issuegram.data.model.ChannelDto
+import com.svce.issuegram.data.model.ChannelMessageDto
 import com.svce.issuegram.ui.theme.IssuegramShapeDefaults
-import kotlinx.coroutines.launch
-
-private data class MessageChannel(
-    val id: String,
-    val name: String,
-    val subtitle: String,
-    val lastMessage: String,
-    val timestamp: String,
-    val unreadCount: Int = 0,
-    val isAdmin: Boolean = false,
-    val badgeColor: Color = Color(0xFF0E4B5A),
-    val iconRes: Int = R.drawable.ic_message_circle
-)
-
-private data class ChatBubble(
-    val id: String,
-    val sender: String,
-    val message: String,
-    val timestamp: String,
-    val isFromUser: Boolean,
-    val ticketBadge: String? = null
-)
 
 @Composable
 fun MessagesScreen(
     modifier: Modifier = Modifier,
-    onBackToHome: () -> Unit = {}
+    channels: List<ChannelDto> = emptyList(),
+    messagesByChannel: Map<String, List<ChannelMessageDto>> = emptyMap(),
+    currentUserId: String = "",
+    onOpenChannel: (String?) -> Unit = {},
+    onRetryMessages: () -> Unit = {},
+    onSendMessage: (channelId: String, message: String, onQueued: () -> Unit) -> Unit = { _, _, _ -> },
+    onBackToHome: () -> Unit = {},
+    initialChannelId: String? = null,
+    initialMessage: String = "",
+    sending: Boolean = false,
+    onContextConsumed: () -> Unit = {},
 ) {
-    var activeChatId by remember { mutableStateOf<String?>(null) }
+    var activeChatId by rememberSaveable { mutableStateOf(initialChannelId) }
+    LaunchedEffect(initialChannelId) { if (initialChannelId != null) activeChatId = initialChannelId }
 
+    val displayChannels = remember(channels) {
+        channels
+    }
+
+    BackHandler(activeChatId != null) { activeChatId = null }
+    DisposableEffect(activeChatId) {
+        onOpenChannel(activeChatId)
+        onDispose { onOpenChannel(null) }
+    }
     AnimatedContent(
         targetState = activeChatId,
         transitionSpec = {
@@ -106,13 +105,26 @@ fun MessagesScreen(
     ) { chatId ->
         if (chatId == null) {
             MessageChannelsView(
+                channels = displayChannels,
                 onBack = onBackToHome,
                 onSelectChannel = { channelId ->
                     activeChatId = channelId
                 }
             )
         } else {
+            val activeChannel = displayChannels.firstOrNull { it.id == chatId }
+            val channelMsgs = messagesByChannel[chatId].orEmpty()
             AdminChatView(
+                channelId = chatId,
+                initialMessage = if (chatId == initialChannelId) initialMessage else "",
+                onContextConsumed = onContextConsumed,
+                sending = sending,
+                channelTitle = activeChannel?.name ?: "Civic Dispatch Admin",
+                channelSubtitle = activeChannel?.subtitle ?: "Civic Support Desk",
+                messages = channelMsgs,
+                currentUserId = currentUserId,
+                onRetryMessages = onRetryMessages,
+                onSendMessage = { msg, queued -> onSendMessage(chatId, msg, queued) },
                 onBack = { activeChatId = null }
             )
         }
@@ -121,51 +133,11 @@ fun MessagesScreen(
 
 @Composable
 private fun MessageChannelsView(
+    channels: List<ChannelDto>,
     onBack: () -> Unit,
-    onSelectChannel: (String) -> Unit
+    onSelectChannel: (String) -> Unit,
 ) {
     val scrollState = rememberScrollState()
-
-    val channels = listOf(
-        MessageChannel(
-            id = "admin",
-            name = "Campus Admin",
-            subtitle = "maintenance dispatch",
-            lastMessage = "Technician dispatched to CS Lab 3 for #IG-106",
-            timestamp = "2m ago",
-            unreadCount = 1,
-            isAdmin = true,
-            badgeColor = Color(0xFF0E4B5A),
-            iconRes = R.drawable.ic_verified
-        ),
-        MessageChannel(
-            id = "it_helpdesk",
-            name = "IT Lab Helpdesk",
-            subtitle = "hardware & systems",
-            lastMessage = "Replacement keycaps will arrive before morning lab.",
-            timestamp = "1h ago",
-            badgeColor = Color(0xFF453856),
-            iconRes = R.drawable.ic_report_alert
-        ),
-        MessageChannel(
-            id = "facilities",
-            name = "Facilities Desk",
-            subtitle = "hostel & campus infra",
-            lastMessage = "Water dispenser filter maintenance completed.",
-            timestamp = "Yesterday",
-            badgeColor = Color(0xFF1B3B2B),
-            iconRes = R.drawable.ic_check
-        ),
-        MessageChannel(
-            id = "safety",
-            name = "Safety & Security",
-            subtitle = "electricals & control room",
-            lastMessage = "Main Auditorium audio lines inspection scheduled.",
-            timestamp = "Nov 5",
-            badgeColor = Color(0xFF4A3520),
-            iconRes = R.drawable.ic_map_pin
-        )
-    )
 
     Column(
         modifier = Modifier
@@ -205,17 +177,27 @@ private fun MessageChannelsView(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Segmented List Item Stack (4 Items)
+        // Segmented List Item Stack
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
+            if (channels.isEmpty()) Text("Support departments will appear here when available.", modifier = Modifier.padding(20.dp))
             channels.forEachIndexed { index, channel ->
                 val itemShape = when {
                     channels.size == 1 -> RoundedCornerShape(16.dp)
                     index == 0 -> IssuegramShapeDefaults.topListItemShape
                     index == channels.size - 1 -> IssuegramShapeDefaults.bottomListItemShape
                     else -> IssuegramShapeDefaults.middleListItemShape
+                }
+
+                val badgeColor = parseHexColor(channel.badgeColorHex)
+                val iconRes = when (channel.iconKey) {
+                    "verified" -> R.drawable.ic_verified
+                    "report_alert" -> R.drawable.ic_report_alert
+                    "check" -> R.drawable.ic_check
+                    "map_pin" -> R.drawable.ic_map_pin
+                    else -> R.drawable.ic_message_circle
                 }
 
                 Card(
@@ -238,11 +220,11 @@ private fun MessageChannelsView(
                         Box(
                             modifier = Modifier
                                 .size(42.dp)
-                                .background(channel.badgeColor, CircleShape),
+                                .background(badgeColor, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                painter = painterResource(channel.iconRes),
+                                painter = painterResource(iconRes),
                                 contentDescription = null,
                                 tint = if (channel.isAdmin) Color(0xFF67B7F7) else Color.White,
                                 modifier = Modifier.size(20.dp)
@@ -295,7 +277,7 @@ private fun MessageChannelsView(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(
-                                text = channel.timestamp,
+                                text = channel.lastTimestampLabel,
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 11.sp
                                 ),
@@ -327,41 +309,34 @@ private fun MessageChannelsView(
 
 @Composable
 private fun AdminChatView(
-    onBack: () -> Unit
+    channelId: String,
+    initialMessage: String,
+    onContextConsumed: () -> Unit,
+    sending: Boolean,
+    channelTitle: String,
+    channelSubtitle: String,
+    messages: List<ChannelMessageDto>,
+    currentUserId: String,
+    onRetryMessages: () -> Unit,
+    onSendMessage: (String, () -> Unit) -> Unit,
+    onBack: () -> Unit,
 ) {
     val listState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
-    var inputMessage by remember { mutableStateOf("") }
-
-    val messages = remember {
-        mutableStateListOf(
-            ChatBubble(
-                id = "1",
-                sender = "zenzer0s",
-                message = "Hi, I reported issue #IG-106 regarding stuck mechanical keys on workstation 14 in CSE Lab 3. We have lab exams starting tomorrow morning.",
-                timestamp = "5:26 PM",
-                isFromUser = true
-            ),
-            ChatBubble(
-                id = "2",
-                sender = "Admin",
-                message = "Hello @zenzer0s! We've received your ticket.",
-                timestamp = "5:27 PM",
-                isFromUser = false,
-                ticketBadge = "#IG-106 • Keycaps Jammed (CS Lab 3)"
-            ),
-            ChatBubble(
-                id = "3",
-                sender = "Admin",
-                message = "Technician Rajesh has been dispatched with replacement keycaps and cleaning kit. ETA: 15 minutes.",
-                timestamp = "5:28 PM",
-                isFromUser = false
-            )
-        )
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val drafts = remember(context) { com.svce.issuegram.data.local.MessageDraftStore(context) }
+    var inputMessage by rememberSaveable(currentUserId, channelId) { mutableStateOf(drafts.read(currentUserId, channelId)) }
+    LaunchedEffect(initialMessage) {
+        if (initialMessage.isNotBlank()) {
+            if (!inputMessage.contains(initialMessage)) inputMessage = listOf(inputMessage, initialMessage).filter { it.isNotBlank() }.joinToString("\n").take(2000)
+            onContextConsumed()
+        }
     }
+    LaunchedEffect(inputMessage) { drafts.save(currentUserId, channelId, inputMessage) }
 
     LaunchedEffect(messages.size) {
-        listState.animateScrollToItem(messages.size - 1)
+        if (messages.isNotEmpty()) {
+            listState.animateScrollToItem(messages.size)
+        }
     }
 
     Column(
@@ -370,6 +345,7 @@ private fun AdminChatView(
             .background(MaterialTheme.colorScheme.background)
             .imePadding()
     ) {
+
         // Chat Header Bar
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -395,7 +371,7 @@ private fun AdminChatView(
                     )
                 }
 
-                // Admin Avatar with Online Dot
+                // Department avatar
                 Box(modifier = Modifier.size(40.dp)) {
                     Box(
                         modifier = Modifier
@@ -411,13 +387,7 @@ private fun AdminChatView(
                         )
                     }
 
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .background(Color(0xFF4CAF50), CircleShape)
-                            .border(BorderStroke(1.5.dp, MaterialTheme.colorScheme.surfaceContainer), CircleShape)
-                            .align(Alignment.BottomEnd)
-                    )
+
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
@@ -426,7 +396,7 @@ private fun AdminChatView(
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "Campus Maintenance Admin",
+                            text = channelTitle,
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp
@@ -441,7 +411,7 @@ private fun AdminChatView(
                         )
                     }
                     Text(
-                        text = "Online • Estate Support Office",
+                        text = channelSubtitle,
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 11.sp
                         ),
@@ -473,7 +443,7 @@ private fun AdminChatView(
                         color = MaterialTheme.colorScheme.surfaceContainerHigh
                     ) {
                         Text(
-                            text = "Today",
+                            text = "Conversation",
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
@@ -482,8 +452,9 @@ private fun AdminChatView(
                 }
             }
 
-            items(messages) { msg ->
-                if (msg.isFromUser) {
+            if (messages.isEmpty()) item { Text("Start a conversation with this department.", style = MaterialTheme.typography.bodySmall) }
+            items(messages, key = { it.requestId ?: it.id.toString() }) { msg ->
+                if (msg.senderId == currentUserId) {
                     // User Message Bubble (Right-aligned, Cyan tint)
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -512,7 +483,7 @@ private fun AdminChatView(
                         }
 
                         Text(
-                            text = "${msg.timestamp} • Delivered",
+                            text = "${displayTime(msg.createdAt ?: msg.timestampLabel)} • ${when (msg.delivery) { DeliveryState.SENT -> "Sent"; DeliveryState.QUEUED -> "Waiting to send"; DeliveryState.FAILED -> "Failed — tap Retry above" }}",
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 3.dp, end = 4.dp)
@@ -582,7 +553,7 @@ private fun AdminChatView(
                         }
 
                         Text(
-                            text = "${msg.sender} • ${msg.timestamp}",
+                            text = "${msg.senderUsername} • ${displayTime(msg.createdAt ?: msg.timestampLabel)}",
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 3.dp, start = 4.dp)
@@ -592,6 +563,9 @@ private fun AdminChatView(
             }
         }
 
+        if (messages.any { it.delivery == DeliveryState.FAILED }) {
+            androidx.compose.material3.TextButton(onClick = onRetryMessages) { Text("Retry failed messages") }
+        }
         // Bottom Chat Input Bar
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -607,10 +581,10 @@ private fun AdminChatView(
             ) {
                 OutlinedTextField(
                     value = inputMessage,
-                    onValueChange = { inputMessage = it },
+                    onValueChange = { inputMessage = it.take(2000) },
                     placeholder = {
                         Text(
-                            text = "Message Campus Admin...",
+                            text = "Message $channelTitle...",
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                             fontSize = 14.sp
                         )
@@ -622,8 +596,8 @@ private fun AdminChatView(
                         unfocusedContainerColor = MaterialTheme.colorScheme.background,
                         focusedBorderColor = Color(0xFF67B7F7),
                         unfocusedBorderColor = Color(0xFF30363D),
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     ),
                     shape = RoundedCornerShape(20.dp)
                 )
@@ -632,20 +606,15 @@ private fun AdminChatView(
                 IconButton(
                     onClick = {
                         if (inputMessage.isNotBlank()) {
-                            messages.add(
-                                ChatBubble(
-                                    id = System.currentTimeMillis().toString(),
-                                    sender = "zenzer0s",
-                                    message = inputMessage.trim(),
-                                    timestamp = "Just now",
-                                    isFromUser = true
-                                )
-                            )
-                            inputMessage = ""
+                            val submitted = inputMessage
+                            onSendMessage(submitted.trim()) {
+                                if (inputMessage == submitted) { inputMessage = ""; drafts.save(currentUserId, channelId, "") }
+                            }
                         }
                     },
+                    enabled = !sending && inputMessage.isNotBlank(),
                     modifier = Modifier
-                        .size(42.dp)
+                        .size(48.dp)
                         .background(
                             color = if (inputMessage.isNotBlank()) Color(0xFF67B7F7) else Color(0xFF21262D),
                             shape = CircleShape
@@ -661,4 +630,10 @@ private fun AdminChatView(
             }
         }
     }
+}
+
+private fun parseHexColor(hex: String): Color {
+    return runCatching {
+        Color(hex.toColorInt())
+    }.getOrDefault(Color(0xFF0E4B5A))
 }
