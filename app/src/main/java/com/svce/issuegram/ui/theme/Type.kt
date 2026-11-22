@@ -58,10 +58,13 @@ private fun variableWeightFamily(@FontRes resId: Int): FontFamily = FontFamily(
     },
 )
 
+val GoogleSans: FontFamily = variableFontFamily(R.font.google_sans_flex, 14f)
+fun googleSansFamily(size: Float = 14f): FontFamily = variableFontFamily(R.font.google_sans_flex, size)
+
 val MonoFamily: FontFamily = variableWeightFamily(R.font.roboto_mono)
 
-private fun sansFamily(size: Float): FontFamily = variableFontFamily(R.font.roboto_flex, size)
-private fun displayFamily(size: Float): FontFamily = variableFontFamily(R.font.fraunces, size)
+private fun sansFamily(size: Float): FontFamily = variableFontFamily(R.font.google_sans_flex, size)
+private fun displayFamily(size: Float): FontFamily = variableFontFamily(R.font.google_sans_flex, size)
 
 /** The fifteen Material styles plus their emphasized twins, with the kit's weights and tracking. */
 fun expressiveTypography(
@@ -104,10 +107,10 @@ val ExpressiveTypography = expressiveTypography()
 
 /** Styles beyond the Material type scale: hero numerals and mono data labels. */
 object ExpressiveTextStyles {
-    val numeralLarge = TextStyle(fontFamily = variableFontFamily(R.font.roboto_flex, 56f), fontSize = 56.sp, lineHeight = 60.sp, fontWeight = FontWeight(700), letterSpacing = (-1.5).sp)
-    val numeralMedium = TextStyle(fontFamily = variableFontFamily(R.font.roboto_flex, 40f), fontSize = 40.sp, lineHeight = 44.sp, fontWeight = FontWeight(700), letterSpacing = (-1).sp)
-    val numeralSmall = TextStyle(fontFamily = variableFontFamily(R.font.roboto_flex, 28f), fontSize = 28.sp, lineHeight = 32.sp, fontWeight = FontWeight(700), letterSpacing = (-0.5).sp)
-    val eyebrow = TextStyle(fontFamily = MonoFamily, fontSize = 11.sp, lineHeight = 16.sp, fontWeight = FontWeight(500), letterSpacing = (1.2).sp)
-    val dataMedium = TextStyle(fontFamily = MonoFamily, fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight(500), letterSpacing = (0).sp)
-    val dataSmall = TextStyle(fontFamily = MonoFamily, fontSize = 11.sp, lineHeight = 14.sp, fontWeight = FontWeight(500), letterSpacing = (0.3).sp)
+    val numeralLarge = TextStyle(fontFamily = variableFontFamily(R.font.google_sans_flex, 56f), fontSize = 56.sp, lineHeight = 60.sp, fontWeight = FontWeight(700), letterSpacing = (-1.5).sp)
+    val numeralMedium = TextStyle(fontFamily = variableFontFamily(R.font.google_sans_flex, 40f), fontSize = 40.sp, lineHeight = 44.sp, fontWeight = FontWeight(700), letterSpacing = (-1).sp)
+    val numeralSmall = TextStyle(fontFamily = variableFontFamily(R.font.google_sans_flex, 28f), fontSize = 28.sp, lineHeight = 32.sp, fontWeight = FontWeight(700), letterSpacing = (-0.5).sp)
+    val eyebrow = TextStyle(fontFamily = GoogleSans, fontSize = 11.sp, lineHeight = 16.sp, fontWeight = FontWeight(700), letterSpacing = (1.2).sp)
+    val dataMedium = TextStyle(fontFamily = GoogleSans, fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight(500), letterSpacing = (0).sp)
+    val dataSmall = TextStyle(fontFamily = GoogleSans, fontSize = 11.sp, lineHeight = 14.sp, fontWeight = FontWeight(500), letterSpacing = (0.3).sp)
 }

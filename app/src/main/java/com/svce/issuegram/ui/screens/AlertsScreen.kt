@@ -1,5 +1,6 @@
 package com.svce.issuegram.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -35,6 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.svce.issuegram.R
 import com.svce.issuegram.data.AlertKind
@@ -71,8 +74,14 @@ private fun bucketOf(at: Instant): Int {
 @Composable
 fun AlertsScreen(
     modifier: Modifier = Modifier,
+    bottomBarPadding: Dp = 0.dp,
+    onBack: (() -> Unit)? = null,
     onIssueClick: (String) -> Unit,
 ) {
+    if (onBack != null) {
+        BackHandler { onBack() }
+    }
+
     var alerts by remember { mutableStateOf(MockAlerts.all) }
     val groups = listOf(
         BUCKET_TODAY to alerts.filter { bucketOf(it.at) == BUCKET_TODAY },
@@ -85,18 +94,22 @@ fun AlertsScreen(
             icon = Icons.Outlined.NotificationsNone,
             title = stringResource(R.string.alerts_empty_title),
             body = stringResource(R.string.alerts_empty_body),
-            modifier = modifier.fillMaxSize(),
+            modifier = modifier
+                .fillMaxSize()
+                .statusBarsPadding(),
         )
         return
     }
 
     LazyColumn(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .statusBarsPadding(),
         contentPadding = PaddingValues(
             start = Spacing.space4,
             end = Spacing.space4,
-            top = Spacing.space8,
-            bottom = Spacing.space6,
+            top = Spacing.space4,
+            bottom = bottomBarPadding + Spacing.space6,
         ),
         verticalArrangement = Arrangement.spacedBy(Spacing.space3),
     ) {

@@ -4,6 +4,9 @@
 
     <!-- Navigation -->
     <string name="tab_feed">Feed</string>
+    <string name="tab_home">Home</string>
+    <string name="tab_create">Camera</string>
+    <string name="tab_map">Map</string>
     <string name="tab_my_issues">My issues</string>
     <string name="tab_notifications">Alerts</string>
     <string name="tab_profile">Profile</string>

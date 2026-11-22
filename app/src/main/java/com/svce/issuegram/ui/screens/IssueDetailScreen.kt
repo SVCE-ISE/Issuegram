@@ -1,5 +1,13 @@
+@file:OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalTextApi::class,
+)
+
 package com.svce.issuegram.ui.screens
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -11,251 +19,406 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.ThumbUp
-import androidx.compose.material.icons.outlined.ThumbUpOffAlt
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.svce.issuegram.R
 import com.svce.issuegram.data.IssueStore
+import com.svce.issuegram.data.MockIssues
 import com.svce.issuegram.data.TimelineEvent
 import com.svce.issuegram.data.timeline
-import com.svce.issuegram.ui.components.CategoryAvatar
 import com.svce.issuegram.ui.components.Eyebrow
-import com.svce.issuegram.ui.components.StatusBadge
-import com.svce.issuegram.ui.components.absoluteDateTime
 import com.svce.issuegram.ui.components.badgeTone
 import com.svce.issuegram.ui.components.rememberPhotoBitmap
 import com.svce.issuegram.ui.components.shareIssue
 import com.svce.issuegram.ui.theme.ExpressiveTextStyles
 import com.svce.issuegram.ui.theme.Spacing
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+private val EventDateFormatter = DateTimeFormatter
+    .ofPattern("MMM d, yyyy", Locale.getDefault())
+    .withZone(ZoneId.systemDefault())
+
+private fun formatEventDate(instant: Instant): String = EventDateFormatter.format(instant)
+
+private val EventTimeFormatter = DateTimeFormatter
+    .ofPattern("MMM d, h:mm a", Locale.getDefault())
+    .withZone(ZoneId.systemDefault())
+
+private fun formatEventTime(instant: Instant): String = EventTimeFormatter.format(instant)
+
+private val GoogleSansLightFamily = FontFamily(
+    Font(
+        resId = R.font.google_sans_flex,
+        weight = FontWeight.Light,
+        variationSettings = FontVariation.Settings(
+            FontVariation.weight(300),
+            FontVariation.width(100f),
+            FontVariation.slant(0f),
+        ),
+    ),
+)
+
 @Composable
 fun IssueDetailScreen(ticketId: String, onBack: () -> Unit) {
-    val issue = IssueStore.issues.firstOrNull { it.ticketId == ticketId }
-    if (issue == null) {
-        NotFound(onBack)
-        return
-    }
+    BackHandler { onBack() }
 
     val context = LocalContext.current
-    var liked by rememberSaveable(ticketId) { mutableStateOf(false) }
-    var following by rememberSaveable(ticketId) { mutableStateOf(false) }
-    val likeCount = issue.likes + if (liked) 1 else 0
-    val photo = rememberPhotoBitmap(issue.photoUri)
+    val issue = remember(ticketId) {
+        IssueStore.issues.firstOrNull { it.ticketId.equals(ticketId, ignoreCase = true) }
+            ?: IssueStore.issues.firstOrNull { it.ticketId.endsWith(ticketId, ignoreCase = true) }
+            ?: MockIssues.all.firstOrNull { it.ticketId.equals(ticketId, ignoreCase = true) }
+            ?: MockIssues.all.firstOrNull { it.ticketId.endsWith(ticketId, ignoreCase = true) }
+            ?: IssueStore.issues.firstOrNull()
+            ?: MockIssues.all.first()
+    }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.surface,
-        topBar = {
-            TopAppBar(
-                title = {},
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = stringResource(R.string.detail_back),
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
-            )
-        },
-        bottomBar = {
-            Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Spacing.space4, vertical = Spacing.space3),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.space2),
-                ) {
-                    IconToggleButton(checked = liked, onCheckedChange = { liked = it }) {
-                        Icon(
-                            imageVector = if (liked) Icons.Outlined.ThumbUp else Icons.Outlined.ThumbUpOffAlt,
-                            contentDescription = stringResource(R.string.like_issue, issue.ticketId),
-                            tint = if (liked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    }
-                    Text(
-                        text = likeCount.toString(),
-                        style = ExpressiveTextStyles.dataSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.weight(1f))
-                    OutlinedButton(onClick = { following = !following }) {
-                        Text(
-                            text = stringResource(
-                                if (following) R.string.detail_following else R.string.detail_follow,
-                            ),
-                        )
-                    }
-                    Button(onClick = { shareIssue(context, issue.ticketId, issue.title) }) {
-                        Icon(
-                            imageVector = Icons.Outlined.Share,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Spacer(Modifier.width(Spacing.space2))
-                        Text(stringResource(R.string.detail_share))
-                    }
-                }
-            }
-        },
-    ) { innerPadding ->
+    val detailScrollState = rememberScrollState()
+    val photoBitmap = rememberPhotoBitmap(issue.photoUri)
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface),
+    ) {
+        // Scrollable content: Photo + Title + Detailed Content
         Column(
             modifier = Modifier
-                .padding(innerPadding)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = Spacing.space4),
+                .verticalScroll(detailScrollState),
         ) {
-            Spacer(Modifier.height(Spacing.space1))
-
+            // PHOTO CONTAINER: Edge-to-edge behind status bar, 440dp height
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(16f / 10f)
-                    .clip(MaterialTheme.shapes.extraLarge)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                contentAlignment = Alignment.Center,
+                    .height(440.dp),
             ) {
-                if (photo != null) {
+                if (photoBitmap != null) {
                     Image(
-                        bitmap = photo,
-                        contentDescription = stringResource(R.string.issue_photo_desc, issue.ticketId),
-                        contentScale = ContentScale.Crop,
+                        bitmap = photoBitmap,
+                        contentDescription = issue.title,
                         modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                } else if (!issue.photoUri.isNullOrBlank()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(context)
+                            .data(issue.photoUri)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = issue.title,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        placeholder = painterResource(R.drawable.feed_cat_photo),
+                        error = painterResource(R.drawable.feed_cat_photo),
                     )
                 } else {
-                    CategoryAvatar(category = issue.category, size = 112.dp)
+                    Image(
+                        painter = painterResource(R.drawable.feed_cat_photo),
+                        contentDescription = issue.title,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
                 }
-            }
 
-            Spacer(Modifier.height(Spacing.space4))
-
-            Text(
-                text = issue.title,
-                style = MaterialTheme.typography.headlineMediumEmphasized,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Spacer(Modifier.height(Spacing.space2))
-            Text(
-                text = stringResource(
-                    R.string.issue_meta,
-                    issue.ticketId,
-                    stringResource(issue.category.labelRes),
-                ),
-                style = ExpressiveTextStyles.dataSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(Spacing.space1))
-            Text(
-                text = absoluteDateTime(issue.createdAt),
-                style = ExpressiveTextStyles.dataSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
-            Spacer(Modifier.height(Spacing.space3))
-            StatusBadge(status = issue.status)
-
-            Spacer(Modifier.height(Spacing.space6))
-            Eyebrow(stringResource(R.string.detail_status_eyebrow))
-            Spacer(Modifier.height(Spacing.space3))
-            Timeline(events = issue.timeline())
-
-            Spacer(Modifier.height(Spacing.space6))
-            Eyebrow(stringResource(R.string.detail_location_eyebrow))
-            Spacer(Modifier.height(Spacing.space2))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Outlined.Place,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp),
+                // Bottom gradient scrim for title landing on photo
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .align(Alignment.BottomCenter)
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color.Transparent,
+                                    Color.Black.copy(alpha = 0.35f),
+                                    Color.Black.copy(alpha = 0.85f),
+                                ),
+                            ),
+                        ),
                 )
-                Spacer(Modifier.width(Spacing.space2))
-                Column {
+
+                // Title lands directly on the photo
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomStart)
+                        .padding(horizontal = Spacing.space4, vertical = Spacing.space4),
+                ) {
                     Text(
-                        text = issue.locationName,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Text(
-                        text = issue.area,
-                        style = ExpressiveTextStyles.dataSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = issue.title,
+                        fontFamily = GoogleSansLightFamily,
+                        fontWeight = FontWeight.Light,
+                        fontSize = 23.sp,
+                        lineHeight = 29.sp,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                        color = Color.White,
                     )
                 }
             }
 
-            issue.description?.let { description ->
-                Spacer(Modifier.height(Spacing.space6))
-                Eyebrow(stringResource(R.string.detail_about_eyebrow))
-                Spacer(Modifier.height(Spacing.space2))
+            // Detailed page content below the photo
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.space4, vertical = Spacing.space4)
+                    .navigationBarsPadding(),
+                verticalArrangement = Arrangement.spacedBy(Spacing.space4),
+            ) {
+                // 1. Detailed Summary / Story Description on Top
                 Text(
-                    text = description,
+                    text = issue.description?.takeIf { it.isNotBlank() }
+                        ?: "No additional details provided for this issue report.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
+                    lineHeight = 26.sp,
                 )
+
+                // Entire status section enclosed in an outer outlined container
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                ) {
+                    Column(
+                        modifier = Modifier.padding(Spacing.space4),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.space3),
+                    ) {
+                        Eyebrow(stringResource(R.string.detail_status_eyebrow))
+                        Timeline(events = issue.timeline())
+                    }
+                }
+
+                // Location Map Preview (strict 16:9 aspect ratio placeholder)
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(16f / 9f),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.detail_map_placeholder),
+                        contentDescription = "Location Map",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+
+                // Address Card (two lines)
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(Spacing.space4),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.LocationOn,
+                                contentDescription = "Location",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+
+                        Spacer(Modifier.width(Spacing.space3))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = issue.locationName.ifBlank { "Location reported" },
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                text = issue.area.ifBlank { "Anna Nagar East, Chennai" },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+
+                // Bottom row: Reporter pill on left, Date pill on right
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // Bottom Left: Reporter with Person icon
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = Spacing.space3, vertical = Spacing.space2),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.space2),
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_user),
+                                contentDescription = "Reported by",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Text(
+                                text = issue.authorName,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                    }
+
+                    // Bottom Right: Date pill with Date icon
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = Spacing.space3, vertical = Spacing.space2),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.space2),
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_calendar_check),
+                                contentDescription = "Date",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Text(
+                                text = formatEventDate(issue.createdAt),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(48.dp))
+            }
+        }
+
+        // PINNED TOP BAR: Back button and Share button stay fixed at the top while scrolling
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = Spacing.space4, vertical = Spacing.space2)
+                .align(Alignment.TopCenter),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Surface(
+                onClick = onBack,
+                shape = CircleShape,
+                color = Color.Black.copy(alpha = 0.55f),
+                modifier = Modifier.size(40.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
             }
 
-            Spacer(Modifier.height(Spacing.space6))
-            Text(
-                text = stringResource(R.string.detail_reported_by, issue.authorName),
-                style = ExpressiveTextStyles.dataSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(Spacing.space6))
+            Surface(
+                onClick = { shareIssue(context, issue.ticketId, issue.title) },
+                shape = CircleShape,
+                color = Color.Black.copy(alpha = 0.55f),
+                modifier = Modifier.size(40.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Outlined.Share,
+                        contentDescription = "Share",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
 private fun Timeline(events: List<TimelineEvent>) {
-    Column {
+    Column(modifier = Modifier.fillMaxWidth()) {
         events.forEachIndexed { index, event ->
             val tone = event.status.badgeTone()
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            val isActive = index == events.lastIndex
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
+            ) {
+                // Left status icon & connecting timeline vertical line
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.width(24.dp),
+                ) {
                     Box(
                         modifier = Modifier
-                            .size(28.dp)
+                            .size(24.dp)
                             .clip(CircleShape)
                             .background(tone.container),
                         contentAlignment = Alignment.Center,
@@ -264,74 +427,64 @@ private fun Timeline(events: List<TimelineEvent>) {
                             imageVector = tone.icon,
                             contentDescription = null,
                             tint = tone.content,
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(13.dp),
                         )
                     }
                     if (index != events.lastIndex) {
                         Box(
                             modifier = Modifier
-                                .width(2.dp)
-                                .height(28.dp)
-                                .background(MaterialTheme.colorScheme.outlineVariant),
+                                .width(1.5.dp)
+                                .height(16.dp)
+                                .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
                         )
                     }
                 }
-                Spacer(Modifier.width(Spacing.space3))
-                Column(
+
+                Spacer(Modifier.width(Spacing.space2))
+
+                // Milestone chip on the left + timestamp on the right
+                Row(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(top = Spacing.space1, bottom = Spacing.space4),
+                        .height(24.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    // Status Pill Chip (compact)
+                    Surface(
+                        shape = CircleShape,
+                        color = if (isActive) Color(0xFFBDEEEA) else MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = if (isActive) Color(0xFF00201F) else MaterialTheme.colorScheme.onSurface,
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            if (isActive) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(5.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFF00796B)),
+                                )
+                            }
+                            Text(
+                                text = stringResource(event.status.labelRes),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Medium,
+                            )
+                        }
+                    }
+
+                    // Timestamp
                     Text(
-                        text = stringResource(event.status.labelRes),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Text(
-                        text = absoluteDateTime(event.at),
+                        text = formatEventTime(event.at),
                         style = ExpressiveTextStyles.dataSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun NotFound(onBack: () -> Unit) {
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.surface,
-        topBar = {
-            TopAppBar(
-                title = {},
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = stringResource(R.string.detail_back),
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
-            )
-        },
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .padding(horizontal = Spacing.space6),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = stringResource(R.string.detail_not_found),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }

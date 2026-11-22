@@ -59,10 +59,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.carousel.HorizontalUncontainedCarousel
-import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -91,6 +90,9 @@ import com.svce.issuegram.data.IssueStore
 import com.svce.issuegram.data.MockAlerts
 import com.svce.issuegram.data.MockIssues
 import com.svce.issuegram.data.ProfileMock
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import coil.compose.AsyncImage
 import com.svce.issuegram.data.TimelineEvent
 import com.svce.issuegram.data.model.IssueCategory
 import com.svce.issuegram.data.model.IssueStatus
@@ -136,9 +138,25 @@ fun FeedScreenV6(
     onDetailExpandedChange: (Boolean) -> Unit = {},
 ) {
     val hasUnread = remember { MockAlerts.all.any { it.unread } }
-    val carouselState = rememberCarouselState { 5 }
     val haptic = rememberHaptics()
     var isLiked by rememberSaveable { mutableStateOf(false) }
+
+    var firebaseUser by remember { mutableStateOf(Firebase.auth.currentUser) }
+    DisposableEffect(Unit) {
+        val listener = com.google.firebase.auth.FirebaseAuth.AuthStateListener { auth ->
+            firebaseUser = auth.currentUser
+        }
+        val auth = Firebase.auth
+        auth.addAuthStateListener(listener)
+        onDispose {
+            auth.removeAuthStateListener(listener)
+        }
+    }
+    val userPhotoUrl = firebaseUser?.photoUrl?.toString()
+    val userInitials = remember(firebaseUser) {
+        firebaseUser?.displayName?.split(" ")?.mapNotNull { it.firstOrNull()?.uppercaseChar() }?.joinToString("")?.takeIf { it.isNotBlank() }
+            ?: ProfileMock.initials
+    }
 
     // Intercept hardware / gesture back button to close detailed view smoothly
     BackHandler(enabled = isDetailExpanded) {
@@ -235,37 +253,26 @@ fun FeedScreenV6(
                                 .size(40.dp)
                                 .align(Alignment.CenterEnd),
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(
-                                    text = ProfileMock.initials,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            if (!userPhotoUrl.isNullOrBlank()) {
+                                AsyncImage(
+                                    model = userPhotoUrl,
+                                    contentDescription = "Profile",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize(),
                                 )
+                            } else {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = userInitials,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    )
+                                }
                             }
                         }
                     }
 
-                    Spacer(Modifier.height(Spacing.space2))
-
-                    // --- CAROUSEL (3:4 Portrait Aspect Ratio) ---
-                    HorizontalUncontainedCarousel(
-                        state = carouselState,
-                        itemWidth = 150.dp,
-                        itemSpacing = 12.dp,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        contentPadding = PaddingValues(horizontal = Spacing.space4),
-                    ) { _ ->
-                        Box(
-                            modifier = Modifier
-                                .maskClip(MaterialTheme.shapes.extraLarge)
-                                .fillMaxSize()
-                                .background(MaterialTheme.colorScheme.surfaceContainer),
-                        )
-                    }
-
-                    Spacer(Modifier.height(Spacing.space5))
+                    Spacer(Modifier.height(Spacing.space3))
 
                     // --- FEED PHOTO CARD ---
                     Card(
