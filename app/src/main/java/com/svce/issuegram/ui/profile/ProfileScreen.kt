@@ -1,6 +1,7 @@
 package com.svce.issuegram.ui.profile
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,6 +25,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
@@ -54,8 +56,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -69,6 +74,9 @@ import com.svce.issuegram.data.model.IssueFlagDto
 import com.svce.issuegram.data.model.UserProfileDto
 import com.svce.issuegram.ui.components.IssuegramMediaImage
 import com.svce.issuegram.ui.theme.IssuegramShapeDefaults
+
+private const val UID_PREVIEW_PREFIX_LEN = 8
+private const val UID_PREVIEW_SUFFIX_LEN = 4
 
 @Composable
 fun ProfileScreen(
@@ -402,6 +410,50 @@ fun ProfileScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+
+        val userId = activeUser.id.takeIf { it.isNotBlank() && it != "user_me" } ?: firebaseUser?.uid
+        if (!userId.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            val clipboardManager = LocalClipboardManager.current
+            val context = LocalContext.current
+            val previewUid = if (userId.length > UID_PREVIEW_PREFIX_LEN + UID_PREVIEW_SUFFIX_LEN) {
+                "${userId.take(UID_PREVIEW_PREFIX_LEN)}...${userId.takeLast(UID_PREVIEW_SUFFIX_LEN)}"
+            } else {
+                userId
+            }
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .clickable {
+                        clipboardManager.setText(AnnotatedString(userId))
+                        Toast
+                            .makeText(context, "User ID copied to clipboard", Toast.LENGTH_SHORT)
+                            .show()
+                    }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = "UID: $previewUid",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Icon(
+                        imageVector = Icons.Outlined.ContentCopy,
+                        contentDescription = "Copy UID",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(20.dp))
 
         if (effectiveBusy) androidx.compose.material3.LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
