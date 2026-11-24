@@ -414,11 +414,14 @@ fun FeedScreenV6(
                                                 .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
                                         ) {
                                             if (hasPhoto) {
-                                                AsyncImage(
-                                                    model = ImageRequest.Builder(context)
+                                                val imageRequest = remember(issuePhoto) {
+                                                    ImageRequest.Builder(context)
                                                         .data(issuePhoto)
                                                         .crossfade(true)
-                                                        .build(),
+                                                        .build()
+                                                }
+                                                AsyncImage(
+                                                    model = imageRequest,
                                                     contentDescription = issue.title,
                                                     modifier = Modifier.fillMaxSize(),
                                                     contentScale = ContentScale.Crop,
@@ -576,11 +579,14 @@ fun FeedScreenV6(
                                 ),
                         ) {
                             if (!currentIssue?.photoUri.isNullOrBlank()) {
-                                AsyncImage(
-                                    model = ImageRequest.Builder(context)
+                                val detailImageRequest = remember(currentIssue?.photoUri) {
+                                    ImageRequest.Builder(context)
                                         .data(currentIssue?.photoUri)
                                         .crossfade(true)
-                                        .build(),
+                                        .build()
+                                }
+                                AsyncImage(
+                                    model = detailImageRequest,
                                     contentDescription = currentIssue?.title.orEmpty(),
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop,

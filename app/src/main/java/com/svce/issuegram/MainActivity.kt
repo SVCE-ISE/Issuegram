@@ -54,6 +54,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Initialize Google Maps SDK with Activity Context to prevent visual service WindowManager warnings
+        try {
+            com.google.android.gms.maps.MapsInitializer.initialize(
+                this,
+                com.google.android.gms.maps.MapsInitializer.Renderer.LATEST,
+                null
+            )
+        } catch (e: Exception) {
+            Log.w("MainActivity", "Failed to initialize Google Maps LATEST renderer", e)
+        }
         setContent {
             // Calm utility product: no bounce on routine actions.
             // Dynamic colour on Android 12+; brand palette below that.
