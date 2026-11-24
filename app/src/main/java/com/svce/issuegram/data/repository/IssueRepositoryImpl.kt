@@ -107,12 +107,17 @@ class IssueRepositoryImpl(
         Result.failure(e)
     }
 
-    override suspend fun toggleLike(ticketId: String): Result<Unit> = try {
-        remoteDataSource.toggleLike(ticketId)
+    override suspend fun toggleLike(ticketId: String): Result<Unit> {
+        // Immediate optimistic local flip for instant, zero-lag UI reaction
         localDataSource.toggleLike(ticketId)
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
+        return try {
+            remoteDataSource.toggleLike(ticketId)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            // Revert on remote failure
+            localDataSource.toggleLike(ticketId)
+            Result.failure(e)
+        }
     }
 
     override suspend fun deleteIssue(ticketId: String): Result<Unit> {
