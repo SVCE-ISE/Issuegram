@@ -23,7 +23,13 @@ class IssueLocalDataSource {
 
     suspend fun toggleLike(ticketId: String) = mutex.withLock {
         val updated = _issuesFlow.value.map {
-            if (it.ticketId == ticketId) it.copy(likes = it.likes + 1) else it
+            if (it.ticketId.equals(ticketId, ignoreCase = true) || it.ticketId.endsWith(ticketId, ignoreCase = true)) {
+                val newLiked = !it.isLikedByMe
+                val newLikes = if (newLiked) it.likes + 1 else (it.likes - 1).coerceAtLeast(0)
+                it.copy(isLikedByMe = newLiked, likes = newLikes)
+            } else {
+                it
+            }
         }
         _issuesFlow.value = updated
     }

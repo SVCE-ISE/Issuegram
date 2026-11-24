@@ -50,6 +50,7 @@ data class Issue(
     val likes: Int,
     val photoUri: String? = null,
     val isMine: Boolean = false,
+    val isLikedByMe: Boolean = false,
     val latitude: Double = 12.9716,
     val longitude: Double = 77.5946,
     val authorId: String? = null,

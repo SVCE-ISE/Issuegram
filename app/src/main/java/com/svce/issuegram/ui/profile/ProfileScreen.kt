@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
@@ -33,21 +34,24 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -74,10 +78,12 @@ import com.svce.issuegram.data.model.IssueFlagDto
 import com.svce.issuegram.data.model.UserProfileDto
 import com.svce.issuegram.ui.components.IssuegramMediaImage
 import com.svce.issuegram.ui.theme.IssuegramShapeDefaults
+import kotlinx.coroutines.launch
 
 private const val UID_PREVIEW_PREFIX_LEN = 8
 private const val UID_PREVIEW_SUFFIX_LEN = 4
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
@@ -121,6 +127,23 @@ fun ProfileScreen(
 
     var customAvatarUri by remember { mutableStateOf<Uri?>(null) }
     var customDisplayName by remember { mutableStateOf<String?>(null) }
+    var userIsAdmin by remember { mutableStateOf(false) }
+
+    val currentUid = firebaseUser?.uid
+    DisposableEffect(currentUid) {
+        if (currentUid.isNullOrBlank()) {
+            userIsAdmin = false
+            return@DisposableEffect onDispose {}
+        }
+        val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+        val registration = firestore.collection("users").document(currentUid)
+            .addSnapshotListener { snapshot, _ ->
+                if (snapshot != null && snapshot.exists()) {
+                    userIsAdmin = snapshot.getBoolean("isAdmin") == true
+                }
+            }
+        onDispose { registration.remove() }
+    }
 
     val activeUser = currentUser ?: vmUser?.let { domainUser ->
         UserProfileDto(
@@ -129,9 +152,10 @@ fun ProfileScreen(
             displayName = domainUser.displayName,
             avatarUrl = domainUser.avatarUrl,
             email = domainUser.email,
-            bio = domainUser.bio
+            bio = domainUser.bio,
+            isAdmin = domainUser.isAdmin || userIsAdmin
         )
-    } ?: remember(firebaseUser, customAvatarUri, customDisplayName) {
+    } ?: remember(firebaseUser, customAvatarUri, customDisplayName, userIsAdmin) {
         val email = firebaseUser?.email.orEmpty()
         val derivedUsername = email.substringBefore('@').ifBlank { "citizen_${firebaseUser?.uid?.take(6) ?: "user"}" }
         val name = customDisplayName
@@ -149,9 +173,11 @@ fun ProfileScreen(
             displayName = name,
             avatarUrl = photo,
             email = email,
-            bio = "Civic Citizen Reporter"
+            bio = "Civic Citizen Reporter",
+            isAdmin = userIsAdmin
         )
     }
+    val isAdminEffective = activeUser.isAdmin || userIsAdmin
     val username = activeUser.username
     val avatarRef = activeUser.avatarUrl
     val userEmail = activeUser.email ?: firebaseUser?.email.orEmpty()
@@ -166,10 +192,8 @@ fun ProfileScreen(
         }
     }
 
-    val deletedTicketCodes = remember { mutableStateListOf<String>() }
-
-    val userPostedIssues = remember(allIssues, activeUser.id, vmIssues, deletedTicketCodes.toList()) {
-        val raw = if (allIssues.isNotEmpty()) {
+    val userPostedIssues = remember(allIssues, activeUser.id, vmIssues) {
+        if (allIssues.isNotEmpty()) {
             allIssues.filter { it.authorId == activeUser.id }
         } else {
             vmIssues.mapIndexed { idx, it ->
@@ -181,9 +205,99 @@ fun ProfileScreen(
                 )
             }
         }
-        raw.filter { it.ticketCode !in deletedTicketCodes }
     }
     var issueToEdit by remember { mutableStateOf<CivicIssueDto?>(null) }
+    var issueToDelete by remember { mutableStateOf<CivicIssueDto?>(null) }
+    val deleteSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    if (issueToDelete != null) {
+        val target = issueToDelete!!
+        ModalBottomSheet(
+            onDismissRequest = { if (!effectiveBusy) issueToDelete = null },
+            sheetState = deleteSheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        modifier = Modifier.size(44.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Outlined.Delete,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                    Column {
+                        Text(
+                            text = "Delete Post?",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Ticket: ${target.ticketCode}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Text(
+                    text = "Are you sure you want to permanently delete \"${target.title}\"? This action cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = { issueToDelete = null },
+                        enabled = !effectiveBusy,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancel", fontWeight = FontWeight.SemiBold)
+                    }
+
+                    Button(
+                        onClick = {
+                            val code = target.ticketCode
+                            issueToDelete = null
+                            viewModel?.deleteIssue(code)
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        enabled = !effectiveBusy,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Delete", fontWeight = FontWeight.SemiBold)
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+
+    val editSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     if (issueToEdit != null) {
         val target = issueToEdit!!
@@ -193,79 +307,106 @@ fun ProfileScreen(
 
         val canSave = editTitle.trim().length in 3..100 && editCaption.trim().length in 5..500
 
-        AlertDialog(
+        ModalBottomSheet(
             onDismissRequest = { if (!effectiveBusy) issueToEdit = null },
-            icon = {
-                Icon(
-                    imageVector = Icons.Outlined.Edit,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(28.dp)
+            sheetState = editSheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.size(44.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Outlined.Edit,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                    Column {
+                        Text(
+                            text = "Edit Post",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Ticket: ${target.ticketCode}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                OutlinedTextField(
+                    value = editTitle,
+                    onValueChange = { editTitle = it.take(100) },
+                    label = { Text("Title") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
                 )
-            },
-            title = {
-                Text(
-                    text = "Edit report",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                OutlinedTextField(
+                    value = editCaption,
+                    onValueChange = { editCaption = it.take(500) },
+                    label = { Text("Description") },
+                    minLines = 3,
+                    maxLines = 5,
+                    modifier = Modifier.fillMaxWidth()
                 )
-            },
-            text = {
-                Column(
+                OutlinedTextField(
+                    value = editLocation,
+                    onValueChange = { editLocation = it.take(160) },
+                    label = { Text("Location") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        text = "Ticket: ${target.ticketCode}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    OutlinedTextField(
-                        value = editTitle,
-                        onValueChange = { editTitle = it.take(100) },
-                        label = { Text("Title") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = editCaption,
-                        onValueChange = { editCaption = it.take(500) },
-                        label = { Text("Description") },
-                        minLines = 3,
-                        maxLines = 5,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = editLocation,
-                        onValueChange = { editLocation = it.take(160) },
-                        label = { Text("Location") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    OutlinedButton(
+                        onClick = { issueToEdit = null },
+                        enabled = !effectiveBusy,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancel", fontWeight = FontWeight.SemiBold)
+                    }
+
+                    Button(
+                        onClick = {
+                            val ticketCode = target.ticketCode
+                            val newT = editTitle.trim()
+                            val newC = editCaption.trim()
+                            val newL = editLocation.trim()
+                            issueToEdit = null
+                            viewModel?.editIssue(ticketCode, newT, newC, newL)
+                        },
+                        enabled = canSave && !effectiveBusy,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Save", fontWeight = FontWeight.SemiBold)
+                    }
                 }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val ticketCode = target.ticketCode
-                        val newT = editTitle.trim()
-                        val newC = editCaption.trim()
-                        val newL = editLocation.trim()
-                        issueToEdit = null
-                        viewModel?.editIssue(ticketCode, newT, newC, newL)
-                    },
-                    enabled = canSave && !effectiveBusy
-                ) {
-                    Text("Save")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { issueToEdit = null }) {
-                    Text("Cancel")
-                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
-        )
+        }
     }
 
     var editingName by remember { mutableStateOf(false) }
@@ -331,46 +472,26 @@ fun ProfileScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // 1. Profile Picture in the Centre (Tap to change profile picture)
-        Box(
-            contentAlignment = Alignment.BottomEnd,
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            border = BorderStroke(2.5.dp, Color(0xFF30363D)),
             modifier = Modifier
                 .size(92.dp)
+                .clip(CircleShape)
                 .clickable(enabled = !effectiveBusy) {
                     avatarPickerLauncher.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                     )
                 }
         ) {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceContainer,
-                border = BorderStroke(2.5.dp, Color(0xFF30363D)),
+            IssuegramMediaImage(
+                mediaRef = avatarRef,
+                contentDescription = "Profile Picture",
+                contentScale = ContentScale.Crop,
+                fallbackDrawableRes = R.drawable.avatar_placeholder,
                 modifier = Modifier.fillMaxSize()
-            ) {
-                IssuegramMediaImage(
-                    mediaRef = avatarRef,
-                    contentDescription = "Profile Picture",
-                    contentScale = ContentScale.Crop,
-                    fallbackDrawableRes = R.drawable.avatar_placeholder,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-
-            Surface(
-                shape = CircleShape,
-                color = Color(0xFF67B7F7),
-                border = BorderStroke(2.dp, MaterialTheme.colorScheme.background),
-                modifier = Modifier.size(26.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_image_plus),
-                        contentDescription = "Change Profile Picture",
-                        tint = Color(0xFF0F2A30),
-                        modifier = Modifier.size(13.dp)
-                    )
-                }
-            }
+            )
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -378,7 +499,7 @@ fun ProfileScreen(
         // 2. Real Name and Email below Profile Picture
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             modifier = Modifier.clickable(enabled = !effectiveBusy) {
                 editedName = activeUser.displayName
                 editingName = true
@@ -393,6 +514,30 @@ fun ProfileScreen(
                 ),
                 color = MaterialTheme.colorScheme.onBackground
             )
+            if (isAdminEffective) {
+                Icon(
+                    imageVector = Icons.Filled.CheckCircle,
+                    contentDescription = "Admin Verified",
+                    tint = Color(0xFF1D9BF0),
+                    modifier = Modifier.size(18.dp)
+                )
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color(0xFF1D9BF0).copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, Color(0xFF1D9BF0).copy(alpha = 0.4f))
+                ) {
+                    Text(
+                        text = "ADMIN",
+                        color = Color(0xFF1D9BF0),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 10.sp,
+                            letterSpacing = 0.5.sp
+                        ),
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
         }
 
         if (userEmail.isNotBlank()) {
@@ -457,16 +602,6 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         if (effectiveBusy) androidx.compose.material3.LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-        if (customAvatarUri != null || activeUser.avatarUrl != null) {
-            androidx.compose.material3.TextButton(
-                onClick = {
-                    customAvatarUri = null
-                    viewModel?.removeAvatar()
-                    onRemoveAvatar()
-                },
-                enabled = !effectiveBusy
-            ) { Text("Remove profile photo") }
-        }
 
         // 3. Compact Horizontal Alignment of the Two Items Below
         Row(
@@ -681,10 +816,8 @@ fun ProfileScreen(
                                         false
                                     }
                                     SwipeToDismissBoxValue.EndToStart -> {
-                                        // Instant optimistic deletion from UI and data stores
-                                        deletedTicketCodes.add(issue.ticketCode)
-                                        viewModel?.deleteIssue(issue.ticketCode)
-                                        true
+                                        issueToDelete = issue
+                                        false
                                     }
                                     SwipeToDismissBoxValue.Settled -> false
                                 }

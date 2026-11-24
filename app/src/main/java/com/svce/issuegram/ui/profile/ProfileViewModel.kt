@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 data class ProfileUiState(
     val user: User? = null,
@@ -106,6 +107,24 @@ class ProfileViewModel(
             } else {
                 _errorMessage.value = result.exceptionOrNull()?.message
             }
+        }
+    }
+
+    fun setUserAdminStatus(targetUid: String, makeAdmin: Boolean, onComplete: (Result<Unit>) -> Unit = {}) {
+        viewModelScope.launch {
+            _isBusy.value = true
+            val result = runCatching {
+                val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                db.collection("users").document(targetUid)
+                    .set(mapOf("isAdmin" to makeAdmin), com.google.firebase.firestore.SetOptions.merge())
+                    .await()
+                Unit
+            }
+            _isBusy.value = false
+            if (result.isFailure) {
+                _errorMessage.value = result.exceptionOrNull()?.message
+            }
+            onComplete(result)
         }
     }
 

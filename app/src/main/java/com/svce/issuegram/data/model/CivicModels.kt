@@ -11,6 +11,7 @@ data class UserProfileDto(
     @SerialName("avatar_url") val avatarUrl: String? = null,
     val email: String? = null,
     val bio: String = "Civic Citizen Reporter",
+    @SerialName("is_admin") val isAdmin: Boolean = false,
     @SerialName("created_at") val createdAt: String? = null
 )
 

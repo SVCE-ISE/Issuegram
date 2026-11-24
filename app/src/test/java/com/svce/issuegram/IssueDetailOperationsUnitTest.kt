@@ -15,7 +15,9 @@ import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -46,15 +48,15 @@ import org.junit.Test
 class IssueDetailOperationsUnitTest {
 
     private val testDispatcher = StandardTestDispatcher()
-    private val issuesMap = mutableMapOf<String, Issue>()
+    private val issuesFlow = MutableStateFlow<Map<String, Issue>>(emptyMap())
     private var lastToggledTicket: String? = null
 
     private val fakeIssueRepository = object : IssueRepository {
-        override fun getFeedIssues(): Flow<List<Issue>> = flowOf(issuesMap.values.toList())
+        override fun getFeedIssues(): Flow<List<Issue>> = issuesFlow.map { it.values.toList() }
 
-        override fun getIssueById(ticketId: String): Flow<Issue?> = flowOf(
-            issuesMap[ticketId] ?: issuesMap.values.firstOrNull { it.ticketId.endsWith(ticketId, ignoreCase = true) }
-        )
+        override fun getIssueById(ticketId: String): Flow<Issue?> = issuesFlow.map { map ->
+            map[ticketId] ?: map.values.firstOrNull { it.ticketId.endsWith(ticketId, ignoreCase = true) }
+        }
 
         override fun getUserIssues(userId: String, authorName: String): Flow<List<Issue>> = flowOf(emptyList())
 
@@ -72,6 +74,15 @@ class IssueDetailOperationsUnitTest {
 
         override suspend fun toggleLike(ticketId: String): Result<Unit> {
             lastToggledTicket = ticketId
+            val currentMap = issuesFlow.value.toMutableMap()
+            val existing = currentMap[ticketId]
+            if (existing != null) {
+                currentMap[ticketId] = existing.copy(
+                    isLikedByMe = !existing.isLikedByMe,
+                    likes = if (existing.isLikedByMe) (existing.likes - 1).coerceAtLeast(0) else existing.likes + 1
+                )
+                issuesFlow.value = currentMap
+            }
             return Result.success(Unit)
         }
 
@@ -87,7 +98,7 @@ class IssueDetailOperationsUnitTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        issuesMap.clear()
+        issuesFlow.value = emptyMap()
         lastToggledTicket = null
         viewModel = IssueDetailViewModel(
             getIssueDetailUseCase = GetIssueDetailUseCase(fakeIssueRepository),
@@ -111,7 +122,7 @@ class IssueDetailOperationsUnitTest {
     @Test
     fun testLoadIssue_successfulRetrieval_updatesState() = runTest {
         val issue = createTestIssue("IG-9001", "Fallen Tree", IssueStatus.InProgress)
-        issuesMap["IG-9001"] = issue
+        issuesFlow.value = mapOf("IG-9001" to issue)
 
         viewModel.loadIssue("IG-9001")
         advanceUntilIdle()
@@ -137,7 +148,7 @@ class IssueDetailOperationsUnitTest {
     @Test
     fun testToggleLike_flipsOptimisticStateAndCallsUseCase() = runTest {
         val issue = createTestIssue("IG-9002", "Pothole", IssueStatus.Open)
-        issuesMap["IG-9002"] = issue
+        issuesFlow.value = mapOf("IG-9002" to issue)
 
         viewModel.loadIssue("IG-9002")
         advanceUntilIdle()

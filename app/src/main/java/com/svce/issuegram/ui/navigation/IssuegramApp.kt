@@ -1,6 +1,8 @@
 package com.svce.issuegram.ui.navigation
 
 import android.net.Uri
+import android.widget.Toast
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -17,12 +19,14 @@ import androidx.compose.material.icons.rounded.Map
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PhotoCamera
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -33,6 +37,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -52,6 +57,7 @@ import com.svce.issuegram.R
 import com.svce.issuegram.data.mapper.IssueMapper
 import com.svce.issuegram.data.model.IssueCategory
 import com.svce.issuegram.di.ViewModelFactory
+import com.svce.issuegram.ui.admin.AdminManagementBottomSheet
 import com.svce.issuegram.ui.camera.PixelCameraScreen
 import com.svce.issuegram.ui.feed.FeedViewModel
 import com.svce.issuegram.ui.map.CivicMapScreen
@@ -74,12 +80,17 @@ private enum class TopLevelDestination(val route: String, val labelRes: Int, val
     Profile("profile", R.string.tab_profile, Icons.Outlined.Person, Icons.Rounded.Person)
 }
 
+private const val ADMIN_TRIGGER_HOLD_MILLIS = 3000L
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IssuegramApp() {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     var isV4DetailExpanded by rememberSaveable { mutableStateOf(false) }
+    var showAdminBottomSheet by remember { mutableStateOf(false) }
+    val adminSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val context = LocalContext.current
     val appContainer = remember(context) {
@@ -104,6 +115,8 @@ fun IssuegramApp() {
                 NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                     destinations.forEach { destination ->
                         val selected = currentRoute == destination.route
+                        val isFeedTab = destination == TopLevelDestination.Feed
+
                         NavigationBarItem(
                             selected = selected,
                             onClick = {
@@ -116,12 +129,60 @@ fun IssuegramApp() {
                                 }
                             },
                             icon = {
+                                val iconModifier = if (isFeedTab) {
+                                    Modifier.pointerInput(Unit) {
+                                        detectTapGestures(
+                                            onTap = {
+                                                navController.navigate(destination.route) {
+                                                    popUpTo(navController.graph.findStartDestination().id) {
+                                                        saveState = true
+                                                    }
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                }
+                                            },
+                                            onLongPress = {
+                                                showAdminBottomSheet = true
+                                                Toast.makeText(context, "Admin Control Panel unlocked", Toast.LENGTH_SHORT).show()
+                                            }
+                                        )
+                                    }
+                                } else {
+                                    Modifier
+                                }
                                 Icon(
                                     imageVector = if (selected) destination.selectedIcon else destination.icon,
-                                    contentDescription = null
+                                    contentDescription = null,
+                                    modifier = iconModifier
                                 )
                             },
-                            label = { Text(stringResource(destination.labelRes)) }
+                            label = {
+                                val labelModifier = if (isFeedTab) {
+                                    Modifier.pointerInput(Unit) {
+                                        detectTapGestures(
+                                            onTap = {
+                                                navController.navigate(destination.route) {
+                                                    popUpTo(navController.graph.findStartDestination().id) {
+                                                        saveState = true
+                                                    }
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                }
+                                            },
+                                            onLongPress = {
+                                                showAdminBottomSheet = true
+                                                Toast.makeText(context, "Admin Control Panel unlocked", Toast.LENGTH_SHORT).show()
+                                            }
+                                        )
+                                    }
+                                } else {
+                                    Modifier
+                                }
+                                Text(
+                                    text = stringResource(destination.labelRes),
+                                    modifier = labelModifier
+                                )
+                            }
                         )
                     }
                 }
@@ -281,5 +342,12 @@ fun IssuegramApp() {
                 )
             }
         }
+    }
+
+    if (showAdminBottomSheet) {
+        AdminManagementBottomSheet(
+            onDismissRequest = { showAdminBottomSheet = false },
+            sheetState = adminSheetState
+        )
     }
 }

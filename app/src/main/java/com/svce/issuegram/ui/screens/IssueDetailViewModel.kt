@@ -22,6 +22,7 @@ class IssueDetailViewModel(private val getIssueDetailUseCase: GetIssueDetailUseC
             getIssueDetailUseCase(ticketId).collect { issue ->
                 _uiState.value = IssueDetailUiState(
                     issue = issue,
+                    isLiked = issue?.isLikedByMe == true,
                     isLoading = false
                 )
             }
@@ -30,8 +31,6 @@ class IssueDetailViewModel(private val getIssueDetailUseCase: GetIssueDetailUseC
 
     fun toggleLike(ticketId: String) {
         viewModelScope.launch {
-            val currLiked = _uiState.value.isLiked
-            _uiState.value = _uiState.value.copy(isLiked = !currLiked)
             toggleLikeUseCase(ticketId)
         }
     }

@@ -17,15 +17,16 @@
     <ID>CyclomaticComplexMethod:FormatLocation.kt$fun formatLocationAddress(locationName: String?, area: String?, latitude: Double? = null, longitude: Double? = null): FormattedAddress</ID>
     <ID>CyclomaticComplexMethod:FormatLocation.kt$fun resolveReporterDisplayName( authorName: String?, authorUsername: String?, authorId: String?, currentFirebaseUser: FirebaseUser? = null ): String</ID>
     <ID>CyclomaticComplexMethod:IssueMapper.kt$IssueMapper$fun fromCivicDto(dto: CivicIssueDto): Issue</ID>
-    <ID>CyclomaticComplexMethod:IssuegramApp.kt$@Composable fun IssuegramApp()</ID>
+    <ID>CyclomaticComplexMethod:IssuegramApp.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun IssuegramApp()</ID>
     <ID>CyclomaticComplexMethod:MainActivity.kt$MainActivity$override fun onCreate(savedInstanceState: Bundle?)</ID>
     <ID>CyclomaticComplexMethod:PixelCameraScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PixelCameraScreen( modifier: Modifier = Modifier, isPosting: Boolean = false, pickedLatitude: Double? = null, pickedLongitude: Double? = null, onRequestPickLocationOnMap: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp, onPostIssue: ( title: String, description: String, category: String, locationName: String, subLocation: String, latitude: Double, longitude: Double, capturedFile: File?, pickedUri: Uri? ) -&gt; Unit = { _, _, _, _, _, _, _, _, _ -&gt; } )</ID>
-    <ID>CyclomaticComplexMethod:ProfileScreen.kt$@Composable fun ProfileScreen( modifier: Modifier = Modifier, viewModel: ProfileViewModel? = null, currentUser: UserProfileDto? = null, allIssues: List&lt;CivicIssueDto&gt; = emptyList(), onUpdateAvatar: (Uri) -&gt; Unit = {}, onUpdateName: (String, () -&gt; Unit) -&gt; Unit = { _, _ -&gt; }, onRemoveAvatar: () -&gt; Unit = {}, profileBusy: Boolean = false, onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, onCreate: () -&gt; Unit = {}, errorMessage: String? = null, isModerator: Boolean = false, moderationFlags: List&lt;IssueFlagDto&gt; = emptyList(), onReviewFlag: (Long, String) -&gt; Unit = { _, _ -&gt; }, onSignOut: () -&gt; Unit = {} )</ID>
+    <ID>CyclomaticComplexMethod:ProfileScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProfileScreen( modifier: Modifier = Modifier, viewModel: ProfileViewModel? = null, currentUser: UserProfileDto? = null, allIssues: List&lt;CivicIssueDto&gt; = emptyList(), onUpdateAvatar: (Uri) -&gt; Unit = {}, onUpdateName: (String, () -&gt; Unit) -&gt; Unit = { _, _ -&gt; }, onRemoveAvatar: () -&gt; Unit = {}, profileBusy: Boolean = false, onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, onCreate: () -&gt; Unit = {}, errorMessage: String? = null, isModerator: Boolean = false, moderationFlags: List&lt;IssueFlagDto&gt; = emptyList(), onReviewFlag: (Long, String) -&gt; Unit = { _, _ -&gt; }, onSignOut: () -&gt; Unit = {} )</ID>
     <ID>EmptyFunctionBlock:HomeFeedOperationsUnitTest.kt$HomeFeedOperationsUnitTest.FakeHomeFeedAuthRepository${}</ID>
     <ID>EmptyFunctionBlock:IssuePerformanceUnitTest.kt$IssuePerformanceUnitTest.DelayedRemoteDataSource${}</ID>
     <ID>EmptyFunctionBlock:PhotoCaptureAndFeedIntegrationTest.kt$PhotoCaptureAndFeedIntegrationTest.FakePhotoIssueRemoteDataSource${}</ID>
     <ID>EmptyFunctionBlock:PhotoCaptureAndFeedIntegrationTest.kt$PhotoCaptureAndFeedIntegrationTest.FakeSimpleAuthRepository${}</ID>
     <ID>ExplicitItLambdaParameter:ProfileScreen.kt${ idx, it -&gt; com.svce.issuegram.data.mapper.IssueMapper.toCivicDto( issue = it, id = idx.toLong() + 1, authorId = activeUser.id, authorUsername = activeUser.username ) }</ID>
+    <ID>FunctionNaming:AdminManagementBottomSheet.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun AdminManagementBottomSheet( onDismissRequest: () -&gt; Unit, sheetState: SheetState, modifier: Modifier = Modifier )</ID>
     <ID>FunctionNaming:AlertsScreen.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun AlertsScreen( modifier: Modifier = Modifier, bottomBarPadding: Dp = 0.dp, onBack: (() -&gt; Unit)? = null, onIssueClick: (String) -&gt; Unit, viewModel: AlertsViewModel? = null )</ID>
     <ID>FunctionNaming:AlertsScreen.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable private fun AlertRow(notification: AppNotification)</ID>
     <ID>FunctionNaming:CategoryAvatar.kt$@Composable fun CategoryAvatar( category: IssueCategory, modifier: Modifier = Modifier, size: Dp = 40.dp, containerColor: Color = MaterialTheme.colorScheme.primaryContainer, contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer )</ID>
@@ -39,19 +40,20 @@
     <ID>FunctionNaming:FeedScreenV6.kt$@Composable private fun Timeline(events: List&lt;TimelineEvent&gt;)</ID>
     <ID>FunctionNaming:GroupedList.kt$@Composable fun GroupedList(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -&gt; Unit)</ID>
     <ID>FunctionNaming:GroupedList.kt$@Composable fun GroupedRow( index: Int, count: Int, modifier: Modifier = Modifier, onClick: (() -&gt; Unit)? = null, containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow, content: @Composable RowScope.() -&gt; Unit )</ID>
-    <ID>FunctionNaming:IssueCard.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun IssueCard(issue: Issue, modifier: Modifier = Modifier, onClick: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:IssueCard.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun IssueCard( issue: Issue, modifier: Modifier = Modifier, onToggleLike: (String) -&gt; Unit = {}, onClick: () -&gt; Unit )</ID>
     <ID>FunctionNaming:IssueDetailScreen.kt$@Composable fun IssueDetailScreen( ticketId: String, onBack: () -&gt; Unit, viewModel: IssueDetailViewModel? = null, onOpenFullMap: ((LatLng) -&gt; Unit)? = null )</ID>
     <ID>FunctionNaming:IssueDetailScreen.kt$@Composable private fun Timeline(events: List&lt;TimelineEvent&gt;)</ID>
-    <ID>FunctionNaming:IssuegramApp.kt$@Composable fun IssuegramApp()</ID>
+    <ID>FunctionNaming:IssuegramApp.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun IssuegramApp()</ID>
     <ID>FunctionNaming:IssuegramMediaImage.kt$@Composable fun IssuegramMediaImage( mediaRef: String?, contentDescription: String?, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Crop, fallbackDrawableRes: Int = R.drawable.image_placeholder )</ID>
     <ID>FunctionNaming:LocationPickerDialog.kt$@Composable fun LocationPickerDialog(initialLatitude: Double?, initialLongitude: Double?, onDismiss: () -&gt; Unit, onSelected: (Double, Double) -&gt; Unit)</ID>
     <ID>FunctionNaming:LoginScreen.kt$@Composable fun LoginScreen(modifier: Modifier = Modifier, isSigningIn: Boolean = false, onGoogleSignIn: () -&gt; Unit = {})</ID>
     <ID>FunctionNaming:MyIssuesScreen.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun MyIssuesScreen(modifier: Modifier = Modifier, issues: List&lt;Issue&gt; = emptyList(), onIssueClick: (String) -&gt; Unit)</ID>
     <ID>FunctionNaming:PixelCameraScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PixelCameraScreen( modifier: Modifier = Modifier, isPosting: Boolean = false, pickedLatitude: Double? = null, pickedLongitude: Double? = null, onRequestPickLocationOnMap: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp, onPostIssue: ( title: String, description: String, category: String, locationName: String, subLocation: String, latitude: Double, longitude: Double, capturedFile: File?, pickedUri: Uri? ) -&gt; Unit = { _, _, _, _, _, _, _, _, _ -&gt; } )</ID>
-    <ID>FunctionNaming:ProfileScreen.kt$@Composable fun ProfileScreen( modifier: Modifier = Modifier, viewModel: ProfileViewModel? = null, currentUser: UserProfileDto? = null, allIssues: List&lt;CivicIssueDto&gt; = emptyList(), onUpdateAvatar: (Uri) -&gt; Unit = {}, onUpdateName: (String, () -&gt; Unit) -&gt; Unit = { _, _ -&gt; }, onRemoveAvatar: () -&gt; Unit = {}, profileBusy: Boolean = false, onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, onCreate: () -&gt; Unit = {}, errorMessage: String? = null, isModerator: Boolean = false, moderationFlags: List&lt;IssueFlagDto&gt; = emptyList(), onReviewFlag: (Long, String) -&gt; Unit = { _, _ -&gt; }, onSignOut: () -&gt; Unit = {} )</ID>
+    <ID>FunctionNaming:ProfileScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProfileScreen( modifier: Modifier = Modifier, viewModel: ProfileViewModel? = null, currentUser: UserProfileDto? = null, allIssues: List&lt;CivicIssueDto&gt; = emptyList(), onUpdateAvatar: (Uri) -&gt; Unit = {}, onUpdateName: (String, () -&gt; Unit) -&gt; Unit = { _, _ -&gt; }, onRemoveAvatar: () -&gt; Unit = {}, profileBusy: Boolean = false, onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, onCreate: () -&gt; Unit = {}, errorMessage: String? = null, isModerator: Boolean = false, moderationFlags: List&lt;IssueFlagDto&gt; = emptyList(), onReviewFlag: (Long, String) -&gt; Unit = { _, _ -&gt; }, onSignOut: () -&gt; Unit = {} )</ID>
     <ID>FunctionNaming:StatusBadge.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun StatusBadge(status: IssueStatus, modifier: Modifier = Modifier)</ID>
     <ID>FunctionNaming:Theme.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun IssuegramTheme( darkTheme: Boolean = isSystemInDarkTheme(), motionScheme: MotionScheme = MotionScheme.expressive(), dynamicColor: Boolean = false, amoledBlack: Boolean = false, typography: Typography = ExpressiveTypography, content: @Composable () -&gt; Unit )</ID>
     <ID>ImplicitDefaultLocale:IssuePerformanceUnitTest.kt$IssuePerformanceUnitTest$String.format("%.3f", localEvictionDurationMs)</ID>
+    <ID>LongMethod:AdminManagementBottomSheet.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun AdminManagementBottomSheet( onDismissRequest: () -&gt; Unit, sheetState: SheetState, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:AlertsScreen.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun AlertsScreen( modifier: Modifier = Modifier, bottomBarPadding: Dp = 0.dp, onBack: (() -&gt; Unit)? = null, onIssueClick: (String) -&gt; Unit, viewModel: AlertsViewModel? = null )</ID>
     <ID>LongMethod:AlertsScreen.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable private fun AlertRow(notification: AppNotification)</ID>
     <ID>LongMethod:CivicMapScreen.kt$@Composable fun CivicMapScreen( modifier: Modifier = Modifier, issues: List&lt;CivicIssueDto&gt; = emptyList(), onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, isPickingLocation: Boolean = false, initialPickLocation: LatLng? = null, initialCenter: LatLng? = null, onLocationPicked: (Double, Double) -&gt; Unit = { _, _ -&gt; }, onCancelPickLocation: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp )</ID>
@@ -61,16 +63,16 @@
     <ID>LongMethod:FeedScreenV6.kt$@Composable private fun Timeline(events: List&lt;TimelineEvent&gt;)</ID>
     <ID>LongMethod:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$override suspend fun postIssue(issue: Issue): Issue</ID>
     <ID>LongMethod:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$override suspend fun fetchNotifications(): List&lt;Notification&gt;</ID>
-    <ID>LongMethod:IssueCard.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun IssueCard(issue: Issue, modifier: Modifier = Modifier, onClick: () -&gt; Unit)</ID>
+    <ID>LongMethod:IssueCard.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun IssueCard( issue: Issue, modifier: Modifier = Modifier, onToggleLike: (String) -&gt; Unit = {}, onClick: () -&gt; Unit )</ID>
     <ID>LongMethod:IssueDetailScreen.kt$@Composable fun IssueDetailScreen( ticketId: String, onBack: () -&gt; Unit, viewModel: IssueDetailViewModel? = null, onOpenFullMap: ((LatLng) -&gt; Unit)? = null )</ID>
     <ID>LongMethod:IssueDetailScreen.kt$@Composable private fun Timeline(events: List&lt;TimelineEvent&gt;)</ID>
     <ID>LongMethod:IssueMapper.kt$IssueMapper$fun fromCivicDto(dto: CivicIssueDto): Issue</ID>
-    <ID>LongMethod:IssuegramApp.kt$@Composable fun IssuegramApp()</ID>
+    <ID>LongMethod:IssuegramApp.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun IssuegramApp()</ID>
     <ID>LongMethod:LoginScreen.kt$@Composable fun LoginScreen(modifier: Modifier = Modifier, isSigningIn: Boolean = false, onGoogleSignIn: () -&gt; Unit = {})</ID>
     <ID>LongMethod:MainActivity.kt$MainActivity$override fun onCreate(savedInstanceState: Bundle?)</ID>
     <ID>LongMethod:MyIssuesScreen.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun MyIssuesScreen(modifier: Modifier = Modifier, issues: List&lt;Issue&gt; = emptyList(), onIssueClick: (String) -&gt; Unit)</ID>
     <ID>LongMethod:PixelCameraScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PixelCameraScreen( modifier: Modifier = Modifier, isPosting: Boolean = false, pickedLatitude: Double? = null, pickedLongitude: Double? = null, onRequestPickLocationOnMap: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp, onPostIssue: ( title: String, description: String, category: String, locationName: String, subLocation: String, latitude: Double, longitude: Double, capturedFile: File?, pickedUri: Uri? ) -&gt; Unit = { _, _, _, _, _, _, _, _, _ -&gt; } )</ID>
-    <ID>LongMethod:ProfileScreen.kt$@Composable fun ProfileScreen( modifier: Modifier = Modifier, viewModel: ProfileViewModel? = null, currentUser: UserProfileDto? = null, allIssues: List&lt;CivicIssueDto&gt; = emptyList(), onUpdateAvatar: (Uri) -&gt; Unit = {}, onUpdateName: (String, () -&gt; Unit) -&gt; Unit = { _, _ -&gt; }, onRemoveAvatar: () -&gt; Unit = {}, profileBusy: Boolean = false, onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, onCreate: () -&gt; Unit = {}, errorMessage: String? = null, isModerator: Boolean = false, moderationFlags: List&lt;IssueFlagDto&gt; = emptyList(), onReviewFlag: (Long, String) -&gt; Unit = { _, _ -&gt; }, onSignOut: () -&gt; Unit = {} )</ID>
+    <ID>LongMethod:ProfileScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProfileScreen( modifier: Modifier = Modifier, viewModel: ProfileViewModel? = null, currentUser: UserProfileDto? = null, allIssues: List&lt;CivicIssueDto&gt; = emptyList(), onUpdateAvatar: (Uri) -&gt; Unit = {}, onUpdateName: (String, () -&gt; Unit) -&gt; Unit = { _, _ -&gt; }, onRemoveAvatar: () -&gt; Unit = {}, profileBusy: Boolean = false, onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, onCreate: () -&gt; Unit = {}, errorMessage: String? = null, isModerator: Boolean = false, moderationFlags: List&lt;IssueFlagDto&gt; = emptyList(), onReviewFlag: (Long, String) -&gt; Unit = { _, _ -&gt; }, onSignOut: () -&gt; Unit = {} )</ID>
     <ID>LongMethod:Type.kt$fun expressiveTypography(sans: (Float) -&gt; FontFamily = ::sansFamily, display: (Float) -&gt; FontFamily = ::displayFamily): Typography</ID>
     <ID>LongParameterList:CivicMapOperationsAndPerformanceUnitTest.kt$CivicMapOperationsAndPerformanceUnitTest$( id: Long, ticketCode: String, title: String, locationName: String, latitude: Double, longitude: Double, isResolved: Boolean, status: String, category: String )</ID>
     <ID>LongParameterList:CivicMapScreen.kt$( modifier: Modifier = Modifier, issues: List&lt;CivicIssueDto&gt; = emptyList(), onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, isPickingLocation: Boolean = false, initialPickLocation: LatLng? = null, initialCenter: LatLng? = null, onLocationPicked: (Double, Double) -&gt; Unit = { _, _ -&gt; }, onCancelPickLocation: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp )</ID>
@@ -82,6 +84,7 @@
     <ID>LongParameterList:PixelCameraScreen.kt$( modifier: Modifier = Modifier, isPosting: Boolean = false, pickedLatitude: Double? = null, pickedLongitude: Double? = null, onRequestPickLocationOnMap: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp, onPostIssue: ( title: String, description: String, category: String, locationName: String, subLocation: String, latitude: Double, longitude: Double, capturedFile: File?, pickedUri: Uri? ) -&gt; Unit = { _, _, _, _, _, _, _, _, _ -&gt; } )</ID>
     <ID>LongParameterList:ProfileScreen.kt$( modifier: Modifier = Modifier, viewModel: ProfileViewModel? = null, currentUser: UserProfileDto? = null, allIssues: List&lt;CivicIssueDto&gt; = emptyList(), onUpdateAvatar: (Uri) -&gt; Unit = {}, onUpdateName: (String, () -&gt; Unit) -&gt; Unit = { _, _ -&gt; }, onRemoveAvatar: () -&gt; Unit = {}, profileBusy: Boolean = false, onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, onCreate: () -&gt; Unit = {}, errorMessage: String? = null, isModerator: Boolean = false, moderationFlags: List&lt;IssueFlagDto&gt; = emptyList(), onReviewFlag: (Long, String) -&gt; Unit = { _, _ -&gt; }, onSignOut: () -&gt; Unit = {} )</ID>
     <ID>LongParameterList:Theme.kt$( darkTheme: Boolean = isSystemInDarkTheme(), motionScheme: MotionScheme = MotionScheme.expressive(), dynamicColor: Boolean = false, amoledBlack: Boolean = false, typography: Typography = ExpressiveTypography, content: @Composable () -&gt; Unit )</ID>
+    <ID>MagicNumber:AdminManagementBottomSheet.kt$0xFF1D9BF0</ID>
     <ID>MagicNumber:AlertsViewModel.kt$AlertsViewModel$5000</ID>
     <ID>MagicNumber:CategoryAvatar.kt$0.5f</ID>
     <ID>MagicNumber:CivicMapScreen.kt$0xFF1B5E20</ID>
@@ -234,7 +237,7 @@
     <ID>MagicNumber:PixelCameraScreen.kt$500</ID>
     <ID>MagicNumber:PixelCameraScreen.kt$77.5946</ID>
     <ID>MagicNumber:ProfileScreen.kt$0xFF0E3D4F</ID>
-    <ID>MagicNumber:ProfileScreen.kt$0xFF0F2A30</ID>
+    <ID>MagicNumber:ProfileScreen.kt$0xFF1D9BF0</ID>
     <ID>MagicNumber:ProfileScreen.kt$0xFF30363D</ID>
     <ID>MagicNumber:ProfileScreen.kt$0xFF35254A</ID>
     <ID>MagicNumber:ProfileScreen.kt$0xFF4CAF50</ID>
@@ -293,6 +296,7 @@
     <ID>MatchingDeclarationName:ShapeDefaults.kt$IssuegramShapeDefaults</ID>
     <ID>MatchingDeclarationName:StatusBadge.kt$StatusTone</ID>
     <ID>MatchingDeclarationName:Timeline.kt$TimelineEvent</ID>
+    <ID>MaxLineLength:AdminManagementBottomSheet.kt$Toast.makeText(sheetContext, "Failed: ${err.localizedMessage}", Toast.LENGTH_LONG).show()</ID>
     <ID>MaxLineLength:AppPermissionsAuditUnitTest.kt$AppPermissionsAuditUnitTest$*</ID>
     <ID>MaxLineLength:AppPermissionsAuditUnitTest.kt$AppPermissionsAuditUnitTest$assertFalse("App should not request MANAGE_EXTERNAL_STORAGE", content.contains("android.permission.MANAGE_EXTERNAL_STORAGE"))</ID>
     <ID>MaxLineLength:AppPermissionsAuditUnitTest.kt$AppPermissionsAuditUnitTest$assertTrue("Manifest must declare ACCESS_COARSE_LOCATION", content.contains("android.permission.ACCESS_COARSE_LOCATION"))</ID>
@@ -329,7 +333,6 @@
     <ID>MaxLineLength:FeedScreenV6.kt$sharedContentState = rememberSharedContentState(key = "issue_title_${issue.ticketId}")</ID>
     <ID>MaxLineLength:FeedScreenV6.kt$val captionText = issue.description?.takeIf { it.isNotBlank() } ?: issue.locationName</ID>
     <ID>MaxLineLength:FeedScreenV6.kt$val detailDescription = currentIssue?.description?.takeIf { it.isNotBlank() } ?: currentIssue?.title.orEmpty()</ID>
-    <ID>MaxLineLength:FeedScreenV6.kt$var isPostLiked by rememberSaveable(issue.ticketId) { mutableStateOf(false) }</ID>
     <ID>MaxLineLength:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$override suspend</ID>
     <ID>MaxLineLength:FormatLocation.kt$first.length &lt;= 6 || first.all { it.isDigit() || it.isLetter() &amp;&amp; it.isLowerCase() || it == '/' || it == '-' || it == '#' }</ID>
     <ID>MaxLineLength:FormatLocation.kt$fun</ID>
@@ -351,6 +354,7 @@
     <ID>MaxLineLength:IssueSyncUnitTest.kt$IssueSyncUnitTest$assertFalse("Local feed should no longer contain deleted issue", localFeed.any { it.ticketId == issue.ticketId })</ID>
     <ID>MaxLineLength:IssueSyncUnitTest.kt$IssueSyncUnitTest.FakeIssueRemoteDataSource$locationName = locationName?.trim()?.ifBlank { remoteStorage[idx].locationName } ?: remoteStorage[idx].locationName</ID>
     <ID>MaxLineLength:IssueSyncUnitTest.kt$IssueSyncUnitTest.FakeIssueRemoteDataSource$override suspend</ID>
+    <ID>MaxLineLength:IssuegramApp.kt$Toast.makeText(context, "Admin Control Panel unlocked", Toast.LENGTH_SHORT).show()</ID>
     <ID>MaxLineLength:IssuegramApp.kt$TopLevelDestination$MyIssues : TopLevelDestination</ID>
     <ID>MaxLineLength:IssuegramApp.kt$TopLevelDestination$Notifications : TopLevelDestination</ID>
     <ID>MaxLineLength:IssuegramApp.kt$TopLevelDestination$private enum</ID>
@@ -398,6 +402,7 @@
     <ID>MaxLineLength:ProfileOperationsUnitTest.kt$ProfileOperationsUnitTest.&lt;no name provided&gt;$val modified = it.copy(title = title, description = description, locationName = locationName ?: it.locationName)</ID>
     <ID>MaxLineLength:ProfileScreen.kt$color = if (issue.isResolved) Color(0xFF4CAF50) else Color(0xFFFFA726)</ID>
     <ID>MaxLineLength:ProfileScreen.kt$style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)</ID>
+    <ID>MaxLineLength:ProfileScreen.kt$text = "Are you sure you want to permanently delete \"${target.title}\"? This action cannot be undone."</ID>
     <ID>MaxLineLength:ProfileViewModel.kt$ProfileViewModel$fun</ID>
     <ID>MaxLineLength:ReportDraftStore.kt$ReportDraftStore$fun read(): ReportDraft</ID>
     <ID>MaxLineLength:ReportRules.kt$ReportRules$val categories = listOf("Public Works", "Power &amp; Lighting", "Water &amp; Sanitation", "Smart City / IT", "Roads &amp; Transit")</ID>
@@ -427,12 +432,14 @@
     <ID>TooGenericExceptionThrown:IssueSyncUnitTest.kt$IssueSyncUnitTest.FakeIssueRemoteDataSource$throw RuntimeException("Network unreachable")</ID>
     <ID>TooGenericExceptionThrown:IssueSyncUnitTest.kt$IssueSyncUnitTest.FakeIssueRemoteDataSource$throw RuntimeException("Supabase POST error: 500")</ID>
     <ID>TooManyFunctions:ExpressiveMotion.kt$com.svce.issuegram.ui.motion.ExpressiveMotion.kt</ID>
-    <ID>UnusedParameter:FeedScreenV6.kt$onIssueClick: (String) -&gt; Unit = {}</ID>
     <ID>UnusedParameter:HomeFeedOperationsUnitTest.kt$HomeFeedOperationsUnitTest$categoryName: String</ID>
     <ID>UnusedParameter:ProfileScreen.kt$onCreate: () -&gt; Unit = {}</ID>
+    <ID>UnusedParameter:ProfileScreen.kt$onRemoveAvatar: () -&gt; Unit = {}</ID>
+    <ID>UnusedPrivateProperty:AdminManagementBottomSheet.kt$private val ADMIN_BUTTON_COLOR = Color(0xFF1D9BF0)</ID>
     <ID>UnusedPrivateProperty:FeedScreenV6.kt$var isLiked by rememberSaveable { mutableStateOf(false) }</ID>
     <ID>UnusedPrivateProperty:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$val uploadTask = storageRef.putBytes(bytes).await()</ID>
     <ID>UnusedPrivateProperty:IssueSyncUnitTest.kt$IssueSyncUnitTest$val edited = editResult.getOrThrow()</ID>
+    <ID>UnusedPrivateProperty:IssuegramApp.kt$private const val ADMIN_TRIGGER_HOLD_MILLIS = 3000L</ID>
     <ID>UnusedPrivateProperty:ProfileOperationsUnitTest.kt$ProfileOperationsUnitTest$val collectIssuesJob = backgroundScope.launch { viewModel.userPostedIssues.collect {} }</ID>
     <ID>UnusedPrivateProperty:ProfileOperationsUnitTest.kt$ProfileOperationsUnitTest$val collectJob = backgroundScope.launch { viewModel.currentUser.collect {} }</ID>
     <ID>UnusedPrivateProperty:ProfileOperationsUnitTest.kt$ProfileOperationsUnitTest$val collectUserJob = backgroundScope.launch { viewModel.currentUser.collect {} }</ID>

@@ -20,7 +20,8 @@ object UserMapper {
             username = username,
             avatarUrl = firebaseUser.photoUrl?.toString(),
             bio = "Civic Citizen Reporter",
-            isModerator = false
+            isModerator = false,
+            isAdmin = false
         )
     }
 }

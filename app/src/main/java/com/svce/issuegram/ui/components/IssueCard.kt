@@ -1,6 +1,5 @@
 package com.svce.issuegram.ui.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,8 +27,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +35,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.svce.issuegram.R
 import com.svce.issuegram.data.model.Issue
 import com.svce.issuegram.ui.motion.DigitRoll
@@ -49,12 +48,16 @@ import com.svce.issuegram.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun IssueCard(issue: Issue, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun IssueCard(
+    issue: Issue,
+    modifier: Modifier = Modifier,
+    onToggleLike: (String) -> Unit = {},
+    onClick: () -> Unit
+) {
     val context = LocalContext.current
     val haptic = rememberHaptics()
-    var liked by rememberSaveable(issue.ticketId) { mutableStateOf(false) }
-    val likeCount = issue.likes + if (liked) 1 else 0
-    val photo = rememberPhotoBitmap(issue.photoUri)
+    val liked = issue.isLikedByMe
+    val likeCount = issue.likes
 
     Card(
         onClick = {
@@ -75,9 +78,12 @@ fun IssueCard(issue: Issue, modifier: Modifier = Modifier, onClick: () -> Unit) 
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             contentAlignment = Alignment.Center
         ) {
-            if (photo != null) {
-                Image(
-                    bitmap = photo,
+            if (!issue.photoUri.isNullOrBlank()) {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(issue.photoUri)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = stringResource(R.string.issue_photo_desc, issue.ticketId),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
@@ -141,8 +147,8 @@ fun IssueCard(issue: Issue, modifier: Modifier = Modifier, onClick: () -> Unit) 
                     IconToggleButton(
                         checked = liked,
                         onCheckedChange = {
-                            liked = it
                             haptic(if (it) ExpressiveHaptic.Confirm else ExpressiveHaptic.Tick)
+                            onToggleLike(issue.ticketId)
                         },
                         modifier = Modifier.statePulse(liked)
                     ) {

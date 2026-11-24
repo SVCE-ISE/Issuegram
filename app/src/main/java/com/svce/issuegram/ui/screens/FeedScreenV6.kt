@@ -409,8 +409,7 @@ fun FeedScreenV6(
                                         containerColor = MaterialTheme.colorScheme.surfaceContainerLow
                                     ),
                                     onClick = {
-                                        selectedTicketId = issue.ticketId
-                                        onDetailExpandedChange(true)
+                                        onIssueClick(issue.ticketId)
                                     }
                                 ) {
                                     Column(modifier = Modifier.fillMaxWidth()) {
@@ -496,8 +495,7 @@ fun FeedScreenV6(
                                                 Button(
                                                     onClick = {
                                                         haptic(ExpressiveHaptic.Tap)
-                                                        selectedTicketId = issue.ticketId
-                                                        onDetailExpandedChange(true)
+                                                        onIssueClick(issue.ticketId)
                                                     },
                                                     shape = CircleShape,
                                                     colors = ButtonDefaults.buttonColors(
@@ -521,12 +519,11 @@ fun FeedScreenV6(
                                                     )
                                                 }
 
-                                                var isPostLiked by rememberSaveable(issue.ticketId) { mutableStateOf(false) }
+                                                val isPostLiked = issue.isLikedByMe
 
                                                 Surface(
                                                     onClick = {
                                                         haptic(ExpressiveHaptic.Tap)
-                                                        isPostLiked = !isPostLiked
                                                         viewModel?.toggleLike(issue.ticketId)
                                                     },
                                                     shape = MaterialShapes.Cookie9Sided.toShape(),
@@ -913,12 +910,11 @@ fun FeedScreenV6(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            var isDetailLiked by rememberSaveable(currentIssue?.ticketId) { mutableStateOf(false) }
+                            val isDetailLiked = currentIssue?.isLikedByMe == true
 
                             Surface(
                                 onClick = {
                                     haptic(ExpressiveHaptic.Tap)
-                                    isDetailLiked = !isDetailLiked
                                     currentIssue?.let { viewModel?.toggleLike(it.ticketId) }
                                 },
                                 shape = CircleShape,

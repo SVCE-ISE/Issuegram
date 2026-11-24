@@ -83,7 +83,6 @@ import com.svce.issuegram.domain.formatLocationAddress
 import com.svce.issuegram.domain.resolveReporterDisplayName
 import com.svce.issuegram.ui.components.Eyebrow
 import com.svce.issuegram.ui.components.badgeTone
-import com.svce.issuegram.ui.components.rememberPhotoBitmap
 import com.svce.issuegram.ui.components.shareIssue
 import com.svce.issuegram.ui.theme.ExpressiveTextStyles
 import com.svce.issuegram.ui.theme.Spacing
@@ -146,7 +145,6 @@ fun IssueDetailScreen(
     }
 
     val detailScrollState = rememberScrollState()
-    val photoBitmap = rememberPhotoBitmap(issue.photoUri)
 
     Box(
         modifier = Modifier
@@ -165,14 +163,7 @@ fun IssueDetailScreen(
                     .fillMaxWidth()
                     .height(440.dp)
             ) {
-                if (photoBitmap != null) {
-                    Image(
-                        bitmap = photoBitmap,
-                        contentDescription = issue.title,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else if (!issue.photoUri.isNullOrBlank()) {
+                if (!issue.photoUri.isNullOrBlank()) {
                     AsyncImage(
                         model = ImageRequest.Builder(context)
                             .data(issue.photoUri)
