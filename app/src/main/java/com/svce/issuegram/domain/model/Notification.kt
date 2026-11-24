@@ -1,10 +1,12 @@
 package com.svce.issuegram.domain.model
 
+import androidx.compose.runtime.Immutable
 import com.svce.issuegram.data.model.IssueStatus
 import java.time.Instant
 
 enum class AlertKind { Status, Reply }
 
+@Immutable
 data class Notification(
     val id: String,
     val ticketId: String,

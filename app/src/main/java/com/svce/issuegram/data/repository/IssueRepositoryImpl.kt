@@ -105,7 +105,6 @@ class IssueRepositoryImpl(
                 authorUsername = authorUsername ?: posted.authorUsername,
             )
             localDataSource.addIssue(finalIssue)
-            com.svce.issuegram.data.IssueStore.issues.add(0, finalIssue)
             Result.success(finalIssue)
         } catch (e: Exception) {
             Result.failure(e)
@@ -125,9 +124,6 @@ class IssueRepositoryImpl(
     override suspend fun deleteIssue(ticketId: String): Result<Unit> {
         // Immediate optimistic local deletion
         localDataSource.deleteIssue(ticketId)
-        com.svce.issuegram.data.IssueStore.issues.removeAll {
-            it.ticketId.equals(ticketId, ignoreCase = true) || it.ticketId.endsWith(ticketId, ignoreCase = true)
-        }
         return try {
             remoteDataSource.deleteIssue(ticketId)
             Result.success(Unit)
@@ -147,12 +143,6 @@ class IssueRepositoryImpl(
             val updated = result.getOrNull()
             if (updated != null) {
                 localDataSource.updateIssue(updated)
-                val storeIdx = com.svce.issuegram.data.IssueStore.issues.indexOfFirst {
-                    it.ticketId.equals(ticketId, ignoreCase = true) || it.ticketId.endsWith(ticketId, ignoreCase = true)
-                }
-                if (storeIdx != -1) {
-                    com.svce.issuegram.data.IssueStore.issues[storeIdx] = updated
-                }
                 Result.success(updated)
             } else {
                 val current = localDataSource.issuesFlow.first().firstOrNull {
@@ -165,12 +155,6 @@ class IssueRepositoryImpl(
                         locationName = locationName?.trim()?.ifBlank { current.locationName } ?: current.locationName,
                     )
                     localDataSource.updateIssue(locallyUpdated)
-                    val storeIdx = com.svce.issuegram.data.IssueStore.issues.indexOfFirst {
-                        it.ticketId.equals(ticketId, ignoreCase = true) || it.ticketId.endsWith(ticketId, ignoreCase = true)
-                    }
-                    if (storeIdx != -1) {
-                        com.svce.issuegram.data.IssueStore.issues[storeIdx] = locallyUpdated
-                    }
                     Result.success(locallyUpdated)
                 } else {
                     result
@@ -185,8 +169,6 @@ class IssueRepositoryImpl(
         return try {
             val remote = remoteDataSource.fetchIssues()
             localDataSource.updateIssues(remote)
-            com.svce.issuegram.data.IssueStore.issues.clear()
-            com.svce.issuegram.data.IssueStore.issues.addAll(remote)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

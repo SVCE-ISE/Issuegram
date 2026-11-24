@@ -1,6 +1,7 @@
 package com.svce.issuegram.data.model
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Immutable
 import com.svce.issuegram.R
 import java.time.Instant
 
@@ -24,6 +25,7 @@ enum class IssueStatus(@StringRes val labelRes: Int) {
     Reopened(R.string.status_reopened),
 }
 
+@Immutable
 data class IssueMilestone(
     val id: Long,
     val stepOrder: Int,
@@ -33,6 +35,7 @@ data class IssueMilestone(
     val isCompleted: Boolean,
 )
 
+@Immutable
 data class Issue(
     /** Human-readable ticket ID, e.g. "IG-2481". */
     val ticketId: String,

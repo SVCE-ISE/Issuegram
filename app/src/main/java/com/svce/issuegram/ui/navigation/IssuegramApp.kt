@@ -48,7 +48,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.svce.issuegram.IssuegramApplication
-import com.svce.issuegram.data.IssueStore
+
 import com.svce.issuegram.data.mapper.IssueMapper
 import com.svce.issuegram.data.model.IssueCategory
 import com.svce.issuegram.di.ViewModelFactory
@@ -177,7 +177,9 @@ fun IssuegramApp() {
                 )
             }
             composable(TopLevelDestination.MyIssues.route) {
+                val feedIssues by appContainer.getFeedIssuesUseCase().collectAsState(initial = emptyList())
                 MyIssuesScreen(
+                    issues = feedIssues,
                     onIssueClick = { ticketId ->
                         navController.navigate("issue/$ticketId")
                     },
@@ -232,17 +234,6 @@ fun IssuegramApp() {
                                 authorUsername = authorUsername,
                             )
                         }
-                        IssueStore.add(
-                            title = title,
-                            description = description,
-                            category = cat,
-                            locationName = locationName,
-                            photoUri = photoUri,
-                            latitude = lat,
-                            longitude = lon,
-                            authorName = authorName,
-                            authorUsername = authorUsername,
-                        )
                         navController.navigate(TopLevelDestination.Feed.route) {
                             popUpTo(TopLevelDestination.Feed.route) { inclusive = false }
                         }

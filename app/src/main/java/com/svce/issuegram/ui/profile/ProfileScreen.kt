@@ -158,42 +158,16 @@ fun ProfileScreen(
 
     val deletedTicketCodes = remember { mutableStateListOf<String>() }
 
-    val userPostedIssues = remember(allIssues, activeUser.id, vmIssues, com.svce.issuegram.data.IssueStore.issues.size, deletedTicketCodes.toList()) {
+    val userPostedIssues = remember(allIssues, activeUser.id, vmIssues, deletedTicketCodes.toList()) {
         val raw = if (allIssues.isNotEmpty()) {
             allIssues.filter { it.authorId == activeUser.id }
-        } else if (vmIssues.isNotEmpty()) {
+        } else {
             vmIssues.mapIndexed { idx, it ->
                 com.svce.issuegram.data.mapper.IssueMapper.toCivicDto(
                     issue = it,
                     id = idx.toLong() + 1,
                     authorId = activeUser.id,
                     authorUsername = activeUser.username,
-                )
-            }
-        } else {
-            com.svce.issuegram.data.IssueStore.issues.filter {
-                it.isMine ||
-                it.authorName.equals(activeUser.displayName, ignoreCase = true) ||
-                (firebaseUser?.displayName != null && it.authorName.equals(firebaseUser?.displayName, ignoreCase = true))
-            }.mapIndexed { idx, it ->
-                CivicIssueDto(
-                    id = idx.toLong() + 1,
-                    ticketCode = it.ticketId,
-                    authorId = activeUser.id,
-                    authorUsername = activeUser.username,
-                    title = it.title,
-                    caption = it.description.orEmpty(),
-                    category = it.category.name,
-                    locationName = it.locationName,
-                    latitude = it.latitude,
-                    longitude = it.longitude,
-                    status = when (it.status) {
-                        com.svce.issuegram.data.model.IssueStatus.Resolved -> "RESOLVED"
-                        com.svce.issuegram.data.model.IssueStatus.InProgress -> "IN_PROGRESS"
-                        else -> "REPORTED"
-                    },
-                    mediaUrls = listOfNotNull(it.photoUri),
-                    createdAt = it.createdAt.toString(),
                 )
             }
         }
@@ -649,9 +623,6 @@ fun ProfileScreen(
                                     SwipeToDismissBoxValue.EndToStart -> {
                                         // Instant optimistic deletion from UI and data stores
                                         deletedTicketCodes.add(issue.ticketCode)
-                                        com.svce.issuegram.data.IssueStore.issues.removeAll {
-                                            it.ticketId.equals(issue.ticketCode, ignoreCase = true) || it.ticketId.endsWith(issue.ticketCode, ignoreCase = true)
-                                        }
                                         viewModel?.deleteIssue(issue.ticketCode)
                                         true
                                     }

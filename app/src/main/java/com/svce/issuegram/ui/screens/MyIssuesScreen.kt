@@ -17,11 +17,13 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.svce.issuegram.R
-import com.svce.issuegram.data.IssueStore
+import com.svce.issuegram.data.model.Issue
 import com.svce.issuegram.ui.components.EmptyState
 import com.svce.issuegram.ui.components.IssueCard
 import com.svce.issuegram.ui.motion.rememberReducedMotion
@@ -33,9 +35,10 @@ import java.util.Locale
 @Composable
 fun MyIssuesScreen(
     modifier: Modifier = Modifier,
+    issues: List<Issue> = emptyList(),
     onIssueClick: (String) -> Unit,
 ) {
-    val myIssues = IssueStore.issues.filter { it.isMine }
+    val myIssues = issues.filter { it.isMine }
     val listState = rememberLazyListState()
     val reducedMotion = rememberReducedMotion()
 

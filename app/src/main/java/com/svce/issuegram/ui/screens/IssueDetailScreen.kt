@@ -80,7 +80,7 @@ import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.svce.issuegram.R
-import com.svce.issuegram.data.IssueStore
+
 import com.svce.issuegram.data.TimelineEvent
 import com.svce.issuegram.data.timeline
 import com.svce.issuegram.ui.components.Eyebrow
@@ -133,10 +133,7 @@ fun IssueDetailScreen(
 
     val uiState by viewModel?.uiState?.collectAsState() ?: remember { mutableStateOf(null) }
     val context = LocalContext.current
-    val issue = uiState?.issue ?: remember(ticketId) {
-        IssueStore.issues.firstOrNull { it.ticketId.equals(ticketId, ignoreCase = true) }
-            ?: IssueStore.issues.firstOrNull { it.ticketId.endsWith(ticketId, ignoreCase = true) }
-    }
+    val issue = uiState?.issue
 
     if (issue == null) {
         Box(

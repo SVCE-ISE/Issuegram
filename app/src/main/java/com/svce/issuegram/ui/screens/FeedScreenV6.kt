@@ -37,6 +37,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -112,7 +115,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.svce.issuegram.R
-import com.svce.issuegram.data.IssueStore
+
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import coil.compose.AsyncImage
@@ -192,7 +195,7 @@ fun FeedScreenV6(
         onDetailExpandedChange(false)
     }
 
-    val feedScrollState = rememberScrollState()
+    val feedListState = rememberLazyListState()
     val context = LocalContext.current
     val issues = uiState?.issues.orEmpty()
     val isRefreshing = uiState?.isRefreshing == true
@@ -236,154 +239,171 @@ fun FeedScreenV6(
                     state = pullToRefreshState,
                     indicator = {}
                 ) {
-                    Column(
+                    LazyColumn(
+                        state = feedListState,
                         modifier = Modifier
                             .fillMaxSize()
-                            .verticalScroll(feedScrollState)
-                            .background(MaterialTheme.colorScheme.surface)
-                            .padding(bottom = bottomBarPadding + Spacing.space6),
+                            .background(MaterialTheme.colorScheme.surface),
+                        contentPadding = PaddingValues(bottom = bottomBarPadding + Spacing.space6),
                     ) {
                         // --- TOP APP BAR ---
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .statusBarsPadding()
-                                .padding(horizontal = Spacing.space4, vertical = Spacing.space2),
-                        ) {
-                            // Top Left: Alerts
-                            Surface(
-                                onClick = onAlertsClick,
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        item(key = "feed_top_bar", contentType = "header") {
+                            Box(
                                 modifier = Modifier
-                                    .size(40.dp)
-                                    .align(Alignment.CenterStart),
+                                    .fillMaxWidth()
+                                    .statusBarsPadding()
+                                    .padding(horizontal = Spacing.space4, vertical = Spacing.space2),
                             ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.NotificationsNone,
-                                        contentDescription = stringResource(R.string.tab_notifications),
-                                        tint = MaterialTheme.colorScheme.onSurface,
-                                        modifier = Modifier.size(22.dp),
-                                    )
-                                    if (hasUnread) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(9.dp)
-                                                .align(Alignment.TopEnd)
-                                                .offset(x = (-8).dp, y = 8.dp)
-                                                .clip(CircleShape)
-                                                .background(MaterialTheme.colorScheme.error),
+                                // Top Left: Alerts
+                                Surface(
+                                    onClick = onAlertsClick,
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .align(Alignment.CenterStart),
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.NotificationsNone,
+                                            contentDescription = stringResource(R.string.tab_notifications),
+                                            tint = MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier.size(22.dp),
                                         )
+                                        if (hasUnread) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(9.dp)
+                                                    .align(Alignment.TopEnd)
+                                                    .offset(x = (-8).dp, y = 8.dp)
+                                                    .clip(CircleShape)
+                                                    .background(MaterialTheme.colorScheme.error),
+                                            )
+                                        }
                                     }
                                 }
-                            }
 
-                            // Top Middle: Issuegram Wordmark
-                            Image(
-                                painter = painterResource(R.drawable.issuegram),
-                                contentDescription = stringResource(R.string.app_name),
-                                modifier = Modifier
-                                    .height(28.dp)
-                                    .align(Alignment.Center),
-                                contentScale = ContentScale.Fit,
-                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
-                            )
+                                // Top Middle: Issuegram Wordmark
+                                Image(
+                                    painter = painterResource(R.drawable.issuegram),
+                                    contentDescription = stringResource(R.string.app_name),
+                                    modifier = Modifier
+                                        .height(28.dp)
+                                        .align(Alignment.Center),
+                                    contentScale = ContentScale.Fit,
+                                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+                                )
 
-                            // Top Right: Profile
-                            Surface(
-                                onClick = onProfileClick,
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.primaryContainer,
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .align(Alignment.CenterEnd),
-                            ) {
-                                if (!userPhotoUrl.isNullOrBlank()) {
-                                    AsyncImage(
-                                        model = userPhotoUrl,
-                                        contentDescription = "Profile",
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                } else {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Text(
-                                            text = userInitials,
-                                            style = MaterialTheme.typography.titleSmall,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                // Top Right: Profile
+                                Surface(
+                                    onClick = onProfileClick,
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .align(Alignment.CenterEnd),
+                                ) {
+                                    if (!userPhotoUrl.isNullOrBlank()) {
+                                        AsyncImage(
+                                            model = userPhotoUrl,
+                                            contentDescription = "Profile",
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier.fillMaxSize(),
                                         )
+                                    } else {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Text(
+                                                text = userInitials,
+                                                style = MaterialTheme.typography.titleSmall,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
 
                         // Contained Refresh Status Banner / Pill (visible while refreshing)
-                        AnimatedVisibility(
-                            visible = isRefreshing,
-                            enter = fadeIn() + expandVertically(),
-                            exit = fadeOut() + shrinkVertically(),
-                            modifier = Modifier.align(Alignment.CenterHorizontally),
-                        ) {
-                            Surface(
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                                shadowElevation = 3.dp,
-                                modifier = Modifier.padding(top = Spacing.space2),
+                        item(key = "feed_refresh_indicator", contentType = "status") {
+                            AnimatedVisibility(
+                                visible = isRefreshing,
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically(),
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = Spacing.space3, vertical = Spacing.space2),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(Spacing.space2),
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = Spacing.space2),
+                                    contentAlignment = Alignment.Center,
                                 ) {
-                                    ContainedLoadingIndicator(
-                                        modifier = Modifier.size(20.dp),
-                                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                        indicatorColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    )
-                                    Text(
-                                        text = "Refreshing feed...",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontWeight = FontWeight.Medium,
-                                    )
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                                        shadowElevation = 3.dp,
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = Spacing.space3, vertical = Spacing.space2),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(Spacing.space2),
+                                        ) {
+                                            ContainedLoadingIndicator(
+                                                modifier = Modifier.size(20.dp),
+                                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                                indicatorColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            )
+                                            Text(
+                                                text = "Refreshing feed...",
+                                                style = MaterialTheme.typography.labelMedium,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontWeight = FontWeight.Medium,
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
 
-                        Spacer(Modifier.height(Spacing.space3))
+                        item(key = "feed_top_spacer") {
+                            Spacer(Modifier.height(Spacing.space3))
+                        }
 
                         if (uiState?.isLoading == true && issues.isEmpty()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f, fill = true),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                CircularProgressIndicator(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    strokeWidth = 3.dp,
-                                )
+                            item(key = "feed_loading", contentType = "loading") {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 120.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    CircularProgressIndicator(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        strokeWidth = 3.dp,
+                                    )
+                                }
                             }
                         } else if (issues.isEmpty()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f, fill = true)
-                                    .padding(vertical = Spacing.space6),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                EmptyState(
-                                    icon = Icons.Outlined.BookmarkBorder,
-                                    title = stringResource(R.string.my_issues_empty_title),
-                                    body = "Civic issues reported in your community will appear here.",
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
+                            item(key = "feed_empty", contentType = "empty") {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 120.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    EmptyState(
+                                        icon = Icons.Outlined.BookmarkBorder,
+                                        title = stringResource(R.string.my_issues_empty_title),
+                                        body = "Civic issues reported in your community will appear here.",
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
+                                }
                             }
                         } else {
-                        issues.forEach { issue ->
-                            key(issue.ticketId) {
+                            items(
+                                items = issues,
+                                key = { it.ticketId },
+                                contentType = { "issue_card" },
+                            ) { issue ->
                                 val issuePhoto = issue.photoUri
                                 val hasPhoto = !issuePhoto.isNullOrBlank()
 
@@ -543,12 +563,13 @@ fun FeedScreenV6(
                                 }
                             }
                         }
-                    }
 
-                    Spacer(Modifier.height(Spacing.space8))
+                        item(key = "feed_bottom_spacer") {
+                            Spacer(Modifier.height(Spacing.space8))
+                        }
+                    }
                 }
-            }
-        } else {
+            } else {
                 // =============================================================
                 // DETAILED SCREEN: Shared photo (edge-to-edge behind status bar) + title landed on photo
                 // =============================================================
