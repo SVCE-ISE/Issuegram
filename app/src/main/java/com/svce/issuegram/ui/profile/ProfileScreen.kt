@@ -48,7 +48,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -69,9 +68,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
 import com.svce.issuegram.R
 import com.svce.issuegram.data.model.CivicIssueDto
 import com.svce.issuegram.data.model.IssueFlagDto
@@ -112,39 +108,6 @@ fun ProfileScreen(
     val effectiveBusy = profileBusy || vmBusy
     val effectiveErrorMessage = errorMessage ?: vmError
 
-    var firebaseUser by remember { mutableStateOf(Firebase.auth.currentUser) }
-
-    DisposableEffect(Unit) {
-        val listener = FirebaseAuth.AuthStateListener { auth ->
-            firebaseUser = auth.currentUser
-        }
-        val auth = Firebase.auth
-        auth.addAuthStateListener(listener)
-        onDispose {
-            auth.removeAuthStateListener(listener)
-        }
-    }
-
-    var customAvatarUri by remember { mutableStateOf<Uri?>(null) }
-    var customDisplayName by remember { mutableStateOf<String?>(null) }
-    var userIsAdmin by remember { mutableStateOf(false) }
-
-    val currentUid = firebaseUser?.uid
-    DisposableEffect(currentUid) {
-        if (currentUid.isNullOrBlank()) {
-            userIsAdmin = false
-            return@DisposableEffect onDispose {}
-        }
-        val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
-        val registration = firestore.collection("users").document(currentUid)
-            .addSnapshotListener { snapshot, _ ->
-                if (snapshot != null && snapshot.exists()) {
-                    userIsAdmin = snapshot.getBoolean("isAdmin") == true
-                }
-            }
-        onDispose { registration.remove() }
-    }
-
     val activeUser = currentUser ?: vmUser?.let { domainUser ->
         UserProfileDto(
             id = domainUser.id,
@@ -153,40 +116,26 @@ fun ProfileScreen(
             avatarUrl = domainUser.avatarUrl,
             email = domainUser.email,
             bio = domainUser.bio,
-            isAdmin = domainUser.isAdmin || userIsAdmin
+            isAdmin = domainUser.isAdmin
         )
-    } ?: remember(firebaseUser, customAvatarUri, customDisplayName, userIsAdmin) {
-        val email = firebaseUser?.email.orEmpty()
-        val derivedUsername = email.substringBefore('@').ifBlank { "citizen_${firebaseUser?.uid?.take(6) ?: "user"}" }
-        val name = customDisplayName
-            ?: firebaseUser?.displayName?.takeIf { it.isNotBlank() }
-            ?: email.substringBefore('@').takeIf {
-                it.isNotBlank()
-            }?.replace('.', ' ')?.replace('_', ' ')?.replaceFirstChar { it.uppercase() }
-            ?: "Citizen Reporter"
-        val photo = customAvatarUri?.toString()
-            ?: firebaseUser?.photoUrl?.toString()
-
-        UserProfileDto(
-            id = firebaseUser?.uid ?: "user_me",
-            username = derivedUsername,
-            displayName = name,
-            avatarUrl = photo,
-            email = email,
-            bio = "Civic Citizen Reporter",
-            isAdmin = userIsAdmin
-        )
-    }
-    val isAdminEffective = activeUser.isAdmin || userIsAdmin
+    } ?: UserProfileDto(
+        id = "user_me",
+        username = "citizen",
+        displayName = "Citizen Reporter",
+        avatarUrl = null,
+        email = "",
+        bio = "Civic Citizen Reporter",
+        isAdmin = false
+    )
+    val isAdminEffective = activeUser.isAdmin
     val username = activeUser.username
     val avatarRef = activeUser.avatarUrl
-    val userEmail = activeUser.email ?: firebaseUser?.email.orEmpty()
+    val userEmail = activeUser.email.orEmpty()
 
     val avatarPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null) {
-            customAvatarUri = uri
             viewModel?.updateAvatar(uri)
             onUpdateAvatar(uri)
         }
@@ -440,7 +389,6 @@ fun ProfileScreen(
                 androidx.compose.material3.TextButton(
                     onClick = {
                         val sanitizedName = editedName.trim()
-                        customDisplayName = sanitizedName
                         if (viewModel != null) {
                             viewModel.updateDisplayName(sanitizedName) { editingName = false }
                         }
@@ -556,7 +504,7 @@ fun ProfileScreen(
             )
         }
 
-        val userId = activeUser.id.takeIf { it.isNotBlank() && it != "user_me" } ?: firebaseUser?.uid
+        val userId = activeUser.id.takeIf { it.isNotBlank() && it != "user_me" }
         if (!userId.isNullOrBlank()) {
             Spacer(modifier = Modifier.height(8.dp))
             val clipboardManager = LocalClipboardManager.current

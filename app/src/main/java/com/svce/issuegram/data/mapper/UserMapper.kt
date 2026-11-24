@@ -4,7 +4,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.svce.issuegram.domain.model.User
 
 object UserMapper {
-    fun toDomain(firebaseUser: FirebaseUser?): User? {
+    fun toDomain(firebaseUser: FirebaseUser?, isAdmin: Boolean = false): User? {
         if (firebaseUser == null) return null
         val email = firebaseUser.email.orEmpty()
         val displayName = firebaseUser.displayName?.takeIf { it.isNotBlank() }
@@ -21,7 +21,7 @@ object UserMapper {
             avatarUrl = firebaseUser.photoUrl?.toString(),
             bio = "Civic Citizen Reporter",
             isModerator = false,
-            isAdmin = false
+            isAdmin = isAdmin
         )
     }
 }

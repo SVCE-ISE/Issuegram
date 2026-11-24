@@ -84,9 +84,8 @@ fun AlertsScreen(
     }
 
     val uiState by viewModel?.uiState?.collectAsState() ?: remember { mutableStateOf(null) }
-    var localAlerts by remember { mutableStateOf<List<AppNotification>>(emptyList()) }
-    val alerts = remember(uiState, localAlerts) {
-        uiState?.notifications?.map { com.svce.issuegram.data.mapper.NotificationMapper.toData(it) } ?: localAlerts
+    val alerts = remember(uiState) {
+        uiState?.notifications?.map { com.svce.issuegram.data.mapper.NotificationMapper.toData(it) }.orEmpty()
     }
     val groups = listOf(
         BUCKET_TODAY to alerts.filter { bucketOf(it.at) == BUCKET_TODAY },
@@ -135,11 +134,7 @@ fun AlertsScreen(
                 if (alerts.any { it.unread }) {
                     TextButton(
                         onClick = {
-                            if (viewModel != null) {
-                                viewModel.markAllAsRead()
-                            } else {
-                                localAlerts = localAlerts.map { it.copy(unread = false) }
-                            }
+                            viewModel?.markAllAsRead()
                         }
                     ) {
                         Text(stringResource(R.string.alerts_mark_all_read))

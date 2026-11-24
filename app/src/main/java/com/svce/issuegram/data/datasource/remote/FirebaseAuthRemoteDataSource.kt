@@ -5,6 +5,8 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.auth.userProfileChangeRequest
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.svce.issuegram.data.mapper.UserMapper
 import com.svce.issuegram.domain.model.User
 import kotlinx.coroutines.channels.awaitClose
@@ -22,14 +24,37 @@ private suspend fun <T> com.google.android.gms.tasks.Task<T>.await(): T = suspen
     }
 }
 
-class FirebaseAuthRemoteDataSource(private val auth: FirebaseAuth = Firebase.auth) : AuthRemoteDataSource {
+class FirebaseAuthRemoteDataSource(
+    private val auth: FirebaseAuth = Firebase.auth,
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+) : AuthRemoteDataSource {
 
     override fun observeAuthState(): Flow<User?> = callbackFlow {
-        val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
-            trySend(UserMapper.toDomain(firebaseAuth.currentUser))
+        var firestoreListener: ListenerRegistration? = null
+        var currentIsAdmin = false
+
+        val authListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            val user = firebaseAuth.currentUser
+            firestoreListener?.remove()
+            firestoreListener = null
+
+            if (user == null) {
+                currentIsAdmin = false
+                trySend(null)
+            } else {
+                firestoreListener = firestore.collection("users").document(user.uid)
+                    .addSnapshotListener { snapshot, _ ->
+                        currentIsAdmin = snapshot?.getBoolean("isAdmin") == true
+                        trySend(UserMapper.toDomain(auth.currentUser, isAdmin = currentIsAdmin))
+                    }
+                trySend(UserMapper.toDomain(user, isAdmin = currentIsAdmin))
+            }
         }
-        auth.addAuthStateListener(listener)
-        awaitClose { auth.removeAuthStateListener(listener) }
+        auth.addAuthStateListener(authListener)
+        awaitClose {
+            auth.removeAuthStateListener(authListener)
+            firestoreListener?.remove()
+        }
     }
 
     override fun getCurrentUser(): User? = UserMapper.toDomain(auth.currentUser)

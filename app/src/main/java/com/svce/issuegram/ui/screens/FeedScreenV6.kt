@@ -69,7 +69,6 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -159,26 +158,12 @@ fun FeedScreenV6(
     val haptic = rememberHaptics()
     var isLiked by rememberSaveable { mutableStateOf(false) }
 
-    var firebaseUser by remember { mutableStateOf(Firebase.auth.currentUser) }
-    DisposableEffect(Unit) {
-        val listener = com.google.firebase.auth.FirebaseAuth.AuthStateListener { auth ->
-            firebaseUser = auth.currentUser
-        }
-        val auth = Firebase.auth
-        auth.addAuthStateListener(listener)
-        onDispose {
-            auth.removeAuthStateListener(listener)
-        }
-    }
-    val userPhotoUrl = uiState?.currentUser?.avatarUrl ?: firebaseUser?.photoUrl?.toString()
-    val userInitials = remember(uiState?.currentUser, firebaseUser) {
+    val userPhotoUrl = uiState?.currentUser?.avatarUrl
+    val userInitials = remember(uiState?.currentUser) {
         uiState?.currentUser?.displayName?.split(" ")?.mapNotNull {
             it.firstOrNull()?.uppercaseChar()
         }?.joinToString("")?.takeIf { it.isNotBlank() }
-            ?: firebaseUser?.displayName?.split(" ")?.mapNotNull {
-                it.firstOrNull()?.uppercaseChar()
-            }?.joinToString("")?.takeIf { it.isNotBlank() }
-            ?: firebaseUser?.email?.firstOrNull()?.uppercaseChar()?.toString()
+            ?: uiState?.currentUser?.email?.firstOrNull()?.uppercaseChar()?.toString()
             ?: "CR"
     }
 
@@ -831,7 +816,7 @@ fun FeedScreenV6(
                                             authorName = currentIssue?.authorName,
                                             authorUsername = currentIssue?.authorUsername,
                                             authorId = currentIssue?.authorId,
-                                            currentFirebaseUser = firebaseUser ?: Firebase.auth.currentUser
+                                            currentFirebaseUser = Firebase.auth.currentUser
                                         )
                                         Text(
                                             text = reporterName,
