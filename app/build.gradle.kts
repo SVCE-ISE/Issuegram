@@ -3,6 +3,48 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.detekt)
+}
+
+spotless {
+    kotlin {
+        target("**/*.kt")
+        targetExclude("**/build/**")
+        ktlint("1.5.0").editorConfigOverride(
+            mapOf(
+                "ktlint_code_style" to "android_studio",
+                "ktlint_standard_function-naming" to "disabled",
+                "ktlint_standard_backing-property-naming" to "disabled",
+                "ktlint_standard_no-wildcard-imports" to "disabled",
+                "ktlint_standard_package-name" to "disabled",
+                "ktlint_standard_filename" to "disabled",
+                "ktlint_standard_max-line-length" to "disabled"
+            )
+        )
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    kotlinGradle {
+        target("*.gradle.kts")
+        ktlint("1.5.0")
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    config.setFrom(files("$rootDir/detekt.yml"))
+    baseline = file("$rootDir/detekt-baseline.xml")
+}
+
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+    jvmTarget = "17"
+}
+tasks.withType<io.gitlab.arturbosch.detekt.DetektCreateBaselineTask>().configureEach {
+    jvmTarget = "17"
 }
 
 android {
@@ -61,6 +103,11 @@ android {
     }
     testOptions {
         unitTests.isReturnDefaultValues = true
+    }
+    lint {
+        baseline = file("lint-baseline.xml")
+        abortOnError = false
+        checkDependencies = true
     }
 }
 

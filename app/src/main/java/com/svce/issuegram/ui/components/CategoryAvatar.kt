@@ -58,20 +58,20 @@ fun CategoryAvatar(
     modifier: Modifier = Modifier,
     size: Dp = 40.dp,
     containerColor: Color = MaterialTheme.colorScheme.primaryContainer,
-    contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer
 ) {
     Box(
         modifier = modifier
             .size(size)
             .clip(category.shape())
             .background(containerColor),
-        contentAlignment = Alignment.Center,
+        contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = category.icon(),
             contentDescription = null,
             tint = contentColor,
-            modifier = Modifier.size(size * 0.5f),
+            modifier = Modifier.size(size * 0.5f)
         )
     }
 }

@@ -26,29 +26,24 @@ import com.svce.issuegram.ui.theme.Spacing
 /** Empty state pattern: a library shape in a tonal container, one sentence, one line of help. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun EmptyState(
-    icon: ImageVector,
-    title: String,
-    body: String,
-    modifier: Modifier = Modifier,
-) {
+fun EmptyState(icon: ImageVector, title: String, body: String, modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
             modifier = Modifier.padding(horizontal = Spacing.space8),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
                 modifier = Modifier
                     .size(96.dp)
                     .clip(MaterialShapes.Sunny.toShape())
                     .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center,
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier.size(40.dp)
                 )
             }
             Spacer(Modifier.height(Spacing.space6))
@@ -56,14 +51,14 @@ fun EmptyState(
                 text = title,
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(Spacing.space2))
             Text(
                 text = body,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Center
             )
         }
     }

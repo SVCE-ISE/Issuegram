@@ -42,7 +42,7 @@ val ExpressiveLightColors = lightColorScheme(
     surfaceContainerHighest = Color(0xFFE4DACD),
     background = Color(0xFFFBF6EE),
     onBackground = Color(0xFF1F1A16),
-    scrim = Color(0x66140C08),
+    scrim = Color(0x66140C08)
 )
 
 val ExpressiveDarkColors = darkColorScheme(
@@ -77,7 +77,7 @@ val ExpressiveDarkColors = darkColorScheme(
     surfaceContainerHighest = Color(0xFF3D312C),
     background = Color(0xFF1A1210),
     onBackground = Color(0xFFF0E1D9),
-    scrim = Color(0x8F000000),
+    scrim = Color(0x8F000000)
 )
 
 /** Roles Material 3 has no slot for: the loud highlight fill and gain/success colours. */
@@ -87,7 +87,7 @@ data class ExtendedColors(
     val onHighlight: Color,
     val positive: Color,
     val positiveContainer: Color,
-    val onPositiveContainer: Color,
+    val onPositiveContainer: Color
 )
 
 val ExpressiveLightExtended = ExtendedColors(
@@ -95,7 +95,7 @@ val ExpressiveLightExtended = ExtendedColors(
     onHighlight = Color(0xFF2B1700),
     positive = Color(0xFF1B6D3B),
     positiveContainer = Color(0xFFC3EFCF),
-    onPositiveContainer = Color(0xFF00210C),
+    onPositiveContainer = Color(0xFF00210C)
 )
 
 val ExpressiveDarkExtended = ExtendedColors(
@@ -103,7 +103,7 @@ val ExpressiveDarkExtended = ExtendedColors(
     onHighlight = Color(0xFF2B1700),
     positive = Color(0xFF7FD9A3),
     positiveContainer = Color(0xFF0F4A28),
-    onPositiveContainer = Color(0xFFC3EFCF),
+    onPositiveContainer = Color(0xFFC3EFCF)
 )
 
 val LocalExtendedColors = staticCompositionLocalOf { ExpressiveLightExtended }
@@ -119,5 +119,5 @@ fun ColorScheme.toAmoledBlack(): ColorScheme = copy(
     surfaceContainerLowest = Color.Black,
     surfaceContainerLow = lerp(surfaceContainerLow, Color.Black, 0.6f),
     surfaceContainer = lerp(surfaceContainer, Color.Black, 0.35f),
-    scrim = Color.Black,
+    scrim = Color.Black
 )

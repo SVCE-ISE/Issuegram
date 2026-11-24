@@ -2,7 +2,7 @@
     ExperimentalMaterial3ExpressiveApi::class,
     ExperimentalMaterial3Api::class,
     ExperimentalTextApi::class,
-    androidx.compose.animation.ExperimentalSharedTransitionApi::class,
+    androidx.compose.animation.ExperimentalSharedTransitionApi::class
 )
 
 package com.svce.issuegram.ui.screens
@@ -20,6 +20,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,10 +37,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -48,10 +49,6 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Refresh
-import com.svce.issuegram.domain.formatLocationAddress
-import com.svce.issuegram.domain.resolveReporterDisplayName
-import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.ThumbUp
@@ -63,19 +60,17 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -83,17 +78,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import com.svce.issuegram.ui.components.EmptyState
-import com.svce.issuegram.ui.feed.FeedViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import coil.request.ImageRequest
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.ExperimentalTextApi
@@ -105,29 +97,26 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.clickable
-import androidx.compose.runtime.LaunchedEffect
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.svce.issuegram.R
-
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
-import coil.compose.AsyncImage
 import com.svce.issuegram.data.TimelineEvent
-import com.svce.issuegram.data.model.IssueCategory
-import com.svce.issuegram.data.model.IssueStatus
 import com.svce.issuegram.data.timeline
-import com.svce.issuegram.ui.components.CategoryAvatar
+import com.svce.issuegram.domain.formatLocationAddress
+import com.svce.issuegram.domain.resolveReporterDisplayName
+import com.svce.issuegram.ui.components.EmptyState
 import com.svce.issuegram.ui.components.Eyebrow
-import com.svce.issuegram.ui.components.StatusBadge
-import com.svce.issuegram.ui.components.absoluteDateTime
 import com.svce.issuegram.ui.components.badgeTone
+import com.svce.issuegram.ui.feed.FeedViewModel
 import com.svce.issuegram.ui.motion.ExpressiveHaptic
 import com.svce.issuegram.ui.motion.rememberHaptics
 import com.svce.issuegram.ui.theme.ExpressiveTextStyles
@@ -148,9 +137,9 @@ private val GoogleSansLightFamily = FontFamily(
         resId = R.font.google_sans_flex,
         weight = FontWeight.Light,
         variationSettings = FontVariation.Settings(
-            FontVariation.weight(300),
-        ),
-    ),
+            FontVariation.weight(300)
+        )
+    )
 )
 
 @Composable
@@ -163,7 +152,7 @@ fun FeedScreenV6(
     onOpenMapLocation: ((Double, Double) -> Unit)? = null,
     bottomBarPadding: Dp = 0.dp,
     isDetailExpanded: Boolean = false,
-    onDetailExpandedChange: (Boolean) -> Unit = {},
+    onDetailExpandedChange: (Boolean) -> Unit = {}
 ) {
     val uiState by viewModel?.uiState?.collectAsState() ?: remember { mutableStateOf(null) }
     val hasUnread = uiState?.hasUnreadNotifications ?: false
@@ -183,8 +172,12 @@ fun FeedScreenV6(
     }
     val userPhotoUrl = uiState?.currentUser?.avatarUrl ?: firebaseUser?.photoUrl?.toString()
     val userInitials = remember(uiState?.currentUser, firebaseUser) {
-        uiState?.currentUser?.displayName?.split(" ")?.mapNotNull { it.firstOrNull()?.uppercaseChar() }?.joinToString("")?.takeIf { it.isNotBlank() }
-            ?: firebaseUser?.displayName?.split(" ")?.mapNotNull { it.firstOrNull()?.uppercaseChar() }?.joinToString("")?.takeIf { it.isNotBlank() }
+        uiState?.currentUser?.displayName?.split(" ")?.mapNotNull {
+            it.firstOrNull()?.uppercaseChar()
+        }?.joinToString("")?.takeIf { it.isNotBlank() }
+            ?: firebaseUser?.displayName?.split(" ")?.mapNotNull {
+                it.firstOrNull()?.uppercaseChar()
+            }?.joinToString("")?.takeIf { it.isNotBlank() }
             ?: firebaseUser?.email?.firstOrNull()?.uppercaseChar()?.toString()
             ?: "CR"
     }
@@ -223,7 +216,7 @@ fun FeedScreenV6(
                 fadeIn(animationSpec = fastEffectsSpec) togetherWith
                     fadeOut(animationSpec = fastEffectsSpec)
             },
-            label = "feed_detail_shared_transition",
+            label = "feed_detail_shared_transition"
         ) { expanded ->
             if (!expanded) {
                 // =============================================================
@@ -244,7 +237,7 @@ fun FeedScreenV6(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.surface),
-                        contentPadding = PaddingValues(bottom = bottomBarPadding + Spacing.space6),
+                        contentPadding = PaddingValues(bottom = bottomBarPadding + Spacing.space6)
                     ) {
                         // --- TOP APP BAR ---
                         item(key = "feed_top_bar", contentType = "header") {
@@ -252,7 +245,7 @@ fun FeedScreenV6(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .statusBarsPadding()
-                                    .padding(horizontal = Spacing.space4, vertical = Spacing.space2),
+                                    .padding(horizontal = Spacing.space4, vertical = Spacing.space2)
                             ) {
                                 // Top Left: Alerts
                                 Surface(
@@ -261,14 +254,14 @@ fun FeedScreenV6(
                                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
                                     modifier = Modifier
                                         .size(40.dp)
-                                        .align(Alignment.CenterStart),
+                                        .align(Alignment.CenterStart)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
                                             imageVector = Icons.Outlined.NotificationsNone,
                                             contentDescription = stringResource(R.string.tab_notifications),
                                             tint = MaterialTheme.colorScheme.onSurface,
-                                            modifier = Modifier.size(22.dp),
+                                            modifier = Modifier.size(22.dp)
                                         )
                                         if (hasUnread) {
                                             Box(
@@ -277,7 +270,7 @@ fun FeedScreenV6(
                                                     .align(Alignment.TopEnd)
                                                     .offset(x = (-8).dp, y = 8.dp)
                                                     .clip(CircleShape)
-                                                    .background(MaterialTheme.colorScheme.error),
+                                                    .background(MaterialTheme.colorScheme.error)
                                             )
                                         }
                                     }
@@ -291,7 +284,7 @@ fun FeedScreenV6(
                                         .height(28.dp)
                                         .align(Alignment.Center),
                                     contentScale = ContentScale.Fit,
-                                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+                                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
                                 )
 
                                 // Top Right: Profile
@@ -301,21 +294,21 @@ fun FeedScreenV6(
                                     color = MaterialTheme.colorScheme.primaryContainer,
                                     modifier = Modifier
                                         .size(40.dp)
-                                        .align(Alignment.CenterEnd),
+                                        .align(Alignment.CenterEnd)
                                 ) {
                                     if (!userPhotoUrl.isNullOrBlank()) {
                                         AsyncImage(
                                             model = userPhotoUrl,
                                             contentDescription = "Profile",
                                             contentScale = ContentScale.Crop,
-                                            modifier = Modifier.fillMaxSize(),
+                                            modifier = Modifier.fillMaxSize()
                                         )
                                     } else {
                                         Box(contentAlignment = Alignment.Center) {
                                             Text(
                                                 text = userInitials,
                                                 style = MaterialTheme.typography.titleSmall,
-                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer
                                             )
                                         }
                                     }
@@ -328,35 +321,35 @@ fun FeedScreenV6(
                             AnimatedVisibility(
                                 visible = isRefreshing,
                                 enter = fadeIn() + expandVertically(),
-                                exit = fadeOut() + shrinkVertically(),
+                                exit = fadeOut() + shrinkVertically()
                             ) {
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(top = Spacing.space2),
-                                    contentAlignment = Alignment.Center,
+                                    contentAlignment = Alignment.Center
                                 ) {
                                     Surface(
                                         shape = CircleShape,
                                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
                                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                                        shadowElevation = 3.dp,
+                                        shadowElevation = 3.dp
                                     ) {
                                         Row(
                                             modifier = Modifier.padding(horizontal = Spacing.space3, vertical = Spacing.space2),
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(Spacing.space2),
+                                            horizontalArrangement = Arrangement.spacedBy(Spacing.space2)
                                         ) {
                                             ContainedLoadingIndicator(
                                                 modifier = Modifier.size(20.dp),
                                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                                indicatorColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                indicatorColor = MaterialTheme.colorScheme.onPrimaryContainer
                                             )
                                             Text(
                                                 text = "Refreshing feed...",
                                                 style = MaterialTheme.typography.labelMedium,
                                                 color = MaterialTheme.colorScheme.onSurface,
-                                                fontWeight = FontWeight.Medium,
+                                                fontWeight = FontWeight.Medium
                                             )
                                         }
                                     }
@@ -374,11 +367,11 @@ fun FeedScreenV6(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(vertical = 120.dp),
-                                    contentAlignment = Alignment.Center,
+                                    contentAlignment = Alignment.Center
                                 ) {
                                     CircularProgressIndicator(
                                         color = MaterialTheme.colorScheme.primary,
-                                        strokeWidth = 3.dp,
+                                        strokeWidth = 3.dp
                                     )
                                 }
                             }
@@ -388,13 +381,13 @@ fun FeedScreenV6(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(vertical = 120.dp),
-                                    contentAlignment = Alignment.Center,
+                                    contentAlignment = Alignment.Center
                                 ) {
                                     EmptyState(
                                         icon = Icons.Outlined.BookmarkBorder,
                                         title = stringResource(R.string.my_issues_empty_title),
                                         body = "Civic issues reported in your community will appear here.",
-                                        modifier = Modifier.fillMaxWidth(),
+                                        modifier = Modifier.fillMaxWidth()
                                     )
                                 }
                             }
@@ -402,7 +395,7 @@ fun FeedScreenV6(
                             items(
                                 items = issues,
                                 key = { it.ticketId },
-                                contentType = { "issue_card" },
+                                contentType = { "issue_card" }
                             ) { issue ->
                                 val issuePhoto = issue.photoUri
                                 val hasPhoto = !issuePhoto.isNullOrBlank()
@@ -413,12 +406,12 @@ fun FeedScreenV6(
                                         .padding(horizontal = 16.dp, vertical = 8.dp),
                                     shape = RoundedCornerShape(8.dp),
                                     colors = CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
                                     ),
                                     onClick = {
                                         selectedTicketId = issue.ticketId
                                         onDetailExpandedChange(true)
-                                    },
+                                    }
                                 ) {
                                     Column(modifier = Modifier.fillMaxWidth()) {
                                         // Photo: Shared Element connected to detailed photo
@@ -429,9 +422,9 @@ fun FeedScreenV6(
                                                 .sharedElement(
                                                     sharedContentState = rememberSharedContentState(key = "issue_photo_${issue.ticketId}"),
                                                     animatedVisibilityScope = this@AnimatedContent,
-                                                    boundsTransform = sharedBoundsTransform,
+                                                    boundsTransform = sharedBoundsTransform
                                                 )
-                                                .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
+                                                .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
                                         ) {
                                             if (hasPhoto) {
                                                 val imageRequest = remember(issuePhoto) {
@@ -446,14 +439,14 @@ fun FeedScreenV6(
                                                     modifier = Modifier.fillMaxSize(),
                                                     contentScale = ContentScale.Crop,
                                                     placeholder = painterResource(R.drawable.image_placeholder),
-                                                    error = painterResource(R.drawable.image_placeholder),
+                                                    error = painterResource(R.drawable.image_placeholder)
                                                 )
                                             } else {
                                                 Image(
                                                     painter = painterResource(R.drawable.image_placeholder),
                                                     contentDescription = "Card Photo",
                                                     modifier = Modifier.fillMaxSize(),
-                                                    contentScale = ContentScale.Crop,
+                                                    contentScale = ContentScale.Crop
                                                 )
                                             }
                                         }
@@ -462,7 +455,7 @@ fun FeedScreenV6(
                                         Column(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .padding(Spacing.space4),
+                                                .padding(Spacing.space4)
                                         ) {
                                             Text(
                                                 text = issue.title,
@@ -476,8 +469,8 @@ fun FeedScreenV6(
                                                 modifier = Modifier.sharedElement(
                                                     sharedContentState = rememberSharedContentState(key = "issue_title_${issue.ticketId}"),
                                                     animatedVisibilityScope = this@AnimatedContent,
-                                                    boundsTransform = sharedBoundsTransform,
-                                                ),
+                                                    boundsTransform = sharedBoundsTransform
+                                                )
                                             )
 
                                             val captionText = issue.description?.takeIf { it.isNotBlank() } ?: issue.locationName
@@ -488,7 +481,7 @@ fun FeedScreenV6(
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     maxLines = 1,
                                                     overflow = TextOverflow.Ellipsis,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                             }
 
@@ -498,7 +491,7 @@ fun FeedScreenV6(
                                             Row(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically,
+                                                verticalAlignment = Alignment.CenterVertically
                                             ) {
                                                 Button(
                                                     onClick = {
@@ -509,22 +502,22 @@ fun FeedScreenV6(
                                                     shape = CircleShape,
                                                     colors = ButtonDefaults.buttonColors(
                                                         containerColor = Color(0xFFBDEEEA),
-                                                        contentColor = Color(0xFF00201F),
+                                                        contentColor = Color(0xFF00201F)
                                                     ),
                                                     contentPadding = PaddingValues(
                                                         horizontal = Spacing.space4,
-                                                        vertical = Spacing.space2,
-                                                    ),
+                                                        vertical = Spacing.space2
+                                                    )
                                                 ) {
                                                     Icon(
                                                         painter = painterResource(R.drawable.ic_book_text),
                                                         contentDescription = null,
-                                                        modifier = Modifier.size(18.dp),
+                                                        modifier = Modifier.size(18.dp)
                                                     )
                                                     Spacer(Modifier.width(Spacing.space2))
                                                     Text(
                                                         text = "View report",
-                                                        style = MaterialTheme.typography.labelLarge,
+                                                        style = MaterialTheme.typography.labelLarge
                                                     )
                                                 }
 
@@ -547,13 +540,13 @@ fun FeedScreenV6(
                                                     } else {
                                                         MaterialTheme.colorScheme.onPrimaryContainer
                                                     },
-                                                    modifier = Modifier.size(48.dp),
+                                                    modifier = Modifier.size(48.dp)
                                                 ) {
                                                     Box(contentAlignment = Alignment.Center) {
                                                         Icon(
                                                             imageVector = if (isPostLiked) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
                                                             contentDescription = "Like",
-                                                            modifier = Modifier.size(22.dp),
+                                                            modifier = Modifier.size(22.dp)
                                                         )
                                                     }
                                                 }
@@ -579,13 +572,13 @@ fun FeedScreenV6(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface),
+                        .background(MaterialTheme.colorScheme.surface)
                 ) {
                     // Scrollable content: Photo + Title + Detailed Content
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .verticalScroll(detailScrollState),
+                            .verticalScroll(detailScrollState)
                     ) {
                         val currentTicketKey = currentIssue?.ticketId ?: ""
                         // PHOTO CONTAINER: Shared Element (flies edge-to-edge behind status bar, 440dp height)
@@ -596,8 +589,8 @@ fun FeedScreenV6(
                                 .sharedElement(
                                     sharedContentState = rememberSharedContentState(key = "issue_photo_$currentTicketKey"),
                                     animatedVisibilityScope = this@AnimatedContent,
-                                    boundsTransform = sharedBoundsTransform,
-                                ),
+                                    boundsTransform = sharedBoundsTransform
+                                )
                         ) {
                             if (!currentIssue?.photoUri.isNullOrBlank()) {
                                 val detailImageRequest = remember(currentIssue?.photoUri) {
@@ -612,14 +605,14 @@ fun FeedScreenV6(
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop,
                                     placeholder = painterResource(R.drawable.image_placeholder),
-                                    error = painterResource(R.drawable.image_placeholder),
+                                    error = painterResource(R.drawable.image_placeholder)
                                 )
                             } else {
                                 Image(
                                     painter = painterResource(R.drawable.image_placeholder),
                                     contentDescription = "Detailed Photo",
                                     modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop,
+                                    contentScale = ContentScale.Crop
                                 )
                             }
 
@@ -634,10 +627,10 @@ fun FeedScreenV6(
                                             listOf(
                                                 Color.Transparent,
                                                 Color.Black.copy(alpha = 0.35f),
-                                                Color.Black.copy(alpha = 0.85f),
-                                            ),
-                                        ),
-                                    ),
+                                                Color.Black.copy(alpha = 0.85f)
+                                            )
+                                        )
+                                    )
                             )
 
                             // --- TITLE LANDS DIRECTLY ON THE PHOTO (NO SUMMARY HERE) ---
@@ -645,7 +638,7 @@ fun FeedScreenV6(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .align(Alignment.BottomStart)
-                                    .padding(horizontal = Spacing.space4, vertical = Spacing.space4),
+                                    .padding(horizontal = Spacing.space4, vertical = Spacing.space4)
                             ) {
                                 Text(
                                     text = currentIssue?.title.orEmpty(),
@@ -659,8 +652,8 @@ fun FeedScreenV6(
                                     modifier = Modifier.sharedElement(
                                         sharedContentState = rememberSharedContentState(key = "issue_title_$currentTicketKey"),
                                         animatedVisibilityScope = this@AnimatedContent,
-                                        boundsTransform = sharedBoundsTransform,
-                                    ),
+                                        boundsTransform = sharedBoundsTransform
+                                    )
                                 )
                             }
                         }
@@ -671,7 +664,7 @@ fun FeedScreenV6(
                                 .fillMaxWidth()
                                 .padding(horizontal = Spacing.space4, vertical = Spacing.space4)
                                 .navigationBarsPadding(),
-                            verticalArrangement = Arrangement.spacedBy(Spacing.space4),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.space4)
                         ) {
                             // 1. Detailed Summary / Story Description on Top
                             val detailDescription = currentIssue?.description?.takeIf { it.isNotBlank() } ?: currentIssue?.title.orEmpty()
@@ -680,7 +673,7 @@ fun FeedScreenV6(
                                     text = detailDescription,
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurface,
-                                    lineHeight = 26.sp,
+                                    lineHeight = 26.sp
                                 )
                             }
 
@@ -690,11 +683,11 @@ fun FeedScreenV6(
                                     modifier = Modifier.fillMaxWidth(),
                                     shape = RoundedCornerShape(16.dp),
                                     color = MaterialTheme.colorScheme.surfaceContainerLow,
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                                 ) {
                                     Column(
                                         modifier = Modifier.padding(Spacing.space4),
-                                        verticalArrangement = Arrangement.spacedBy(Spacing.space3),
+                                        verticalArrangement = Arrangement.spacedBy(Spacing.space3)
                                     ) {
                                         Eyebrow(stringResource(R.string.detail_status_eyebrow))
 
@@ -718,7 +711,7 @@ fun FeedScreenV6(
                                         .aspectRatio(16f / 9f)
                                         .clip(RoundedCornerShape(16.dp)),
                                     shape = RoundedCornerShape(16.dp),
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                                 ) {
                                     Box(modifier = Modifier.fillMaxSize()) {
                                         GoogleMap(
@@ -731,13 +724,13 @@ fun FeedScreenV6(
                                                 rotationGesturesEnabled = false,
                                                 tiltGesturesEnabled = false,
                                                 mapToolbarEnabled = false,
-                                                myLocationButtonEnabled = false,
-                                            ),
+                                                myLocationButtonEnabled = false
+                                            )
                                         ) {
                                             Marker(
                                                 state = rememberUpdatedMarkerState(position = issueLocation),
                                                 title = currentIssue.title,
-                                                snippet = currentIssue.locationName,
+                                                snippet = currentIssue.locationName
                                             )
                                         }
                                         if (onOpenMapLocation != null) {
@@ -758,50 +751,56 @@ fun FeedScreenV6(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(16.dp),
                                 color = MaterialTheme.colorScheme.surfaceContainerLow,
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                             ) {
                                 Row(
                                     modifier = Modifier.padding(Spacing.space4),
-                                    verticalAlignment = Alignment.CenterVertically,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Box(
                                         modifier = Modifier
                                             .size(40.dp)
                                             .clip(CircleShape)
                                             .background(MaterialTheme.colorScheme.primaryContainer),
-                                        contentAlignment = Alignment.Center,
+                                        contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
                                             imageVector = Icons.Outlined.LocationOn,
                                             contentDescription = "Location",
                                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            modifier = Modifier.size(20.dp),
+                                            modifier = Modifier.size(20.dp)
                                         )
                                     }
 
                                     Spacer(Modifier.width(Spacing.space3))
 
                                     Column(modifier = Modifier.weight(1f)) {
-                                        val formatted = remember(currentIssue?.locationName, currentIssue?.area, currentIssue?.latitude, currentIssue?.longitude) {
-                                            formatLocationAddress(
-                                                locationName = currentIssue?.locationName,
-                                                area = currentIssue?.area,
-                                                latitude = currentIssue?.latitude,
-                                                longitude = currentIssue?.longitude,
-                                            )
-                                        }
+                                        val formatted =
+                                            remember(
+                                                currentIssue?.locationName,
+                                                currentIssue?.area,
+                                                currentIssue?.latitude,
+                                                currentIssue?.longitude
+                                            ) {
+                                                formatLocationAddress(
+                                                    locationName = currentIssue?.locationName,
+                                                    area = currentIssue?.area,
+                                                    latitude = currentIssue?.latitude,
+                                                    longitude = currentIssue?.longitude
+                                                )
+                                            }
                                         Text(
                                             text = formatted.primary,
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.SemiBold,
-                                            color = MaterialTheme.colorScheme.onSurface,
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
                                         if (!formatted.secondary.isNullOrBlank()) {
                                             Spacer(Modifier.height(2.dp))
                                             Text(
                                                 text = formatted.secondary,
                                                 style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                     }
@@ -812,36 +811,36 @@ fun FeedScreenV6(
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 // Bottom Left: Reporter with Person icon
                                 Surface(
                                     shape = CircleShape,
                                     color = MaterialTheme.colorScheme.surfaceContainerLow,
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(horizontal = Spacing.space3, vertical = Spacing.space2),
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(Spacing.space2),
+                                        horizontalArrangement = Arrangement.spacedBy(Spacing.space2)
                                     ) {
                                         Icon(
                                             painter = painterResource(R.drawable.ic_user),
                                             contentDescription = "Reported by",
                                             tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(16.dp),
+                                            modifier = Modifier.size(16.dp)
                                         )
                                         val reporterName = resolveReporterDisplayName(
                                             authorName = currentIssue?.authorName,
                                             authorUsername = currentIssue?.authorUsername,
                                             authorId = currentIssue?.authorId,
-                                            currentFirebaseUser = firebaseUser ?: Firebase.auth.currentUser,
+                                            currentFirebaseUser = firebaseUser ?: Firebase.auth.currentUser
                                         )
                                         Text(
                                             text = reporterName,
                                             style = MaterialTheme.typography.labelLarge,
                                             color = MaterialTheme.colorScheme.onSurface,
-                                            fontWeight = FontWeight.Medium,
+                                            fontWeight = FontWeight.Medium
                                         )
                                     }
                                 }
@@ -850,18 +849,18 @@ fun FeedScreenV6(
                                 Surface(
                                     shape = CircleShape,
                                     color = MaterialTheme.colorScheme.surfaceContainerLow,
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(horizontal = Spacing.space3, vertical = Spacing.space2),
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(Spacing.space2),
+                                        horizontalArrangement = Arrangement.spacedBy(Spacing.space2)
                                     ) {
                                         Icon(
                                             painter = painterResource(R.drawable.ic_calendar_check),
                                             contentDescription = "Date",
                                             tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(16.dp),
+                                            modifier = Modifier.size(16.dp)
                                         )
                                         Text(
                                             text = currentIssue?.createdAt?.let {
@@ -871,7 +870,7 @@ fun FeedScreenV6(
                                             } ?: "",
                                             style = MaterialTheme.typography.labelLarge,
                                             color = MaterialTheme.colorScheme.onSurface,
-                                            fontWeight = FontWeight.Medium,
+                                            fontWeight = FontWeight.Medium
                                         )
                                     }
                                 }
@@ -889,7 +888,7 @@ fun FeedScreenV6(
                             .padding(horizontal = Spacing.space4, vertical = Spacing.space2)
                             .align(Alignment.TopCenter),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
                             onClick = {
@@ -898,21 +897,21 @@ fun FeedScreenV6(
                             },
                             shape = CircleShape,
                             color = Color.Black.copy(alpha = 0.55f),
-                            modifier = Modifier.size(40.dp),
+                            modifier = Modifier.size(40.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                                     contentDescription = "Back",
                                     tint = Color.White,
-                                    modifier = Modifier.size(20.dp),
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
                         }
 
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             var isDetailLiked by rememberSaveable(currentIssue?.ticketId) { mutableStateOf(false) }
 
@@ -924,14 +923,16 @@ fun FeedScreenV6(
                                 },
                                 shape = CircleShape,
                                 color = Color.Black.copy(alpha = 0.55f),
-                                modifier = Modifier.size(40.dp),
+                                modifier = Modifier.size(40.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         imageVector = if (isDetailLiked) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
-                                        contentDescription = stringResource(if (isDetailLiked) R.string.detail_btn_unlike else R.string.detail_btn_like),
+                                        contentDescription = stringResource(
+                                            if (isDetailLiked) R.string.detail_btn_unlike else R.string.detail_btn_like
+                                        ),
                                         tint = if (isDetailLiked) MaterialTheme.colorScheme.primary else Color.White,
-                                        modifier = Modifier.size(20.dp),
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                             }
@@ -945,14 +946,14 @@ fun FeedScreenV6(
                                 },
                                 shape = CircleShape,
                                 color = Color.Black.copy(alpha = 0.55f),
-                                modifier = Modifier.size(40.dp),
+                                modifier = Modifier.size(40.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         imageVector = Icons.Outlined.Share,
                                         contentDescription = "Share",
                                         tint = Color.White,
-                                        modifier = Modifier.size(20.dp),
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                             }
@@ -972,25 +973,25 @@ private fun Timeline(events: List<TimelineEvent>) {
             val isActive = index == events.lastIndex
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top,
+                verticalAlignment = Alignment.Top
             ) {
                 // Left status icon & connecting timeline vertical line
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.width(24.dp),
+                    modifier = Modifier.width(24.dp)
                 ) {
                     Box(
                         modifier = Modifier
                             .size(24.dp)
                             .clip(CircleShape)
                             .background(tone.container),
-                        contentAlignment = Alignment.Center,
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = tone.icon,
                             contentDescription = null,
                             tint = tone.content,
-                            modifier = Modifier.size(13.dp),
+                            modifier = Modifier.size(13.dp)
                         )
                     }
                     if (index != events.lastIndex) {
@@ -998,7 +999,7 @@ private fun Timeline(events: List<TimelineEvent>) {
                             modifier = Modifier
                                 .width(1.5.dp)
                                 .height(16.dp)
-                                .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
+                                .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
                         )
                     }
                 }
@@ -1011,31 +1012,31 @@ private fun Timeline(events: List<TimelineEvent>) {
                         .weight(1f)
                         .height(24.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Status Pill Chip (compact)
                     Surface(
                         shape = CircleShape,
                         color = if (isActive) Color(0xFFBDEEEA) else MaterialTheme.colorScheme.surfaceContainerHigh,
-                        contentColor = if (isActive) Color(0xFF00201F) else MaterialTheme.colorScheme.onSurface,
+                        contentColor = if (isActive) Color(0xFF00201F) else MaterialTheme.colorScheme.onSurface
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             if (isActive) {
                                 Box(
                                     modifier = Modifier
                                         .size(5.dp)
                                         .clip(CircleShape)
-                                        .background(Color(0xFF00796B)),
+                                        .background(Color(0xFF00796B))
                                 )
                             }
                             Text(
                                 text = stringResource(event.status.labelRes),
                                 style = MaterialTheme.typography.labelMedium,
-                                fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Medium,
+                                fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Medium
                             )
                         }
                     }
@@ -1044,7 +1045,7 @@ private fun Timeline(events: List<TimelineEvent>) {
                     Text(
                         text = formatEventTime(event.at),
                         style = ExpressiveTextStyles.dataSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

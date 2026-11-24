@@ -11,13 +11,13 @@ import com.svce.issuegram.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.svce.issuegram.domain.usecase.auth.UpdateUserProfileUseCase
 import com.svce.issuegram.domain.usecase.issue.GetUserIssuesUseCase
 import com.svce.issuegram.ui.profile.ProfileViewModel
+import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -31,7 +31,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.time.Instant
 
 /**
  * Exhaustive unit and operations tests for Profile Screen & ProfileViewModel:
@@ -70,24 +69,20 @@ class ProfileOperationsUnitTest {
         override fun observeCurrentUser(): Flow<User?> = currentUserFlow
         override fun getCurrentUser(): User? = currentUserFlow.value
 
-        override suspend fun updateDisplayName(name: String): Result<Unit> {
-            return if (shouldFail) {
-                Result.failure(RuntimeException("Network failure"))
-            } else {
-                lastUpdatedName = name
-                currentUserFlow.value = currentUserFlow.value?.copy(displayName = name)
-                Result.success(Unit)
-            }
+        override suspend fun updateDisplayName(name: String): Result<Unit> = if (shouldFail) {
+            Result.failure(RuntimeException("Network failure"))
+        } else {
+            lastUpdatedName = name
+            currentUserFlow.value = currentUserFlow.value?.copy(displayName = name)
+            Result.success(Unit)
         }
 
-        override suspend fun updateAvatarUri(uri: String?): Result<Unit> {
-            return if (shouldFail) {
-                Result.failure(RuntimeException("Storage error"))
-            } else {
-                lastUpdatedAvatarUri = uri
-                currentUserFlow.value = currentUserFlow.value?.copy(avatarUrl = uri)
-                Result.success(Unit)
-            }
+        override suspend fun updateAvatarUri(uri: String?): Result<Unit> = if (shouldFail) {
+            Result.failure(RuntimeException("Storage error"))
+        } else {
+            lastUpdatedAvatarUri = uri
+            currentUserFlow.value = currentUserFlow.value?.copy(avatarUrl = uri)
+            Result.success(Unit)
         }
 
         override fun signOut() {
@@ -128,12 +123,7 @@ class ProfileOperationsUnitTest {
             return Result.success(Unit)
         }
 
-        override suspend fun editIssue(
-            ticketId: String,
-            title: String,
-            description: String?,
-            locationName: String?
-        ): Result<Issue> {
+        override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result<Issue> {
             if (shouldFailEdit) {
                 return Result.failure(RuntimeException("Edit failed on server"))
             }
@@ -151,7 +141,9 @@ class ProfileOperationsUnitTest {
                     val modified = it.copy(title = title, description = description, locationName = locationName ?: it.locationName)
                     updatedIssue = modified
                     modified
-                } else it
+                } else {
+                    it
+                }
             }
             return Result.success(updatedIssue ?: createMockIssue(ticketId, title, IssueStatus.Open))
         }
@@ -169,7 +161,7 @@ class ProfileOperationsUnitTest {
             getUserIssuesUseCase = GetUserIssuesUseCase(fakeIssueRepository),
             updateUserProfileUseCase = UpdateUserProfileUseCase(fakeAuthRepository),
             issueRepository = fakeIssueRepository,
-            authRepository = fakeAuthRepository,
+            authRepository = fakeAuthRepository
         )
     }
 
@@ -373,9 +365,7 @@ class ProfileOperationsUnitTest {
 
     @Test
     fun testEditReportValidationRules_titleAndCaptionLength() {
-        fun isValidReportEdit(title: String, caption: String): Boolean {
-            return title.trim().length in 3..100 && caption.trim().length in 5..500
-        }
+        fun isValidReportEdit(title: String, caption: String): Boolean = title.trim().length in 3..100 && caption.trim().length in 5..500
 
         // Valid
         assertTrue(isValidReportEdit("Pothole", "Deep pothole damaging car tires"))
@@ -398,22 +388,20 @@ class ProfileOperationsUnitTest {
         assertFalse(isValidReportEdit("Pothole", longCaption))
     }
 
-    private fun createMockIssue(ticketId: String, title: String, status: IssueStatus): Issue {
-        return Issue(
-            ticketId = ticketId,
-            authorName = "Jane Citizen",
-            title = title,
-            description = "Issue description",
-            category = IssueCategory.Road,
-            status = status,
-            area = "Downtown",
-            locationName = "123 Elm Street",
-            createdAt = Instant.now(),
-            likes = 0,
-            photoUri = null,
-            isMine = true,
-            latitude = 12.9716,
-            longitude = 77.5946
-        )
-    }
+    private fun createMockIssue(ticketId: String, title: String, status: IssueStatus): Issue = Issue(
+        ticketId = ticketId,
+        authorName = "Jane Citizen",
+        title = title,
+        description = "Issue description",
+        category = IssueCategory.Road,
+        status = status,
+        area = "Downtown",
+        locationName = "123 Elm Street",
+        createdAt = Instant.now(),
+        likes = 0,
+        photoUri = null,
+        isMine = true,
+        latitude = 12.9716,
+        longitude = 77.5946
+    )
 }

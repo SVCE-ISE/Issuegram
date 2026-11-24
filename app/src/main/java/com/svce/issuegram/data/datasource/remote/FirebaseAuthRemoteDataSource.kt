@@ -12,20 +12,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 
-private suspend fun <T> com.google.android.gms.tasks.Task<T>.await(): T =
-    suspendCancellableCoroutine { cont ->
-        addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                cont.resume(task.result, onCancellation = null)
-            } else {
-                cont.resumeWith(Result.failure(task.exception ?: RuntimeException("Task failed")))
-            }
+private suspend fun <T> com.google.android.gms.tasks.Task<T>.await(): T = suspendCancellableCoroutine { cont ->
+    addOnCompleteListener { task ->
+        if (task.isSuccessful) {
+            cont.resume(task.result, onCancellation = null)
+        } else {
+            cont.resumeWith(Result.failure(task.exception ?: RuntimeException("Task failed")))
         }
     }
+}
 
-class FirebaseAuthRemoteDataSource(
-    private val auth: FirebaseAuth = Firebase.auth
-) : AuthRemoteDataSource {
+class FirebaseAuthRemoteDataSource(private val auth: FirebaseAuth = Firebase.auth) : AuthRemoteDataSource {
 
     override fun observeAuthState(): Flow<User?> = callbackFlow {
         val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
@@ -35,8 +32,7 @@ class FirebaseAuthRemoteDataSource(
         awaitClose { auth.removeAuthStateListener(listener) }
     }
 
-    override fun getCurrentUser(): User? =
-        UserMapper.toDomain(auth.currentUser)
+    override fun getCurrentUser(): User? = UserMapper.toDomain(auth.currentUser)
 
     override suspend fun updateDisplayName(name: String) {
         val user = auth.currentUser ?: return

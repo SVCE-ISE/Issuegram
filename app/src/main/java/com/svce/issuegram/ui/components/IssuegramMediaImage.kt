@@ -6,9 +6,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.painterResource
 import coil.compose.AsyncImage
 import com.svce.issuegram.R
 
@@ -21,7 +21,7 @@ fun IssuegramMediaImage(
     contentDescription: String?,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop,
-    fallbackDrawableRes: Int = R.drawable.image_placeholder,
+    fallbackDrawableRes: Int = R.drawable.image_placeholder
 ) {
     val context = LocalContext.current
     val previewRes = if (LocalInspectionMode.current) LocalIssuegramPreviewMedia.current[mediaRef.orEmpty()] else null

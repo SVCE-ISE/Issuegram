@@ -14,7 +14,7 @@ class CreateIssueUseCase(private val issueRepository: IssueRepository) {
         latitude: Double = 12.9716,
         longitude: Double = 77.5946,
         authorName: String = "Praveen Zalaki",
-        authorUsername: String? = null,
+        authorUsername: String? = null
     ): Result<Issue> {
         val trimmedTitle = title.trim()
         if (trimmedTitle.length < 3) {
@@ -30,7 +30,7 @@ class CreateIssueUseCase(private val issueRepository: IssueRepository) {
             latitude = latitude,
             longitude = longitude,
             authorName = authorName,
-            authorUsername = authorUsername,
+            authorUsername = authorUsername
         )
     }
 }

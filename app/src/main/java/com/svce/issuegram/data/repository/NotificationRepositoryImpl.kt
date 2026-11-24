@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 
 class NotificationRepositoryImpl(
     private val remoteDataSource: NotificationRemoteDataSource,
-    private val repositoryScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+    private val repositoryScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) : NotificationRepository {
 
     private val _notifications = MutableStateFlow<List<Notification>>(emptyList())

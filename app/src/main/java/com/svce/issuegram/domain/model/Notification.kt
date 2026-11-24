@@ -15,5 +15,5 @@ data class Notification(
     val status: IssueStatus? = null,
     val message: String,
     val createdAt: Instant,
-    val isUnread: Boolean,
+    val isUnread: Boolean
 )

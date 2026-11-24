@@ -13,50 +13,46 @@ import com.svce.issuegram.data.model.Issue
 import com.svce.issuegram.data.model.IssueCategory
 import com.svce.issuegram.data.model.IssueMilestone
 import com.svce.issuegram.data.model.IssueStatus
-import kotlinx.coroutines.tasks.await
 import java.io.File
 import java.time.Instant
 import java.util.UUID
+import kotlinx.coroutines.tasks.await
 
 class FirestoreIssueRemoteDataSource(
     private val context: Context,
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance(),
-    private val storage: FirebaseStorage = FirebaseStorage.getInstance(),
+    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
 ) : IssueRemoteDataSource {
 
     private val issuesCollection = firestore.collection("issues")
 
-    override suspend fun fetchIssues(): List<Issue> {
-        return try {
-            val snapshot = issuesCollection
-                .orderBy("createdAt", Query.Direction.DESCENDING)
-                .get()
-                .await()
+    override suspend fun fetchIssues(): List<Issue> = try {
+        val snapshot = issuesCollection
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .get()
+            .await()
 
-            snapshot.documents.mapNotNull { doc ->
-                mapDocumentToIssue(doc.id, doc.data ?: emptyMap())
-            }
-        } catch (e: Exception) {
-            emptyList()
+        snapshot.documents.mapNotNull { doc ->
+            mapDocumentToIssue(doc.id, doc.data ?: emptyMap())
         }
+    } catch (e: Exception) {
+        emptyList()
     }
 
-    override suspend fun fetchIssueById(ticketId: String): Issue? {
-        return try {
-            val cleanTicketId = ticketId.removePrefix("#")
-            // Try fetching by doc ID or ticketId field
-            val doc = issuesCollection.document(cleanTicketId).get().await()
-            if (doc.exists()) {
-                mapDocumentToIssue(doc.id, doc.data ?: emptyMap())
-            } else {
-                val query = issuesCollection.whereEqualTo("ticketId", cleanTicketId).limit(1).get().await()
-                query.documents.firstOrNull()?.let {
-                    mapDocumentToIssue(it.id, it.data ?: emptyMap())
-                }
+    override suspend fun fetchIssueById(ticketId: String): Issue? = try {
+        val cleanTicketId = ticketId.removePrefix("#")
+        // Try fetching by doc ID or ticketId field
+        val doc = issuesCollection.document(cleanTicketId).get().await()
+        if (doc.exists()) {
+            mapDocumentToIssue(doc.id, doc.data ?: emptyMap())
+        } else {
+            val query = issuesCollection.whereEqualTo("ticketId", cleanTicketId).limit(1).get().await()
+            query.documents.firstOrNull()?.let {
+                mapDocumentToIssue(it.id, it.data ?: emptyMap())
             }
-        } catch (e: Exception) {
-            null
         }
+    } catch (e: Exception) {
+        null
     }
 
     override suspend fun postIssue(issue: Issue): Issue {
@@ -147,7 +143,7 @@ class FirestoreIssueRemoteDataSource(
             "confirmedUserIds" to emptyList<String>(),
             "milestones" to defaultMilestones,
             "createdAt" to issue.createdAt.toString(),
-            "updatedAt" to nowIso,
+            "updatedAt" to nowIso
         )
 
         val docRef = issuesCollection.document(ticketId)
@@ -187,114 +183,101 @@ class FirestoreIssueRemoteDataSource(
         }
     }
 
-    override suspend fun deleteIssue(ticketId: String): Result<Unit> {
-        return try {
-            val cleanTicketId = ticketId.removePrefix("#")
-            issuesCollection.document(cleanTicketId).delete().await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    override suspend fun deleteIssue(ticketId: String): Result<Unit> = try {
+        val cleanTicketId = ticketId.removePrefix("#")
+        issuesCollection.document(cleanTicketId).delete().await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 
-    override suspend fun editIssue(
-        ticketId: String,
-        title: String,
-        description: String?,
-        locationName: String?,
-    ): Result<Issue> {
-        return try {
-            val cleanTicketId = ticketId.removePrefix("#")
-            val docRef = issuesCollection.document(cleanTicketId)
+    override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result<Issue> = try {
+        val cleanTicketId = ticketId.removePrefix("#")
+        val docRef = issuesCollection.document(cleanTicketId)
 
-            val updates = mutableMapOf<String, Any>(
-                "title" to title.trim(),
-                "updatedAt" to Instant.now().toString()
+        val updates = mutableMapOf<String, Any>(
+            "title" to title.trim(),
+            "updatedAt" to Instant.now().toString()
+        )
+        if (description != null) {
+            updates["description"] = description.trim()
+        }
+        if (!locationName.isNullOrBlank()) {
+            updates["locationName"] = locationName.trim()
+        }
+
+        docRef.update(updates).await()
+        val updatedDoc = docRef.get().await()
+        val issue = mapDocumentToIssue(updatedDoc.id, updatedDoc.data ?: emptyMap())
+        if (issue != null) {
+            Result.success(issue)
+        } else {
+            Result.failure(IllegalStateException("Failed to parse updated issue"))
+        }
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    private fun mapDocumentToIssue(docId: String, data: Map<String, Any?>): Issue? = try {
+        val currentUserId = runCatching { Firebase.auth.currentUser?.uid }.getOrNull()
+        val reporterId = data["reporterId"] as? String ?: ""
+        val ticketId = data["ticketId"] as? String ?: docId
+
+        val category = (data["category"] as? String)?.let { catStr ->
+            IssueCategory.entries.firstOrNull { it.name.equals(catStr, ignoreCase = true) }
+        } ?: IssueCategory.Other
+
+        val status = (data["status"] as? String)?.let { statusStr ->
+            IssueStatus.entries.firstOrNull { it.name.equals(statusStr, ignoreCase = true) }
+        } ?: IssueStatus.Open
+
+        val createdAtInstant = runCatching {
+            Instant.parse(data["createdAt"] as? String)
+        }.getOrNull() ?: Instant.now()
+
+        @Suppress("UNCHECKED_CAST")
+        val milestonesList = (data["milestones"] as? List<Map<String, Any?>>)?.mapIndexed { index, m ->
+            val time = runCatching {
+                Instant.parse(m["timestamp"] as? String)
+            }.getOrNull() ?: createdAtInstant
+            IssueMilestone(
+                id = (m["id"] as? Number)?.toLong() ?: (index + 1).toLong(),
+                stepOrder = (m["stepOrder"] as? Number)?.toInt() ?: (index + 1),
+                title = m["title"] as? String ?: "",
+                actor = m["actor"] as? String ?: "",
+                timestamp = time,
+                isCompleted = m["isCompleted"] as? Boolean ?: false
             )
-            if (description != null) {
-                updates["description"] = description.trim()
-            }
-            if (!locationName.isNullOrBlank()) {
-                updates["locationName"] = locationName.trim()
-            }
+        } ?: emptyList()
 
-            docRef.update(updates).await()
-            val updatedDoc = docRef.get().await()
-            val issue = mapDocumentToIssue(updatedDoc.id, updatedDoc.data ?: emptyMap())
-            if (issue != null) {
-                Result.success(issue)
-            } else {
-                Result.failure(IllegalStateException("Failed to parse updated issue"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
+        Issue(
+            ticketId = ticketId,
+            title = data["title"] as? String ?: "Civic Issue",
+            description = data["description"] as? String,
+            category = category,
+            status = status,
+            area = data["area"] as? String ?: "",
+            locationName = data["locationName"] as? String ?: "",
+            authorName = data["authorName"] as? String ?: "Civic Reporter",
+            createdAt = createdAtInstant,
+            likes = (data["likes"] as? Number)?.toInt() ?: 0,
+            photoUri = data["photoUri"] as? String,
+            isMine = (currentUserId != null && reporterId == currentUserId),
+            latitude = (data["latitude"] as? Number)?.toDouble() ?: 12.9716,
+            longitude = (data["longitude"] as? Number)?.toDouble() ?: 77.5946,
+            milestones = milestonesList,
+            authorUsername = data["authorUsername"] as? String
+        )
+    } catch (e: Exception) {
+        null
+    }
+
+    private fun readPhotoBytes(uriStr: String): ByteArray? = runCatching {
+        if (uriStr.startsWith("content://")) {
+            context.contentResolver.openInputStream(Uri.parse(uriStr))?.use { it.readBytes() }
+        } else {
+            val path = if (uriStr.startsWith("file://")) uriStr.removePrefix("file://") else uriStr
+            File(path).readBytes()
         }
-    }
-
-    private fun mapDocumentToIssue(docId: String, data: Map<String, Any?>): Issue? {
-        return try {
-            val currentUserId = runCatching { Firebase.auth.currentUser?.uid }.getOrNull()
-            val reporterId = data["reporterId"] as? String ?: ""
-            val ticketId = data["ticketId"] as? String ?: docId
-
-            val category = (data["category"] as? String)?.let { catStr ->
-                IssueCategory.entries.firstOrNull { it.name.equals(catStr, ignoreCase = true) }
-            } ?: IssueCategory.Other
-
-            val status = (data["status"] as? String)?.let { statusStr ->
-                IssueStatus.entries.firstOrNull { it.name.equals(statusStr, ignoreCase = true) }
-            } ?: IssueStatus.Open
-
-            val createdAtInstant = runCatching {
-                Instant.parse(data["createdAt"] as? String)
-            }.getOrNull() ?: Instant.now()
-
-            @Suppress("UNCHECKED_CAST")
-            val milestonesList = (data["milestones"] as? List<Map<String, Any?>>)?.mapIndexed { index, m ->
-                val time = runCatching {
-                    Instant.parse(m["timestamp"] as? String)
-                }.getOrNull() ?: createdAtInstant
-                IssueMilestone(
-                    id = (m["id"] as? Number)?.toLong() ?: (index + 1).toLong(),
-                    stepOrder = (m["stepOrder"] as? Number)?.toInt() ?: (index + 1),
-                    title = m["title"] as? String ?: "",
-                    actor = m["actor"] as? String ?: "",
-                    timestamp = time,
-                    isCompleted = m["isCompleted"] as? Boolean ?: false
-                )
-            } ?: emptyList()
-
-            Issue(
-                ticketId = ticketId,
-                title = data["title"] as? String ?: "Civic Issue",
-                description = data["description"] as? String,
-                category = category,
-                status = status,
-                area = data["area"] as? String ?: "",
-                locationName = data["locationName"] as? String ?: "",
-                authorName = data["authorName"] as? String ?: "Civic Reporter",
-                createdAt = createdAtInstant,
-                likes = (data["likes"] as? Number)?.toInt() ?: 0,
-                photoUri = data["photoUri"] as? String,
-                isMine = (currentUserId != null && reporterId == currentUserId),
-                latitude = (data["latitude"] as? Number)?.toDouble() ?: 12.9716,
-                longitude = (data["longitude"] as? Number)?.toDouble() ?: 77.5946,
-                milestones = milestonesList,
-                authorUsername = data["authorUsername"] as? String
-            )
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun readPhotoBytes(uriStr: String): ByteArray? {
-        return runCatching {
-            if (uriStr.startsWith("content://")) {
-                context.contentResolver.openInputStream(Uri.parse(uriStr))?.use { it.readBytes() }
-            } else {
-                val path = if (uriStr.startsWith("file://")) uriStr.removePrefix("file://") else uriStr
-                File(path).readBytes()
-            }
-        }.getOrNull()
-    }
+    }.getOrNull()
 }

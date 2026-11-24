@@ -9,15 +9,11 @@ import com.svce.issuegram.ui.theme.ExpressiveTextStyles
 import java.util.Locale
 
 @Composable
-fun Eyebrow(
-    text: String,
-    modifier: Modifier = Modifier,
-    color: Color = MaterialTheme.colorScheme.primary,
-) {
+fun Eyebrow(text: String, modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary) {
     Text(
         text = text.uppercase(Locale.getDefault()),
         style = ExpressiveTextStyles.eyebrow,
         color = color,
-        modifier = modifier,
+        modifier = modifier
     )
 }

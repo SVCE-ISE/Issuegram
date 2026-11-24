@@ -14,7 +14,7 @@ data class AppNotification(
     val status: IssueStatus? = null,
     val message: String,
     val at: Instant,
-    val unread: Boolean,
+    val unread: Boolean
 )
 
 /** Dummy alert feed until notifications come from FCM. */
@@ -32,7 +32,7 @@ object MockAlerts {
             status = IssueStatus.InProgress,
             message = "Work has started. The drain will be cleared this week.",
             at = hoursAgo(3),
-            unread = true,
+            unread = true
         ),
         AppNotification(
             id = "n2",
@@ -42,7 +42,7 @@ object MockAlerts {
             status = IssueStatus.Resolved,
             message = "Marked fixed. Confirm it looks right from your side.",
             at = hoursAgo(7),
-            unread = true,
+            unread = true
         ),
         AppNotification(
             id = "n3",
@@ -51,7 +51,7 @@ object MockAlerts {
             kind = AlertKind.Reply,
             message = "Admin: The valve line is scheduled for Thursday morning.",
             at = hoursAgo(26),
-            unread = false,
+            unread = false
         ),
         AppNotification(
             id = "n4",
@@ -61,7 +61,7 @@ object MockAlerts {
             status = IssueStatus.Acknowledged,
             message = "Your report was acknowledged by the ward office.",
             at = hoursAgo(30),
-            unread = false,
+            unread = false
         ),
         AppNotification(
             id = "n5",
@@ -71,7 +71,7 @@ object MockAlerts {
             status = IssueStatus.Reopened,
             message = "Reopened after your report. The team has been notified.",
             at = daysAgo(3),
-            unread = false,
-        ),
+            unread = false
+        )
     )
 }

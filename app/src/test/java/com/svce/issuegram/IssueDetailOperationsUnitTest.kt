@@ -1,6 +1,5 @@
 package com.svce.issuegram
 
-import com.svce.issuegram.data.TimelineEvent
 import com.svce.issuegram.data.model.Issue
 import com.svce.issuegram.data.model.IssueCategory
 import com.svce.issuegram.data.model.IssueMilestone
@@ -12,10 +11,10 @@ import com.svce.issuegram.domain.resolveReporterDisplayName
 import com.svce.issuegram.domain.usecase.issue.GetIssueDetailUseCase
 import com.svce.issuegram.domain.usecase.issue.ToggleLikeUseCase
 import com.svce.issuegram.ui.screens.IssueDetailViewModel
+import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -30,7 +29,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.time.Instant
 
 /**
  * Exhaustive unit and operations tests for Issue Detail screen & ViewModel:
@@ -79,12 +77,7 @@ class IssueDetailOperationsUnitTest {
 
         override suspend fun deleteIssue(ticketId: String): Result<Unit> = Result.success(Unit)
 
-        override suspend fun editIssue(
-            ticketId: String,
-            title: String,
-            description: String?,
-            locationName: String?
-        ): Result<Issue> = Result.failure(NotImplementedError())
+        override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result<Issue> = Result.failure(NotImplementedError())
 
         override suspend fun refreshIssues(): Result<Unit> = Result.success(Unit)
     }
@@ -270,29 +263,22 @@ class IssueDetailOperationsUnitTest {
         assertEquals("Citizen Reporter", name3)
     }
 
-    private fun createTestIssue(
-        ticketId: String,
-        title: String,
-        status: IssueStatus,
-        createdAt: Instant = Instant.now()
-    ): Issue {
-        return Issue(
-            ticketId = ticketId,
-            authorName = "Vikram Sharma",
-            authorUsername = "vikram_s",
-            authorId = "user_vikram",
-            title = title,
-            description = "Detailed civic report about this incident.",
-            category = IssueCategory.Road,
-            status = status,
-            area = "Koramangala",
-            locationName = "80 Feet Road",
-            createdAt = createdAt,
-            likes = 5,
-            photoUri = "https://example.com/photo.jpg",
-            isMine = false,
-            latitude = 12.9352,
-            longitude = 77.6245
-        )
-    }
+    private fun createTestIssue(ticketId: String, title: String, status: IssueStatus, createdAt: Instant = Instant.now()): Issue = Issue(
+        ticketId = ticketId,
+        authorName = "Vikram Sharma",
+        authorUsername = "vikram_s",
+        authorId = "user_vikram",
+        title = title,
+        description = "Detailed civic report about this incident.",
+        category = IssueCategory.Road,
+        status = status,
+        area = "Koramangala",
+        locationName = "80 Feet Road",
+        createdAt = createdAt,
+        likes = 5,
+        photoUri = "https://example.com/photo.jpg",
+        isMine = false,
+        latitude = 12.9352,
+        longitude = 77.6245
+    )
 }

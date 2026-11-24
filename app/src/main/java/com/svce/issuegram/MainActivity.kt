@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.DisposableEffect
@@ -22,13 +23,10 @@ import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.NoCredentialException
-import android.content.Intent
-import androidx.activity.result.contract.ActivityResultContracts
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.Firebase
 import com.google.firebase.auth.GoogleAuthProvider
@@ -39,16 +37,15 @@ import com.svce.issuegram.ui.theme.IssuegramTheme
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 
-private suspend fun <T> com.google.android.gms.tasks.Task<T>.awaitResult(): T =
-    suspendCancellableCoroutine { cont ->
-        addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                cont.resume(task.result, onCancellation = null)
-            } else {
-                cont.resumeWith(Result.failure(task.exception ?: RuntimeException("Firebase task failed")))
-            }
+private suspend fun <T> com.google.android.gms.tasks.Task<T>.awaitResult(): T = suspendCancellableCoroutine { cont ->
+    addOnCompleteListener { task ->
+        if (task.isSuccessful) {
+            cont.resume(task.result, onCancellation = null)
+        } else {
+            cont.resumeWith(Result.failure(task.exception ?: RuntimeException("Firebase task failed")))
         }
     }
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,7 +67,7 @@ class MainActivity : ComponentActivity() {
             // Dynamic colour on Android 12+; brand palette below that.
             IssuegramTheme(
                 motionScheme = MotionScheme.standard(),
-                dynamicColor = true,
+                dynamicColor = true
             ) {
                 val context = LocalContext.current
                 val credentialManager = remember { CredentialManager.create(context) }
@@ -176,8 +173,10 @@ class MainActivity : ComponentActivity() {
                                     val credential = result.credential
                                     val idToken = when {
                                         credential is CustomCredential &&
-                                            (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL ||
-                                             credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_SIWG_CREDENTIAL) -> {
+                                            (
+                                                credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL ||
+                                                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_SIWG_CREDENTIAL
+                                                ) -> {
                                             val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
                                             googleIdTokenCredential.idToken
                                         }
@@ -193,13 +192,16 @@ class MainActivity : ComponentActivity() {
                                     Log.i("IssuegramAuth", "No Credential Manager accounts; falling back to GoogleSignInClient...")
                                     launchLegacyGoogleSignIn()
                                 } catch (e: Exception) {
-                                    Log.w("IssuegramAuth", "Credential Manager encountered ${e::class.java.simpleName}: ${e.message}. Triggering fallback...")
+                                    Log.w(
+                                        "IssuegramAuth",
+                                        "Credential Manager encountered ${e::class.java.simpleName}: ${e.message}. Triggering fallback..."
+                                    )
                                     launchLegacyGoogleSignIn()
                                 } finally {
                                     isSigningIn = false
                                 }
                             }
-                        },
+                        }
                     )
                 } else {
                     IssuegramApp()

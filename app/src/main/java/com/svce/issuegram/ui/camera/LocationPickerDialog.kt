@@ -19,34 +19,46 @@ fun LocationPickerDialog(initialLatitude: Double?, initialLongitude: Double?, on
     val context = LocalContext.current
     val hasLocationPermission = remember {
         ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
     }
     val lastKnown = remember(hasLocationPermission) {
         if (hasLocationPermission) getLastKnownLocation(context) else null
     }
     var selected by remember {
         mutableStateOf(
-            if (initialLatitude != null && initialLongitude != null) LatLng(initialLatitude, initialLongitude)
-            else lastKnown?.let { LatLng(it.latitude, it.longitude) }
+            if (initialLatitude != null && initialLongitude != null) {
+                LatLng(initialLatitude, initialLongitude)
+            } else {
+                lastKnown?.let { LatLng(it.latitude, it.longitude) }
+            }
         )
     }
     val camera = rememberCameraPositionState {
         val start = selected ?: lastKnown?.let { LatLng(it.latitude, it.longitude) } ?: LatLng(20.5937, 78.9629)
         position = CameraPosition.fromLatLngZoom(start, if (selected == null && lastKnown == null) 4f else 15f)
     }
-    AlertDialog(onDismissRequest = onDismiss, title = { Text("Where is the issue?") }, text = {
-        Column {
-            Text("Tap the map to select the location.")
-            GoogleMap(
-                modifier = Modifier.fillMaxWidth().height(320.dp),
-                cameraPositionState = camera,
-                properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
-                onMapClick = { selected = it },
-                uiSettings = MapUiSettings(zoomControlsEnabled = true, myLocationButtonEnabled = hasLocationPermission)
-            ) {
-                selected?.let { Marker(state = rememberUpdatedMarkerState(position = it)) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Where is the issue?") },
+        text = {
+            Column {
+                Text("Tap the map to select the location.")
+                GoogleMap(
+                    modifier = Modifier.fillMaxWidth().height(320.dp),
+                    cameraPositionState = camera,
+                    properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
+                    onMapClick = { selected = it },
+                    uiSettings = MapUiSettings(zoomControlsEnabled = true, myLocationButtonEnabled = hasLocationPermission)
+                ) {
+                    selected?.let { Marker(state = rememberUpdatedMarkerState(position = it)) }
+                }
             }
-        }
-    }, confirmButton = { TextButton(onClick = { selected?.let { onSelected(it.latitude, it.longitude) } }, enabled = selected != null) { Text("Use this location") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } })
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                selected?.let { onSelected(it.latitude, it.longitude) }
+            }, enabled = selected != null) { Text("Use this location") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
 }

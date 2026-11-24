@@ -4,14 +4,12 @@ import com.svce.issuegram.data.datasource.local.IssueLocalDataSource
 import com.svce.issuegram.data.datasource.remote.IssueRemoteDataSource
 import com.svce.issuegram.data.model.Issue
 import com.svce.issuegram.data.model.IssueCategory
-import com.svce.issuegram.data.model.IssueStatus
 import com.svce.issuegram.data.repository.IssueRepositoryImpl
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import java.time.Instant
 
 /**
  * Unit tests to catch bugs and verify end-to-end synchronization between
@@ -69,12 +67,7 @@ class IssueSyncUnitTest {
             return if (removed) Result.success(Unit) else Result.failure(IllegalArgumentException("Not found"))
         }
 
-        override suspend fun editIssue(
-            ticketId: String,
-            title: String,
-            description: String?,
-            locationName: String?
-        ): Result<Issue> {
+        override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result<Issue> {
             callCountEdit++
             if (shouldFailNetwork) return Result.failure(RuntimeException("Supabase PATCH error: 500"))
             val idx = remoteStorage.indexOfFirst { it.ticketId == ticketId }
@@ -82,7 +75,7 @@ class IssueSyncUnitTest {
                 val updated = remoteStorage[idx].copy(
                     title = title.trim().ifBlank { remoteStorage[idx].title },
                     description = description?.trim()?.ifBlank { null } ?: remoteStorage[idx].description,
-                    locationName = locationName?.trim()?.ifBlank { remoteStorage[idx].locationName } ?: remoteStorage[idx].locationName,
+                    locationName = locationName?.trim()?.ifBlank { remoteStorage[idx].locationName } ?: remoteStorage[idx].locationName
                 )
                 remoteStorage[idx] = updated
                 Result.success(updated)
@@ -98,7 +91,7 @@ class IssueSyncUnitTest {
         localDataSource = IssueLocalDataSource()
         repository = IssueRepositoryImpl(
             remoteDataSource = fakeRemoteDataSource,
-            localDataSource = localDataSource,
+            localDataSource = localDataSource
         )
     }
 
@@ -113,7 +106,7 @@ class IssueSyncUnitTest {
             latitude = 12.9716,
             longitude = 77.5946,
             authorName = "Praveen Zalaki",
-            authorUsername = "praveen_zalaki",
+            authorUsername = "praveen_zalaki"
         )
 
         assertTrue("Issue creation should succeed", result.isSuccess)
@@ -143,7 +136,7 @@ class IssueSyncUnitTest {
             locationName = "4th Main Road",
             photoUri = "pothole.jpg",
             latitude = 12.9716,
-            longitude = 77.5946,
+            longitude = 77.5946
         )
         val original = postResult.getOrThrow()
 
@@ -152,7 +145,7 @@ class IssueSyncUnitTest {
             ticketId = original.ticketId,
             title = "Deep dangerous pothole on 4th Main",
             description = "Near Bangalore Bakery, urgent repair needed",
-            locationName = "4th Main Road, Jayanagar",
+            locationName = "4th Main Road, Jayanagar"
         )
 
         assertTrue("Edit should succeed", editResult.isSuccess)
@@ -179,7 +172,7 @@ class IssueSyncUnitTest {
             description = "Pipe burst",
             category = IssueCategory.Water,
             locationName = "Indiranagar",
-            photoUri = "leak.jpg",
+            photoUri = "leak.jpg"
         )
         val issue = postResult.getOrThrow()
         assertEquals(1, localDataSource.issuesFlow.first().size)
@@ -195,7 +188,13 @@ class IssueSyncUnitTest {
         assertFalse("Local feed should no longer contain deleted issue", localFeed.any { it.ticketId == issue.ticketId })
 
         // 2. Remote storage must be empty
-        assertFalse("Remote database should no longer contain deleted issue", fakeRemoteDataSource.remoteStorage.any { it.ticketId == issue.ticketId })
+        assertFalse(
+            "Remote database should no longer contain deleted issue",
+            fakeRemoteDataSource.remoteStorage.any {
+                it.ticketId ==
+                    issue.ticketId
+            }
+        )
     }
 
     @Test
@@ -205,7 +204,7 @@ class IssueSyncUnitTest {
             description = "Blocking pedestrian path",
             category = IssueCategory.Other,
             locationName = "Koramangala",
-            photoUri = "branch.jpg",
+            photoUri = "branch.jpg"
         )
         val issue = postResult.getOrThrow()
 
@@ -218,7 +217,13 @@ class IssueSyncUnitTest {
 
         // Local cache must still be wiped optimistically
         val localFeed = localDataSource.issuesFlow.first()
-        assertFalse("Locally the issue must still be removed immediately even if remote is offline", localFeed.any { it.ticketId == issue.ticketId })
+        assertFalse(
+            "Locally the issue must still be removed immediately even if remote is offline",
+            localFeed.any {
+                it.ticketId ==
+                    issue.ticketId
+            }
+        )
     }
 
     @Test
@@ -226,7 +231,7 @@ class IssueSyncUnitTest {
         val duplicateInput = "84a, chandramouleshwara layout, Hunasamaranahalli, Karnataka 562157, India"
         val formatted = com.svce.issuegram.domain.formatLocationAddress(
             locationName = duplicateInput,
-            area = duplicateInput,
+            area = duplicateInput
         )
 
         assertNotNull(formatted.primary)
@@ -246,7 +251,7 @@ class IssueSyncUnitTest {
             authorName = "praveenzalaki200",
             authorUsername = "praveenzalaki200",
             authorId = "user_123",
-            currentFirebaseUser = null,
+            currentFirebaseUser = null
         )
 
         assertEquals("Praveen Zalaki", resolved)

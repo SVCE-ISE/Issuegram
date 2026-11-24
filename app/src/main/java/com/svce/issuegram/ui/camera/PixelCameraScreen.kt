@@ -16,14 +16,12 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -31,7 +29,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -49,23 +46,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.rounded.Cameraswitch
 import androidx.compose.material.icons.rounded.PhotoLibrary
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.rememberUpdatedMarkerState
-import com.svce.issuegram.ui.theme.GoogleSans
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -82,22 +67,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.ui.res.stringResource
-import com.svce.issuegram.data.model.IssueStatus
-import com.svce.issuegram.ui.components.Eyebrow
-import com.svce.issuegram.ui.components.StatusBadge
-import com.svce.issuegram.ui.theme.ExpressiveTextStyles
-import com.svce.issuegram.ui.theme.Spacing
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -114,18 +91,28 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.svce.issuegram.R
-import com.svce.issuegram.ui.theme.IssuegramShapeDefaults
 import com.svce.issuegram.data.local.ReportDraft
 import com.svce.issuegram.data.local.ReportDraftStore
 import com.svce.issuegram.data.location.currentDeviceLocation
 import com.svce.issuegram.data.location.reverseGeocode
-import com.svce.issuegram.domain.ReportRules
+import com.svce.issuegram.data.model.IssueStatus
+import com.svce.issuegram.ui.components.StatusBadge
+import com.svce.issuegram.ui.theme.ExpressiveTextStyles
+import com.svce.issuegram.ui.theme.GoogleSans
+import com.svce.issuegram.ui.theme.Spacing
+import java.io.File
+import java.util.Locale
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.io.File
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -145,8 +132,8 @@ fun PixelCameraScreen(
         latitude: Double,
         longitude: Double,
         capturedFile: File?,
-        pickedUri: Uri?,
-    ) -> Unit = { _, _, _, _, _, _, _, _, _ -> },
+        pickedUri: Uri?
+    ) -> Unit = { _, _, _, _, _, _, _, _, _ -> }
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -159,7 +146,12 @@ fun PixelCameraScreen(
     var confirmingDraftDiscard by remember { mutableStateOf(false) }
     var cameraProvider by remember { mutableStateOf<ProcessCameraProvider?>(null) }
     var lensFacing by remember { mutableStateOf(CameraSelector.DEFAULT_BACK_CAMERA) }
-    DisposableEffect(Unit) { onDispose { cameraMounted = false; cameraProvider?.unbindAll() } }
+    DisposableEffect(Unit) {
+        onDispose {
+            cameraMounted = false
+            cameraProvider?.unbindAll()
+        }
+    }
 
     var isShutterTriggered by remember { mutableStateOf(false) }
     var isPhotoCaptured by rememberSaveable { mutableStateOf(restoredDraft.photoPath != null || restoredDraft.pickedUri != null) }
@@ -191,7 +183,9 @@ fun PixelCameraScreen(
                         MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                         id
                     )
-                } else null
+                } else {
+                    null
+                }
             }
         }.getOrNull()
     }
@@ -247,10 +241,31 @@ fun PixelCameraScreen(
             currentLocationText = reverseGeocode(context, pickedLatitude, pickedLongitude) ?: coordinates
         }
     }
-    LaunchedEffect(issueTitle, issueText, selectedCategory, currentLocationText, subLocationText, detectedLat, detectedLon, capturedPhotoPath, pickedGalleryPath) {
+    LaunchedEffect(
+        issueTitle,
+        issueText,
+        selectedCategory,
+        currentLocationText,
+        subLocationText,
+        detectedLat,
+        detectedLon,
+        capturedPhotoPath,
+        pickedGalleryPath
+    ) {
         if (capturedPhotoPath != null || pickedGalleryPath != null || issueTitle.isNotBlank() || issueText.isNotBlank()) {
-            draftStore.save(ReportDraft(issueTitle, issueText, selectedCategory, currentLocationText, subLocationText,
-                detectedLat, detectedLon, capturedPhotoPath, pickedGalleryPath))
+            draftStore.save(
+                ReportDraft(
+                    issueTitle,
+                    issueText,
+                    selectedCategory,
+                    currentLocationText,
+                    subLocationText,
+                    detectedLat,
+                    detectedLon,
+                    capturedPhotoPath,
+                    pickedGalleryPath
+                )
+            )
         } else {
             draftStore.clear()
         }
@@ -271,16 +286,20 @@ fun PixelCameraScreen(
     }
     androidx.activity.compose.BackHandler(isPhotoCaptured && !isPosting) { isPhotoCaptured = false }
     LaunchedEffect(isPhotoCaptured) { if (isPhotoCaptured) cameraProvider?.unbindAll() }
-    if (confirmingDraftDiscard) androidx.compose.material3.AlertDialog(
-        onDismissRequest = { confirmingDraftDiscard = false },
-        title = { Text("Discard this draft?", fontFamily = GoogleSans, fontWeight = FontWeight.Bold) },
-        text = { Text("Remove this report's saved photo, title, description and location from this device?", fontFamily = GoogleSans) },
-        confirmButton = { androidx.compose.material3.TextButton(onClick = {
-            resetCameraScreenState()
-            confirmingDraftDiscard = false
-        }) { Text("Discard draft", fontFamily = GoogleSans) } },
-        dismissButton = { androidx.compose.material3.TextButton(onClick = { confirmingDraftDiscard = false }) { Text("Keep draft", fontFamily = GoogleSans) } },
-    )
+    if (confirmingDraftDiscard) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { confirmingDraftDiscard = false },
+            title = { Text("Discard this draft?", fontFamily = GoogleSans, fontWeight = FontWeight.Bold) },
+            text = { Text("Remove this report's saved photo, title, description and location from this device?", fontFamily = GoogleSans) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    resetCameraScreenState()
+                    confirmingDraftDiscard = false
+                }) { Text("Discard draft", fontFamily = GoogleSans) }
+            },
+            dismissButton = { androidx.compose.material3.TextButton(onClick = { confirmingDraftDiscard = false }) { Text("Keep draft", fontFamily = GoogleSans) } }
+        )
+    }
     val imageCapture = remember {
         ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
@@ -360,20 +379,22 @@ fun PixelCameraScreen(
                                         implementationMode = PreviewView.ImplementationMode.COMPATIBLE
                                         val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
                                         cameraProviderFuture.addListener({
-                                            if (cameraMounted && !isPhotoCaptured) runCatching {
-                                                val provider = cameraProviderFuture.get()
-                                                cameraProvider = provider
-                                                val preview = Preview.Builder().build().also {
-                                                    it.surfaceProvider = surfaceProvider
-                                                }
-                                                provider.unbindAll()
-                                                provider.bindToLifecycle(
-                                                    lifecycleOwner,
-                                                    lensFacing,
-                                                    preview,
-                                                    imageCapture
-                                                )
-                                            }.onFailure { cameraError = "The camera couldn't start. Try again or choose a photo." }
+                                            if (cameraMounted && !isPhotoCaptured) {
+                                                runCatching {
+                                                    val provider = cameraProviderFuture.get()
+                                                    cameraProvider = provider
+                                                    val preview = Preview.Builder().build().also {
+                                                        it.surfaceProvider = surfaceProvider
+                                                    }
+                                                    provider.unbindAll()
+                                                    provider.bindToLifecycle(
+                                                        lifecycleOwner,
+                                                        lensFacing,
+                                                        preview,
+                                                        imageCapture
+                                                    )
+                                                }.onFailure { cameraError = "The camera couldn't start. Try again or choose a photo." }
+                                            }
                                         }, ContextCompat.getMainExecutor(ctx))
                                     }
                                 },
@@ -605,10 +626,15 @@ fun PixelCameraScreen(
                             val coordinates = String.format(Locale.US, "%.5f, %.5f", loc.latitude, loc.longitude)
                             currentLocationText = reverseGeocode(context, loc.latitude, loc.longitude) ?: coordinates
                             subLocationText = ""
-                        } catch (_: kotlinx.coroutines.TimeoutCancellationException) { locationError = "Location lookup timed out. Choose it on the map or retry." }
-                        catch (e: CancellationException) { throw e }
-                        catch (_: Exception) { locationError = "Couldn't get your location. Choose it on the map or retry." }
-                        finally { isLocationLoading = false }
+                        } catch (_: kotlinx.coroutines.TimeoutCancellationException) {
+                            locationError = "Location lookup timed out. Choose it on the map or retry."
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (_: Exception) {
+                            locationError = "Couldn't get your location. Choose it on the map or retry."
+                        } finally {
+                            isLocationLoading = false
+                        }
                     }
                 }
 
@@ -656,7 +682,7 @@ fun PixelCameraScreen(
                                     text = "New Issue Report",
                                     fontFamily = GoogleSans,
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             },
                             navigationIcon = {
@@ -668,7 +694,7 @@ fun PixelCameraScreen(
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                                         contentDescription = "Back to camera",
-                                        tint = MaterialTheme.colorScheme.onSurface,
+                                        tint = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
                             },
@@ -678,20 +704,20 @@ fun PixelCameraScreen(
                                         Text(
                                             text = "Discard",
                                             fontFamily = GoogleSans,
-                                            fontWeight = FontWeight.Medium,
+                                            fontWeight = FontWeight.Medium
                                         )
                                     }
                                 }
                             },
                             colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.surface,
-                            ),
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
                         )
                     },
                     bottomBar = {
                         Surface(
                             color = MaterialTheme.colorScheme.surfaceContainer,
-                            tonalElevation = 2.dp,
+                            tonalElevation = 2.dp
                         ) {
                             Row(
                                 modifier = Modifier
@@ -700,10 +726,10 @@ fun PixelCameraScreen(
                                         start = Spacing.space4,
                                         end = Spacing.space4,
                                         top = Spacing.space3,
-                                        bottom = Spacing.space3 + bottomBarPadding,
+                                        bottom = Spacing.space3 + bottomBarPadding
                                     ),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(Spacing.space3),
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.space3)
                             ) {
                                 OutlinedButton(
                                     onClick = {
@@ -714,12 +740,12 @@ fun PixelCameraScreen(
                                             isPhotoCaptured = false
                                         }
                                     },
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.weight(1f)
                                 ) {
                                     Text(
                                         text = "Retake",
                                         fontFamily = GoogleSans,
-                                        fontWeight = FontWeight.SemiBold,
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                 }
                                 Button(
@@ -742,7 +768,9 @@ fun PixelCameraScreen(
                                                 photoFile.copyTo(target, overwrite = true)
                                                 target
                                             }.getOrNull() ?: photoFile
-                                        } else null
+                                        } else {
+                                            null
+                                        }
 
                                         resetCameraScreenState()
 
@@ -755,42 +783,42 @@ fun PixelCameraScreen(
                                             lat,
                                             lon,
                                             permanentPhotoFile ?: photoFile,
-                                            galleryUri,
+                                            galleryUri
                                         )
                                     },
                                     enabled = isPostEnabled,
-                                    modifier = Modifier.weight(2f),
+                                    modifier = Modifier.weight(2f)
                                 ) {
                                     if (isPosting) {
                                         CircularProgressIndicator(
                                             modifier = Modifier.size(16.dp),
                                             color = MaterialTheme.colorScheme.onPrimary,
-                                            strokeWidth = 2.dp,
+                                            strokeWidth = 2.dp
                                         )
                                         Spacer(Modifier.width(Spacing.space2))
                                         Text(
                                             text = "Submitting...",
                                             fontFamily = GoogleSans,
-                                            fontWeight = FontWeight.SemiBold,
+                                            fontWeight = FontWeight.SemiBold
                                         )
                                     } else {
                                         Text(
                                             text = "Submit Report",
                                             fontFamily = GoogleSans,
-                                            fontWeight = FontWeight.SemiBold,
+                                            fontWeight = FontWeight.SemiBold
                                         )
                                     }
                                 }
                             }
                         }
-                    },
+                    }
                 ) { innerPadding ->
                     Column(
                         modifier = Modifier
                             .padding(innerPadding)
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
-                            .padding(horizontal = Spacing.space4),
+                            .padding(horizontal = Spacing.space4)
                     ) {
                         Spacer(Modifier.height(Spacing.space1))
 
@@ -801,7 +829,7 @@ fun PixelCameraScreen(
                                 .aspectRatio(16f / 10f)
                                 .clip(MaterialTheme.shapes.extraLarge)
                                 .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                            contentAlignment = Alignment.Center,
+                            contentAlignment = Alignment.Center
                         ) {
                             when {
                                 capturedPhotoFile != null -> {
@@ -809,7 +837,7 @@ fun PixelCameraScreen(
                                         model = capturedPhotoFile,
                                         contentDescription = "Captured Issue Photo",
                                         contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize(),
+                                        modifier = Modifier.fillMaxSize()
                                     )
                                 }
                                 pickedGalleryUri != null -> {
@@ -817,7 +845,7 @@ fun PixelCameraScreen(
                                         model = pickedGalleryUri,
                                         contentDescription = "Selected Issue Photo",
                                         contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize(),
+                                        modifier = Modifier.fillMaxSize()
                                     )
                                 }
                                 else -> {
@@ -825,7 +853,7 @@ fun PixelCameraScreen(
                                         imageVector = Icons.Rounded.PhotoLibrary,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(48.dp),
+                                        modifier = Modifier.size(48.dp)
                                     )
                                 }
                             }
@@ -837,14 +865,14 @@ fun PixelCameraScreen(
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             StatusBadge(status = IssueStatus.Open)
                             Text(
                                 text = "DRAFT REPORT",
                                 fontFamily = GoogleSans,
                                 style = ExpressiveTextStyles.dataSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
@@ -858,7 +886,7 @@ fun PixelCameraScreen(
                                 Text(
                                     text = "Title",
                                     fontFamily = GoogleSans,
-                                    color = MaterialTheme.colorScheme.primary,
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             },
                             singleLine = true,
@@ -869,7 +897,7 @@ fun PixelCameraScreen(
                                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                                 unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
                                 focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
                             ),
                             supportingText = {
                                 Text(
@@ -877,9 +905,9 @@ fun PixelCameraScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     fontFamily = GoogleSans,
                                     style = ExpressiveTextStyles.dataSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                            },
+                            }
                         )
 
                         Spacer(Modifier.height(Spacing.space3))
@@ -892,7 +920,7 @@ fun PixelCameraScreen(
                                 Text(
                                     text = "Description",
                                     fontFamily = GoogleSans,
-                                    color = MaterialTheme.colorScheme.primary,
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             },
                             minLines = 4,
@@ -904,7 +932,7 @@ fun PixelCameraScreen(
                                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                                 unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
                                 focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
                             ),
                             supportingText = {
                                 Text(
@@ -912,9 +940,9 @@ fun PixelCameraScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     fontFamily = GoogleSans,
                                     style = ExpressiveTextStyles.dataSmall,
-                                    color = if (issueText.length >= 450) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = if (issueText.length >= 450) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                            },
+                            }
                         )
 
                         Spacer(Modifier.height(Spacing.space3))
@@ -924,7 +952,7 @@ fun PixelCameraScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.space2),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.space2)
                         ) {
                             categories.forEach { cat ->
                                 val isSelected = cat.equals(selectedCategory, ignoreCase = true)
@@ -935,7 +963,7 @@ fun PixelCameraScreen(
                                         Text(
                                             text = cat,
                                             fontFamily = GoogleSans,
-                                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                                         )
                                     },
                                     leadingIcon = if (isSelected) {
@@ -943,16 +971,18 @@ fun PixelCameraScreen(
                                             Icon(
                                                 imageVector = Icons.Outlined.Check,
                                                 contentDescription = null,
-                                                modifier = Modifier.size(16.dp),
+                                                modifier = Modifier.size(16.dp)
                                             )
                                         }
-                                    } else null,
+                                    } else {
+                                        null
+                                    },
                                     colors = FilterChipDefaults.filterChipColors(
                                         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                         selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    ),
+                                        selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
                                 )
                             }
                         }
@@ -976,7 +1006,7 @@ fun PixelCameraScreen(
                                 .height(180.dp)
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                                .clickable { onRequestPickLocationOnMap() },
+                                .clickable { onRequestPickLocationOnMap() }
                         ) {
                             GoogleMap(
                                 modifier = Modifier.fillMaxSize(),
@@ -988,13 +1018,13 @@ fun PixelCameraScreen(
                                     tiltGesturesEnabled = false,
                                     rotationGesturesEnabled = false,
                                     mapToolbarEnabled = false,
-                                    myLocationButtonEnabled = false,
+                                    myLocationButtonEnabled = false
                                 ),
-                                onMapClick = { onRequestPickLocationOnMap() },
+                                onMapClick = { onRequestPickLocationOnMap() }
                             ) {
                                 Marker(
                                     state = rememberUpdatedMarkerState(position = pinLatLng),
-                                    title = "Report Location",
+                                    title = "Report Location"
                                 )
                             }
 
@@ -1006,24 +1036,24 @@ fun PixelCameraScreen(
                                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                                 modifier = Modifier
                                     .align(Alignment.BottomEnd)
-                                    .padding(Spacing.space2),
+                                    .padding(Spacing.space2)
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = Spacing.space3, vertical = Spacing.space1),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(Spacing.space1),
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.space1)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.Map,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(16.dp),
+                                        modifier = Modifier.size(16.dp)
                                     )
                                     Text(
                                         text = "Pick on map",
                                         fontFamily = GoogleSans,
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                        color = MaterialTheme.colorScheme.primary,
+                                        color = MaterialTheme.colorScheme.primary
                                     )
                                 }
                             }
@@ -1039,7 +1069,7 @@ fun PixelCameraScreen(
                                 Text(
                                     text = "Address",
                                     fontFamily = GoogleSans,
-                                    color = MaterialTheme.colorScheme.primary,
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             },
                             singleLine = false,
@@ -1048,7 +1078,7 @@ fun PixelCameraScreen(
                                 Icon(
                                     imageVector = Icons.Outlined.Place,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             },
                             trailingIcon = if (isLocationLoading) {
@@ -1056,17 +1086,19 @@ fun PixelCameraScreen(
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(18.dp),
                                         strokeWidth = 2.dp,
-                                        color = MaterialTheme.colorScheme.primary,
+                                        color = MaterialTheme.colorScheme.primary
                                     )
                                 }
-                            } else null,
+                            } else {
+                                null
+                            },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                                 unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
                                 focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
                             ),
                             textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = GoogleSans),
                             supportingText = {
@@ -1081,9 +1113,9 @@ fun PixelCameraScreen(
                                     text = helper,
                                     fontFamily = GoogleSans,
                                     style = ExpressiveTextStyles.dataSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                            },
+                            }
                         )
 
                         Spacer(Modifier.height(Spacing.space6))

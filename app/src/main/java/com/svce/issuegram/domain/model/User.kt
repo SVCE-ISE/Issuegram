@@ -10,5 +10,5 @@ data class User(
     val username: String = email.substringBefore('@').ifBlank { "citizen" },
     val avatarUrl: String? = null,
     val bio: String = "Civic Citizen Reporter",
-    val isModerator: Boolean = false,
+    val isModerator: Boolean = false
 )

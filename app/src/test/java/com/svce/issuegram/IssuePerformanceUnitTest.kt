@@ -5,13 +5,13 @@ import com.svce.issuegram.data.datasource.remote.IssueRemoteDataSource
 import com.svce.issuegram.data.model.Issue
 import com.svce.issuegram.data.model.IssueCategory
 import com.svce.issuegram.data.repository.IssueRepositoryImpl
+import kotlin.system.measureNanoTime
+import kotlin.system.measureTimeMillis
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import kotlin.system.measureNanoTime
-import kotlin.system.measureTimeMillis
 
 /**
  * Performance Unit Tests benchmark core operations for the user flow:
@@ -53,12 +53,7 @@ class IssuePerformanceUnitTest {
             return Result.success(Unit)
         }
 
-        override suspend fun editIssue(
-            ticketId: String,
-            title: String,
-            description: String?,
-            locationName: String?
-        ): Result<Issue> {
+        override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result<Issue> {
             kotlinx.coroutines.delay(simulatedNetworkDelayMs)
             val idx = remoteStorage.indexOfFirst { it.ticketId == ticketId }
             return if (idx != -1) {
@@ -77,7 +72,7 @@ class IssuePerformanceUnitTest {
         localDataSource = IssueLocalDataSource()
         repository = IssueRepositoryImpl(
             remoteDataSource = fakeRemoteDataSource,
-            localDataSource = localDataSource,
+            localDataSource = localDataSource
         )
     }
 
@@ -89,7 +84,7 @@ class IssuePerformanceUnitTest {
             description = "Desc",
             category = IssueCategory.Road,
             locationName = "Loc",
-            photoUri = null,
+            photoUri = null
         ).getOrThrow()
 
         // Measure how long localDataSource takes to evict the issue from local state
@@ -116,14 +111,20 @@ class IssuePerformanceUnitTest {
                 title = "Issue #$i with damaged road section",
                 description = "Detailed civic report #$i describing problem",
                 category = IssueCategory.Pothole,
-                status = if (i % 2 == 0) com.svce.issuegram.data.model.IssueStatus.Resolved else com.svce.issuegram.data.model.IssueStatus.Open,
+                status = if (i % 2 ==
+                    0
+                ) {
+                    com.svce.issuegram.data.model.IssueStatus.Resolved
+                } else {
+                    com.svce.issuegram.data.model.IssueStatus.Open
+                },
                 area = "Area $i",
                 locationName = "$i, Main road, Sector $i, Bangalore",
                 authorName = if (i % 5 == 0) "Praveen Zalaki" else "Citizen #$i",
                 createdAt = java.time.Instant.now(),
                 likes = i % 50,
                 photoUri = "photo_$i.jpg",
-                isMine = (i % 5 == 0),
+                isMine = (i % 5 == 0)
             )
         }
 
@@ -154,7 +155,7 @@ class IssuePerformanceUnitTest {
                 description = "Perf test description",
                 category = IssueCategory.Garbage,
                 locationName = "Bannerghatta",
-                photoUri = "photo.jpg",
+                photoUri = "photo.jpg"
             ).getOrThrow()
 
             // Step 2: Edit
@@ -162,7 +163,7 @@ class IssuePerformanceUnitTest {
                 ticketId = post.ticketId,
                 title = "Perf Test Issue (Updated)",
                 description = "Updated description",
-                locationName = "Bannerghatta Road",
+                locationName = "Bannerghatta Road"
             ).getOrThrow()
             assertTrue(edited.title.contains("Updated"))
 

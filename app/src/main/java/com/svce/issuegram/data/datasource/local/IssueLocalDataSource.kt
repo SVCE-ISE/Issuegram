@@ -31,16 +31,19 @@ class IssueLocalDataSource {
     suspend fun deleteIssue(ticketId: String) = mutex.withLock {
         _issuesFlow.value = _issuesFlow.value.filter {
             !it.ticketId.equals(ticketId, ignoreCase = true) &&
-            !it.ticketId.endsWith(ticketId, ignoreCase = true)
+                !it.ticketId.endsWith(ticketId, ignoreCase = true)
         }
     }
 
     suspend fun updateIssue(updatedIssue: Issue) = mutex.withLock {
         _issuesFlow.value = _issuesFlow.value.map {
             if (it.ticketId.equals(updatedIssue.ticketId, ignoreCase = true) ||
-                it.ticketId.endsWith(updatedIssue.ticketId, ignoreCase = true)) {
+                it.ticketId.endsWith(updatedIssue.ticketId, ignoreCase = true)
+            ) {
                 updatedIssue
-            } else it
+            } else {
+                it
+            }
         }
     }
 }

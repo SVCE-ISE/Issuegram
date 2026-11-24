@@ -11,14 +11,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-data class AlertsUiState(
-    val notifications: List<Notification> = emptyList(),
-    val isLoading: Boolean = false,
-)
+data class AlertsUiState(val notifications: List<Notification> = emptyList(), val isLoading: Boolean = false)
 
 class AlertsViewModel(
     getNotificationsUseCase: GetNotificationsUseCase,
-    private val markNotificationsAsReadUseCase: MarkNotificationsAsReadUseCase,
+    private val markNotificationsAsReadUseCase: MarkNotificationsAsReadUseCase
 ) : ViewModel() {
 
     val uiState: StateFlow<AlertsUiState> = getNotificationsUseCase().map {

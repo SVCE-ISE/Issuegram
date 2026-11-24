@@ -17,7 +17,6 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
@@ -33,11 +32,7 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun MyIssuesScreen(
-    modifier: Modifier = Modifier,
-    issues: List<Issue> = emptyList(),
-    onIssueClick: (String) -> Unit,
-) {
+fun MyIssuesScreen(modifier: Modifier = Modifier, issues: List<Issue> = emptyList(), onIssueClick: (String) -> Unit) {
     val myIssues = issues.filter { it.isMine }
     val listState = rememberLazyListState()
     val reducedMotion = rememberReducedMotion()
@@ -48,19 +43,19 @@ fun MyIssuesScreen(
                 modifier = Modifier.padding(
                     start = Spacing.space4,
                     end = Spacing.space4,
-                    top = Spacing.space8,
-                ),
+                    top = Spacing.space8
+                )
             ) {
                 Text(
                     text = stringResource(R.string.my_issues_eyebrow).uppercase(Locale.getDefault()),
                     style = ExpressiveTextStyles.eyebrow,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(Modifier.height(Spacing.space2))
                 Text(
                     text = stringResource(R.string.my_issues_title),
                     style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
             EmptyState(
@@ -69,7 +64,7 @@ fun MyIssuesScreen(
                 body = stringResource(R.string.my_issues_empty_body),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
+                    .weight(1f)
             )
         }
         return
@@ -82,28 +77,28 @@ fun MyIssuesScreen(
             start = Spacing.space4,
             end = Spacing.space4,
             top = Spacing.space8,
-            bottom = Spacing.space6,
+            bottom = Spacing.space6
         ),
-        verticalArrangement = Arrangement.spacedBy(Spacing.space3),
+        verticalArrangement = Arrangement.spacedBy(Spacing.space3)
     ) {
         item(key = "header") {
             Column {
                 Text(
                     text = stringResource(R.string.my_issues_eyebrow).uppercase(Locale.getDefault()),
                     style = ExpressiveTextStyles.eyebrow,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(Modifier.height(Spacing.space2))
                 Text(
                     text = stringResource(R.string.my_issues_title),
                     style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(Modifier.height(Spacing.space2))
                 Text(
                     text = pluralStringResource(R.plurals.my_issues_count, myIssues.size, myIssues.size),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(Modifier.height(Spacing.space2))
             }
@@ -117,8 +112,8 @@ fun MyIssuesScreen(
                         null
                     } else {
                         MaterialTheme.motionScheme.defaultSpatialSpec()
-                    },
-                ),
+                    }
+                )
             )
         }
     }

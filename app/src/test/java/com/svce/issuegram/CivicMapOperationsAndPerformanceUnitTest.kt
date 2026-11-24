@@ -3,14 +3,14 @@ package com.svce.issuegram
 import com.google.android.gms.maps.model.LatLng
 import com.svce.issuegram.data.model.CivicIssueDto
 import com.svce.issuegram.ui.map.CivicIssuePin
+import kotlin.system.measureNanoTime
+import kotlin.system.measureTimeMillis
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import kotlin.system.measureNanoTime
-import kotlin.system.measureTimeMillis
 
 /**
  * Unit & Performance Tests for Civic Map Screen operations, transformations, and coordinate math:
@@ -47,7 +47,7 @@ class CivicMapOperationsAndPerformanceUnitTest {
             position = LatLng(dto.latitude, dto.longitude),
             isResolved = dto.isResolved,
             category = dto.category,
-            timestamp = dto.createdAt ?: "",
+            timestamp = dto.createdAt ?: ""
         )
 
         assertEquals("42", pin.id)
@@ -104,7 +104,7 @@ class CivicMapOperationsAndPerformanceUnitTest {
     fun testSelectedPinDetailsLookup() {
         val pins = listOf(
             CivicIssuePin("101", "#IG-101", "OPEN", "Pothole", "A Street", LatLng(10.0, 10.0), false, "Road", "now"),
-            CivicIssuePin("102", "#IG-102", "RESOLVED", "Garbage", "B Street", LatLng(10.1, 10.1), true, "Sanitation", "now"),
+            CivicIssuePin("102", "#IG-102", "RESOLVED", "Garbage", "B Street", LatLng(10.1, 10.1), true, "Sanitation", "now")
         )
 
         var selectedPinId: String? = "102"
@@ -200,7 +200,7 @@ class CivicMapOperationsAndPerformanceUnitTest {
         val spatialFilterTimeNanos = measureNanoTime {
             val insideRadius = largeList.filter { pos ->
                 kotlin.math.abs(pos.latitude - userLocation.latitude) <= radiusDegrees &&
-                kotlin.math.abs(pos.longitude - userLocation.longitude) <= radiusDegrees
+                    kotlin.math.abs(pos.longitude - userLocation.longitude) <= radiusDegrees
             }
             assertTrue(insideRadius.isNotEmpty())
         }
@@ -210,22 +210,18 @@ class CivicMapOperationsAndPerformanceUnitTest {
     }
 
     // Helper functions mirroring CivicMapScreen logic
-    private fun filterPins(pins: List<CivicIssuePin>, filter: String): List<CivicIssuePin> {
-        return when (filter) {
-            "Active" -> pins.filter { !it.isResolved }
-            "Resolved" -> pins.filter { it.isResolved }
-            else -> pins
-        }
+    private fun filterPins(pins: List<CivicIssuePin>, filter: String): List<CivicIssuePin> = when (filter) {
+        "Active" -> pins.filter { !it.isResolved }
+        "Resolved" -> pins.filter { it.isResolved }
+        else -> pins
     }
 
-    private fun resolveMapCenter(initialCenter: LatLng?, firstIssueLatLng: LatLng?): LatLng {
-        return if (initialCenter != null) {
-            initialCenter
-        } else if (firstIssueLatLng != null) {
-            firstIssueLatLng
-        } else {
-            LatLng(13.0827, 80.2707)
-        }
+    private fun resolveMapCenter(initialCenter: LatLng?, firstIssueLatLng: LatLng?): LatLng = if (initialCenter != null) {
+        initialCenter
+    } else if (firstIssueLatLng != null) {
+        firstIssueLatLng
+    } else {
+        LatLng(13.0827, 80.2707)
     }
 
     private fun createMockDto(
@@ -237,30 +233,28 @@ class CivicMapOperationsAndPerformanceUnitTest {
         longitude: Double,
         isResolved: Boolean,
         status: String,
-        category: String,
-    ): CivicIssueDto {
-        return CivicIssueDto(
-            id = id,
-            ticketCode = ticketCode,
-            authorId = "user-1",
-            authorUsername = "Reporter",
-            authorAvatarUrl = null,
-            title = title,
-            caption = "Caption",
-            category = category,
-            locationName = locationName,
-            subLocation = "SubLocation",
-            latitude = latitude,
-            longitude = longitude,
-            isGpsVerified = true,
-            status = status,
-            mediaUrls = emptyList(),
-            mediaType = "PHOTO",
-            upvotesCount = 0,
-            createdAt = "2026-11-24T10:00:00Z",
-            updatedAt = null,
-            resolvedAt = if (isResolved) "2026-11-24T12:00:00Z" else null,
-            milestones = emptyList(),
-        )
-    }
+        category: String
+    ): CivicIssueDto = CivicIssueDto(
+        id = id,
+        ticketCode = ticketCode,
+        authorId = "user-1",
+        authorUsername = "Reporter",
+        authorAvatarUrl = null,
+        title = title,
+        caption = "Caption",
+        category = category,
+        locationName = locationName,
+        subLocation = "SubLocation",
+        latitude = latitude,
+        longitude = longitude,
+        isGpsVerified = true,
+        status = status,
+        mediaUrls = emptyList(),
+        mediaType = "PHOTO",
+        upvotesCount = 0,
+        createdAt = "2026-11-24T10:00:00Z",
+        updatedAt = null,
+        resolvedAt = if (isResolved) "2026-11-24T12:00:00Z" else null,
+        milestones = emptyList()
+    )
 }

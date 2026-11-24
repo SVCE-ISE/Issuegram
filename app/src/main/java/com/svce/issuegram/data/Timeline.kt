@@ -5,10 +5,7 @@ import com.svce.issuegram.data.model.IssueStatus
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-data class TimelineEvent(
-    val status: IssueStatus,
-    val at: Instant,
-)
+data class TimelineEvent(val status: IssueStatus, val at: Instant)
 
 /**
  * Derived timeline for mock data; Firestore will supply real transition events.
@@ -20,7 +17,7 @@ private val progression = listOf(
     IssueStatus.Assigned to 28L,
     IssueStatus.InProgress to 34L,
     IssueStatus.Resolved to 120L,
-    IssueStatus.Reopened to 144L,
+    IssueStatus.Reopened to 144L
 )
 
 fun Issue.timeline(): List<TimelineEvent> {

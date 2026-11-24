@@ -7,6 +7,10 @@ import com.svce.issuegram.domain.repository.NotificationRepository
 import com.svce.issuegram.domain.usecase.notification.GetNotificationsUseCase
 import com.svce.issuegram.domain.usecase.notification.MarkNotificationsAsReadUseCase
 import com.svce.issuegram.ui.screens.AlertsViewModel
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -20,14 +24,9 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.temporal.ChronoUnit
 
 /**
  * Exhaustive unit and operations tests for Notifications & Alerts screen:
@@ -195,16 +194,14 @@ class NotificationOperationsUnitTest {
         issueTitle: String,
         isUnread: Boolean,
         createdAt: Instant = Instant.now()
-    ): Notification {
-        return Notification(
-            id = id,
-            ticketId = ticketId,
-            issueTitle = issueTitle,
-            kind = AlertKind.Status,
-            status = IssueStatus.InProgress,
-            message = "Update on your report: $issueTitle",
-            createdAt = createdAt,
-            isUnread = isUnread
-        )
-    }
+    ): Notification = Notification(
+        id = id,
+        ticketId = ticketId,
+        issueTitle = issueTitle,
+        kind = AlertKind.Status,
+        status = IssueStatus.InProgress,
+        message = "Update on your report: $issueTitle",
+        createdAt = createdAt,
+        isUnread = isUnread
+    )
 }

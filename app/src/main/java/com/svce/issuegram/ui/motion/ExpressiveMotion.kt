@@ -40,6 +40,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -70,10 +71,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
-import androidx.compose.foundation.shape.RoundedCornerShape
-import kotlinx.coroutines.delay
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.roundToInt
+import kotlinx.coroutines.delay
 
 // ---------------------------------------------------------------------------------------------
 // Reduced motion
@@ -100,18 +100,24 @@ fun rememberReducedMotion(): Boolean {
 enum class ExpressiveHaptic {
     /** A value passing a detent: dial steps, picker notches, a drum graduation. */
     Tick,
+
     /** A light acknowledgement: keypad digits, a segment changing. */
     Tap,
+
     /** Something finished successfully: reset, save, an alarm dismissed. */
     Confirm,
+
     /** Something was refused: an invalid entry, a limit reached. */
     Reject,
+
     /** Entering a mode by long press: selection mode, drag to reorder. */
     LongPress,
+
     /** A process started: a timer or stopwatch running. */
     Start,
+
     /** A process stopped or paused. */
-    Stop,
+    Stop
 }
 
 fun View.expressiveHaptic(kind: ExpressiveHaptic) {
@@ -172,10 +178,12 @@ fun Modifier.statePulse(key: Any?, squash: Float = 0.96f): Modifier {
 enum class IconMotion {
     /** A ringing bell or alarm: a quick decaying shake. */
     Wiggle,
+
     /** An hourglass or refresh: half a turn. Use with icons that look the same upside down. */
     Flip,
+
     /** A stopwatch, sync or settings cog: one full turn. */
-    Spin,
+    Spin
 }
 
 /** Plays [motion] each time [trigger] changes to a non-zero value (increment it on tap). */
@@ -212,13 +220,7 @@ private class RollDirection(var last: String, var dir: Int)
  * Use a tabular numeral style so widths never jump.
  */
 @Composable
-fun DigitRoll(
-    text: String,
-    style: TextStyle,
-    modifier: Modifier = Modifier,
-    contentDescription: String = text,
-    staggerMillis: Int = 30,
-) {
+fun DigitRoll(text: String, style: TextStyle, modifier: Modifier = Modifier, contentDescription: String = text, staggerMillis: Int = 30) {
     val holder = remember { RollDirection(text, 1) }
     val dir = remember(text) {
         val a = holder.last.filter(Char::isDigit).toLongOrNull()
@@ -242,12 +244,14 @@ fun DigitRoll(
                             fadeIn(effects) togetherWith fadeOut(effects)
                         } else {
                             (slideInVertically(spatial) { h -> h * dir } + fadeIn(tween(90, delay))) togetherWith
-                                (slideOutVertically(tween(180, delay, FastOutSlowInEasing)) { h -> -h * dir } +
-                                    fadeOut(tween(120, delay)))
+                                (
+                                    slideOutVertically(tween(180, delay, FastOutSlowInEasing)) { h -> -h * dir } +
+                                        fadeOut(tween(120, delay))
+                                    )
                         }
                         transform using SizeTransform(clip = true)
                     },
-                    label = "digitRoll",
+                    label = "digitRoll"
                 ) { c -> Text(c.toString(), style = style) }
             }
         }
@@ -269,7 +273,7 @@ fun animateVariableWeight(@FontRes resId: Int, opticalSize: Float, targetWeight:
     val weight by animateIntAsState(
         targetValue = targetWeight,
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "variableWeight",
+        label = "variableWeight"
     )
     val stepped = (weight / 10) * 10
     return remember(resId, opticalSize, stepped) {
@@ -280,9 +284,9 @@ fun animateVariableWeight(@FontRes resId: Int, opticalSize: Float, targetWeight:
                     weight = FontWeight(stepped.coerceIn(1, 1000)),
                     variationSettings = FontVariation.Settings(
                         FontVariation.weight(stepped.coerceIn(1, 1000)),
-                        FontVariation.Setting("opsz", opticalSize.coerceIn(6f, 144f)),
-                    ),
-                ),
+                        FontVariation.Setting("opsz", opticalSize.coerceIn(6f, 144f))
+                    )
+                )
             )
         }
     }
@@ -304,7 +308,7 @@ fun rememberBreathing(periodMillis: Int = 2400): Float {
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(tween(periodMillis / 2, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "breathing",
+        label = "breathing"
     )
     return value
 }
@@ -368,10 +372,10 @@ fun SwipeToRevealRow(
             "Delete",
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onError,
-            modifier = Modifier.align(Alignment.Center),
+            modifier = Modifier.align(Alignment.Center)
         )
     },
-    content: @Composable () -> Unit,
+    content: @Composable () -> Unit
 ) {
     val density = LocalDensity.current
     val revealPx = with(density) { revealWidth.toPx() }
@@ -402,7 +406,7 @@ fun SwipeToRevealRow(
             Box(
                 Modifier
                     .matchParentSize()
-                    .background(MaterialTheme.colorScheme.error),
+                    .background(MaterialTheme.colorScheme.error)
             ) {
                 Box(Modifier.align(Alignment.CenterEnd).width(revealWidth).fillMaxHeight(), content = action)
             }
@@ -438,8 +442,8 @@ fun SwipeToRevealRow(
                             offset.animateTo(target, settle, initialVelocity = velocity)
                         }
                         armed = false
-                    },
-                ),
+                    }
+                )
         ) { content() }
     }
 }

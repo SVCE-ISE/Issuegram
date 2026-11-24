@@ -1,16 +1,16 @@
 package com.svce.issuegram.ui.profile
 
 import android.net.Uri
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.svce.issuegram.data.model.Issue
 import com.svce.issuegram.domain.model.User
+import com.svce.issuegram.domain.repository.IssueRepository
 import com.svce.issuegram.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.svce.issuegram.domain.usecase.auth.UpdateUserProfileUseCase
 import com.svce.issuegram.domain.usecase.issue.GetUserIssuesUseCase
-import com.svce.issuegram.domain.repository.IssueRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,7 +24,7 @@ data class ProfileUiState(
     val user: User? = null,
     val postedIssues: List<Issue> = emptyList(),
     val isBusy: Boolean = false,
-    val errorMessage: String? = null,
+    val errorMessage: String? = null
 )
 
 class ProfileViewModel(
@@ -32,7 +32,7 @@ class ProfileViewModel(
     private val getUserIssuesUseCase: GetUserIssuesUseCase,
     private val updateUserProfileUseCase: UpdateUserProfileUseCase,
     private val issueRepository: IssueRepository,
-    private val authRepository: com.svce.issuegram.domain.repository.AuthRepository? = null,
+    private val authRepository: com.svce.issuegram.domain.repository.AuthRepository? = null
 ) : ViewModel() {
 
     private val _isBusy = MutableStateFlow(false)

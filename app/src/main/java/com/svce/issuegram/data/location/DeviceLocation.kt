@@ -6,18 +6,17 @@ import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
-import android.os.SystemClock
+import android.os.CancellationSignal
 import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
-import android.os.CancellationSignal
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withTimeout
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.util.Locale
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 
 fun getLastKnownLocation(context: Context): Location? {
     val permitted = listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -86,20 +85,19 @@ suspend fun currentDeviceLocation(context: Context): Location = withTimeout(20_0
  * address is available (offline, no Geocoder backend, or timeout), so callers
  * can fall back to displaying coordinates.
  */
-suspend fun reverseGeocode(context: Context, latitude: Double, longitude: Double): String? =
-    withTimeoutOrNull(5_000) {
-        withContext(Dispatchers.IO) {
-            runCatching {
-                if (!Geocoder.isPresent()) return@runCatching null
-                @Suppress("DEPRECATION")
-                val results = Geocoder(context, Locale.getDefault())
-                    .getFromLocation(latitude, longitude, 1)
-                results?.firstOrNull()?.let { address ->
-                    address.getAddressLine(0)?.takeIf { it.isNotBlank() }
-                        ?: listOfNotNull(address.thoroughfare, address.locality, address.adminArea)
-                            .joinToString(", ")
-                            .takeIf { it.isNotBlank() }
-                }
-            }.getOrNull()
-        }
+suspend fun reverseGeocode(context: Context, latitude: Double, longitude: Double): String? = withTimeoutOrNull(5_000) {
+    withContext(Dispatchers.IO) {
+        runCatching {
+            if (!Geocoder.isPresent()) return@runCatching null
+            @Suppress("DEPRECATION")
+            val results = Geocoder(context, Locale.getDefault())
+                .getFromLocation(latitude, longitude, 1)
+            results?.firstOrNull()?.let { address ->
+                address.getAddressLine(0)?.takeIf { it.isNotBlank() }
+                    ?: listOfNotNull(address.thoroughfare, address.locality, address.adminArea)
+                        .joinToString(", ")
+                        .takeIf { it.isNotBlank() }
+            }
+        }.getOrNull()
     }
+}

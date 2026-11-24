@@ -58,15 +58,11 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.svce.issuegram.R
 
 @Composable
-fun LoginScreen(
-    modifier: Modifier = Modifier,
-    isSigningIn: Boolean = false,
-    onGoogleSignIn: () -> Unit = {},
-) {
+fun LoginScreen(modifier: Modifier = Modifier, isSigningIn: Boolean = false, onGoogleSignIn: () -> Unit = {}) {
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.woman_tracking_on_phone))
     val progress by animateLottieCompositionAsState(
         composition = composition,
-        iterations = LottieConstants.IterateForever,
+        iterations = LottieConstants.IterateForever
     )
 
     var entered by remember { mutableStateOf(false) }
@@ -77,7 +73,7 @@ fun LoginScreen(
     val buttonScale by animateFloatAsState(
         targetValue = if (pressed) 0.96f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow),
-        label = "googleButtonScale",
+        label = "googleButtonScale"
     )
 
     Box(
@@ -91,15 +87,15 @@ fun LoginScreen(
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .padding(horizontal = 28.dp, vertical = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             AnimatedVisibility(
                 visible = entered,
                 enter = fadeIn(tween(durationMillis = 700, delayMillis = 60, easing = FastOutSlowInEasing)) +
                     slideInVertically(
                         initialOffsetY = { -it / 4 },
-                        animationSpec = tween(durationMillis = 700, delayMillis = 60, easing = FastOutSlowInEasing),
-                    ),
+                        animationSpec = tween(durationMillis = 700, delayMillis = 60, easing = FastOutSlowInEasing)
+                    )
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Image(
@@ -109,14 +105,14 @@ fun LoginScreen(
                         colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground),
                         modifier = Modifier
                             .width(148.dp)
-                            .height(36.dp),
+                            .height(36.dp)
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
                         text = stringResource(R.string.login_tagline),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 13.sp,
-                        textAlign = TextAlign.Center,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
@@ -125,7 +121,7 @@ fun LoginScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                contentAlignment = Alignment.Center,
+                contentAlignment = Alignment.Center
             ) {
                 Box(
                     modifier = Modifier
@@ -135,31 +131,31 @@ fun LoginScreen(
                                 colors = listOf(
                                     MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
                                     MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
-                                    Color.Transparent,
-                                ),
+                                    Color.Transparent
+                                )
                             ),
-                            shape = CircleShape,
-                        ),
+                            shape = CircleShape
+                        )
                 )
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
+                    verticalArrangement = Arrangement.Center
                 ) {
                     AnimatedVisibility(
                         visible = entered,
                         enter = fadeIn(tween(durationMillis = 700, delayMillis = 240, easing = FastOutSlowInEasing)) +
                             slideInVertically(
                                 initialOffsetY = { it / 10 },
-                                animationSpec = tween(durationMillis = 700, delayMillis = 240, easing = FastOutSlowInEasing),
-                            ),
+                                animationSpec = tween(durationMillis = 700, delayMillis = 240, easing = FastOutSlowInEasing)
+                            )
                     ) {
                         LottieAnimation(
                             composition = composition,
                             progress = { progress },
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 8.dp)
                         )
                     }
                 }
@@ -172,8 +168,8 @@ fun LoginScreen(
                 enter = fadeIn(tween(durationMillis = 600, delayMillis = 420, easing = FastOutSlowInEasing)) +
                     slideInVertically(
                         initialOffsetY = { it / 2 },
-                        animationSpec = tween(durationMillis = 600, delayMillis = 420, easing = FastOutSlowInEasing),
-                    ),
+                        animationSpec = tween(durationMillis = 600, delayMillis = 420, easing = FastOutSlowInEasing)
+                    )
             ) {
                 Surface(
                     onClick = onGoogleSignIn,
@@ -193,30 +189,30 @@ fun LoginScreen(
                         .graphicsLayer {
                             scaleX = buttonScale
                             scaleY = buttonScale
-                        },
+                        }
                 ) {
                     Row(
                         modifier = Modifier.fillMaxSize(),
                         horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (isSigningIn) {
                             CircularProgressIndicator(
                                 color = MaterialTheme.colorScheme.primary,
                                 strokeWidth = 2.5.dp,
-                                modifier = Modifier.size(24.dp),
+                                modifier = Modifier.size(24.dp)
                             )
                         } else {
                             Box(
                                 modifier = Modifier
                                     .size(30.dp)
                                     .background(Color.White, CircleShape),
-                                contentAlignment = Alignment.Center,
+                                contentAlignment = Alignment.Center
                             ) {
                                 Image(
                                     painter = painterResource(R.drawable.ic_google_g),
                                     contentDescription = null,
-                                    modifier = Modifier.size(20.dp),
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
                             Spacer(modifier = Modifier.width(14.dp))
@@ -236,7 +232,7 @@ fun LoginScreen(
 
             AnimatedVisibility(
                 visible = entered,
-                enter = fadeIn(tween(durationMillis = 600, delayMillis = 520, easing = FastOutSlowInEasing)),
+                enter = fadeIn(tween(durationMillis = 600, delayMillis = 520, easing = FastOutSlowInEasing))
             ) {
                 Text(
                     text = stringResource(R.string.login_anonymous_disclaimer),
@@ -244,7 +240,7 @@ fun LoginScreen(
                     fontSize = 11.sp,
                     lineHeight = 15.sp,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
         }

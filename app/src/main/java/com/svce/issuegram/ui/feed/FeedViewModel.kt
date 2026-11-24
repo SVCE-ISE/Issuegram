@@ -4,10 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.svce.issuegram.data.model.Issue
 import com.svce.issuegram.domain.model.User
+import com.svce.issuegram.domain.repository.IssueRepository
 import com.svce.issuegram.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.svce.issuegram.domain.usecase.issue.GetFeedIssuesUseCase
 import com.svce.issuegram.domain.usecase.issue.ToggleLikeUseCase
-import com.svce.issuegram.domain.repository.IssueRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,7 +21,7 @@ data class FeedUiState(
     val currentUser: User? = null,
     val hasUnreadNotifications: Boolean = false,
     val isLoading: Boolean = false,
-    val isRefreshing: Boolean = false,
+    val isRefreshing: Boolean = false
 )
 
 class FeedViewModel(
@@ -29,7 +29,7 @@ class FeedViewModel(
     observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     getNotificationsUseCase: com.svce.issuegram.domain.usecase.notification.GetNotificationsUseCase,
     private val toggleLikeUseCase: ToggleLikeUseCase,
-    private val issueRepository: IssueRepository? = null,
+    private val issueRepository: IssueRepository? = null
 ) : ViewModel() {
 
     private val _isRefreshing = MutableStateFlow(false)
@@ -38,14 +38,14 @@ class FeedViewModel(
         getFeedIssuesUseCase(),
         observeCurrentUserUseCase(),
         getNotificationsUseCase(),
-        _isRefreshing,
+        _isRefreshing
     ) { issues, user, notifications, refreshing ->
         FeedUiState(
             issues = issues,
             currentUser = user,
             hasUnreadNotifications = notifications.any { it.isUnread },
             isLoading = false,
-            isRefreshing = refreshing,
+            isRefreshing = refreshing
         )
     }.stateIn(
         scope = viewModelScope,

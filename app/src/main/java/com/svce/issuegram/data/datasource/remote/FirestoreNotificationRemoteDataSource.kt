@@ -9,12 +9,12 @@ import com.svce.issuegram.IssuegramApplication
 import com.svce.issuegram.data.model.IssueStatus
 import com.svce.issuegram.domain.model.AlertKind
 import com.svce.issuegram.domain.model.Notification
-import kotlinx.coroutines.tasks.await
 import java.time.Instant
+import kotlinx.coroutines.tasks.await
 
 class FirestoreNotificationRemoteDataSource(
     private val context: Context = IssuegramApplication.instance,
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance(),
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) : NotificationRemoteDataSource {
 
     private val prefs by lazy {

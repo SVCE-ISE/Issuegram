@@ -40,23 +40,18 @@ object IssuegramShapeDefaults {
         @Composable get() = shapes.large
 
     @Composable
-    fun segmentedListItemShapes(
-        index: Int,
-        count: Int,
-        singleElement: Boolean = count == 1
-    ): ListItemShapes =
-        ListItemDefaults.segmentedShapes(
-            index,
-            count,
-            ListItemDefaults.shapes(
-                shape = if (singleElement) shapes.large else shapes.extraSmall,
-                selectedShape = shapes.extraLargeIncreased,
-                pressedShape = shapes.extraLargeIncreased,
-                focusedShape = shapes.large,
-                hoveredShape = shapes.extraLarge,
-                draggedShape = shapes.extraLargeIncreased
-            )
+    fun segmentedListItemShapes(index: Int, count: Int, singleElement: Boolean = count == 1): ListItemShapes = ListItemDefaults.segmentedShapes(
+        index,
+        count,
+        ListItemDefaults.shapes(
+            shape = if (singleElement) shapes.large else shapes.extraSmall,
+            selectedShape = shapes.extraLargeIncreased,
+            pressedShape = shapes.extraLargeIncreased,
+            focusedShape = shapes.large,
+            hoveredShape = shapes.extraLarge,
+            draggedShape = shapes.extraLargeIncreased
         )
+    )
 
     val PANE_MAX_WIDTH = 600.dp
 }

@@ -14,6 +14,7 @@ import com.svce.issuegram.domain.usecase.issue.GetFeedIssuesUseCase
 import com.svce.issuegram.domain.usecase.issue.ToggleLikeUseCase
 import com.svce.issuegram.domain.usecase.notification.GetNotificationsUseCase
 import com.svce.issuegram.ui.feed.FeedViewModel
+import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -35,7 +36,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.time.Instant
 
 /**
  * Exhaustive unit tests covering Home Feed operations and functions:
@@ -72,13 +72,13 @@ class HomeFeedOperationsUnitTest {
 
         override fun getFeedIssues(): Flow<List<Issue>> = issuesFlowInternal
 
-        override fun getIssueById(ticketId: String): Flow<Issue?> {
-            return flowOf(issuesFlowInternal.value.find { it.ticketId == ticketId })
-        }
+        override fun getIssueById(ticketId: String): Flow<Issue?> = flowOf(issuesFlowInternal.value.find { it.ticketId == ticketId })
 
-        override fun getUserIssues(userId: String, authorName: String): Flow<List<Issue>> {
-            return flowOf(issuesFlowInternal.value.filter { it.isMine })
-        }
+        override fun getUserIssues(userId: String, authorName: String): Flow<List<Issue>> = flowOf(
+            issuesFlowInternal.value.filter {
+                it.isMine
+            }
+        )
 
         override suspend fun createIssue(
             title: String,
@@ -89,7 +89,7 @@ class HomeFeedOperationsUnitTest {
             latitude: Double,
             longitude: Double,
             authorName: String,
-            authorUsername: String?,
+            authorUsername: String?
         ): Result<Issue> {
             val newIssue = Issue(
                 ticketId = "IG-${(1000..9999).random()}",
@@ -106,7 +106,7 @@ class HomeFeedOperationsUnitTest {
                 isMine = true,
                 latitude = latitude,
                 longitude = longitude,
-                authorUsername = authorUsername,
+                authorUsername = authorUsername
             )
             issuesFlowInternal.value = listOf(newIssue) + issuesFlowInternal.value
             return Result.success(newIssue)
@@ -130,12 +130,7 @@ class HomeFeedOperationsUnitTest {
             return Result.success(Unit)
         }
 
-        override suspend fun editIssue(
-            ticketId: String,
-            title: String,
-            description: String?,
-            locationName: String?,
-        ): Result<Issue> {
+        override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result<Issue> {
             val currentList = issuesFlowInternal.value.toMutableList()
             val index = currentList.indexOfFirst { it.ticketId == ticketId }
             if (index != -1) {
@@ -192,7 +187,7 @@ class HomeFeedOperationsUnitTest {
             observeCurrentUserUseCase = observeCurrentUserUseCase,
             getNotificationsUseCase = getNotificationsUseCase,
             toggleLikeUseCase = toggleLikeUseCase,
-            issueRepository = fakeIssueRepository,
+            issueRepository = fakeIssueRepository
         )
     }
 
@@ -304,7 +299,7 @@ class HomeFeedOperationsUnitTest {
             status = IssueStatus.InProgress,
             message = "Issue is in progress",
             createdAt = Instant.now(),
-            isUnread = true,
+            isUnread = true
         )
         fakeNotificationRepository.notifsFlow.value = listOf(unreadNotification)
         advanceUntilIdle()
@@ -360,20 +355,18 @@ class HomeFeedOperationsUnitTest {
         collectJob.cancel()
     }
 
-    private fun createMockIssue(ticketId: String, title: String, categoryName: String): Issue {
-        return Issue(
-            ticketId = ticketId,
-            title = title,
-            description = "Detailed report for $title",
-            category = IssueCategory.Other,
-            status = IssueStatus.Open,
-            area = "Civic Center",
-            locationName = "123 Main Road",
-            authorName = "Reporter One",
-            createdAt = Instant.now(),
-            likes = 0,
-            photoUri = null,
-            isMine = false,
-        )
-    }
+    private fun createMockIssue(ticketId: String, title: String, categoryName: String): Issue = Issue(
+        ticketId = ticketId,
+        title = title,
+        description = "Detailed report for $title",
+        category = IssueCategory.Other,
+        status = IssueStatus.Open,
+        area = "Civic Center",
+        locationName = "123 Main Road",
+        authorName = "Reporter One",
+        createdAt = Instant.now(),
+        likes = 0,
+        photoUri = null,
+        isMine = false
+    )
 }

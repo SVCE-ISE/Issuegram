@@ -22,7 +22,7 @@ object MockIssues {
             locationName = "2nd Avenue bus stop",
             authorName = "Priya S.",
             createdAt = daysAgo(2),
-            likes = 34,
+            likes = 34
         ),
         Issue(
             ticketId = "IG-2479",
@@ -34,7 +34,7 @@ object MockIssues {
             locationName = "Lane 4, near the park gate",
             authorName = "Karthik R.",
             createdAt = daysAgo(3),
-            likes = 21,
+            likes = 21
         ),
         Issue(
             ticketId = "IG-2476",
@@ -46,7 +46,7 @@ object MockIssues {
             locationName = "Usman Road junction",
             authorName = "Divya M.",
             createdAt = daysAgo(4),
-            likes = 58,
+            likes = 58
         ),
         Issue(
             ticketId = "IG-2472",
@@ -58,7 +58,7 @@ object MockIssues {
             locationName = "Ranganathan Street corner",
             authorName = "Arjun P.",
             createdAt = daysAgo(5),
-            likes = 42,
+            likes = 42
         ),
         Issue(
             ticketId = "IG-2468",
@@ -70,7 +70,7 @@ object MockIssues {
             locationName = "Sardar Patel Road, opposite depot",
             authorName = "Meera K.",
             createdAt = daysAgo(9),
-            likes = 27,
+            likes = 27
         ),
         Issue(
             ticketId = "IG-2463",
@@ -82,7 +82,7 @@ object MockIssues {
             locationName = "Kasturba Nagar, block C",
             authorName = "Sundar V.",
             createdAt = daysAgo(11),
-            likes = 73,
+            likes = 73
         ),
         Issue(
             ticketId = "IG-2459",
@@ -94,7 +94,7 @@ object MockIssues {
             locationName = "Vijayanagar school lane",
             authorName = "Lakshmi N.",
             createdAt = daysAgo(13),
-            likes = 66,
+            likes = 66
         ),
         Issue(
             ticketId = "IG-2455",
@@ -106,7 +106,7 @@ object MockIssues {
             locationName = "100 Feet Road, near the temple",
             authorName = "Ravi T.",
             createdAt = daysAgo(16),
-            likes = 18,
-        ),
+            likes = 18
+        )
     )
 }

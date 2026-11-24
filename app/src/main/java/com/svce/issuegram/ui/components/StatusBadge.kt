@@ -28,11 +28,7 @@ import com.svce.issuegram.ui.theme.Expressive
 import com.svce.issuegram.ui.theme.ExpressiveTextStyles
 import com.svce.issuegram.ui.theme.Spacing
 
-internal data class StatusTone(
-    val container: Color,
-    val content: Color,
-    val icon: ImageVector,
-)
+internal data class StatusTone(val container: Color, val content: Color, val icon: ImageVector)
 
 @Composable
 internal fun IssueStatus.badgeTone(): StatusTone {
@@ -57,25 +53,25 @@ fun StatusBadge(status: IssueStatus, modifier: Modifier = Modifier) {
         modifier = modifier,
         shape = CircleShape,
         color = tone.container,
-        contentColor = tone.content,
+        contentColor = tone.content
     ) {
         Row(
             modifier = Modifier.padding(
                 horizontal = Spacing.space2,
-                vertical = Spacing.space1,
+                vertical = Spacing.space1
             ),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = tone.icon,
                 contentDescription = null,
                 modifier = Modifier
                     .padding(end = Spacing.space1)
-                    .size(14.dp),
+                    .size(14.dp)
             )
             Text(
                 text = stringResource(status.labelRes),
-                style = ExpressiveTextStyles.dataSmall,
+                style = ExpressiveTextStyles.dataSmall
             )
         }
     }

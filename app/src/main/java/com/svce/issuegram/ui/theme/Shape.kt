@@ -17,5 +17,5 @@ val ExpressiveShapes = Shapes(
     largeIncreased = RoundedCornerShape(20.dp),
     extraLarge = RoundedCornerShape(28.dp),
     extraLargeIncreased = RoundedCornerShape(32.dp),
-    extraExtraLarge = RoundedCornerShape(48.dp),
+    extraExtraLarge = RoundedCornerShape(48.dp)
 )

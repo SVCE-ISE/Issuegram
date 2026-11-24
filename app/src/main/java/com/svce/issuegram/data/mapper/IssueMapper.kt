@@ -10,28 +10,31 @@ import com.svce.issuegram.data.model.IssueStatus
 import java.time.Instant
 
 object IssueMapper {
-    fun toCivicDto(issue: Issue, id: Long = 0, authorId: String = "", authorUsername: String = issue.authorUsername ?: issue.authorName): CivicIssueDto {
-        return CivicIssueDto(
-            id = id,
-            ticketCode = if (issue.ticketId.startsWith("#")) issue.ticketId else "#${issue.ticketId}",
-            authorId = authorId,
-            authorUsername = authorUsername,
-            title = issue.title,
-            caption = issue.description.orEmpty(),
-            category = issue.category.name,
-            locationName = issue.locationName,
-            subLocation = issue.area,
-            latitude = issue.latitude,
-            longitude = issue.longitude,
-            status = when (issue.status) {
-                IssueStatus.Resolved -> "RESOLVED"
-                IssueStatus.InProgress -> "IN_PROGRESS"
-                else -> "REPORTED"
-            },
-            mediaUrls = listOfNotNull(issue.photoUri),
-            createdAt = issue.createdAt.toString(),
-        )
-    }
+    fun toCivicDto(
+        issue: Issue,
+        id: Long = 0,
+        authorId: String = "",
+        authorUsername: String = issue.authorUsername ?: issue.authorName
+    ): CivicIssueDto = CivicIssueDto(
+        id = id,
+        ticketCode = if (issue.ticketId.startsWith("#")) issue.ticketId else "#${issue.ticketId}",
+        authorId = authorId,
+        authorUsername = authorUsername,
+        title = issue.title,
+        caption = issue.description.orEmpty(),
+        category = issue.category.name,
+        locationName = issue.locationName,
+        subLocation = issue.area,
+        latitude = issue.latitude,
+        longitude = issue.longitude,
+        status = when (issue.status) {
+            IssueStatus.Resolved -> "RESOLVED"
+            IssueStatus.InProgress -> "IN_PROGRESS"
+            else -> "REPORTED"
+        },
+        mediaUrls = listOfNotNull(issue.photoUri),
+        createdAt = issue.createdAt.toString()
+    )
 
     fun fromCivicDto(dto: CivicIssueDto): Issue {
         val catLower = dto.category.lowercase()
@@ -57,17 +60,24 @@ object IssueMapper {
         val cleanEmailPrefix = currentEmailPrefix?.replace(".", "_")?.replace("-", "_")
 
         val isCurrentUsersIssue = (currentUser != null && dto.authorId == currentUser.uid) ||
-                (currentEmailPrefix != null && (
-                    dto.authorUsername.equals(currentEmailPrefix, ignoreCase = true) ||
-                    dto.authorUsername.equals(cleanEmailPrefix, ignoreCase = true) ||
-                    dto.authorUsername.contains(currentEmailPrefix, ignoreCase = true)
-                ))
+            (
+                currentEmailPrefix != null &&
+                    (
+                        dto.authorUsername.equals(currentEmailPrefix, ignoreCase = true) ||
+                            dto.authorUsername.equals(cleanEmailPrefix, ignoreCase = true) ||
+                            dto.authorUsername.contains(currentEmailPrefix, ignoreCase = true)
+                        )
+                )
 
         val cleanAuthor = when {
             isCurrentUsersIssue && currentDisplayName != null -> currentDisplayName
             dto.authorUsername.startsWith("user_") || dto.authorUsername.startsWith("citizen_") ->
                 currentDisplayName ?: "Praveen Zalaki"
-            currentEmailPrefix != null && (dto.authorUsername.equals(currentEmailPrefix, ignoreCase = true) || dto.authorUsername.equals(cleanEmailPrefix, ignoreCase = true)) ->
+            currentEmailPrefix != null &&
+                (
+                    dto.authorUsername.equals(currentEmailPrefix, ignoreCase = true) ||
+                        dto.authorUsername.equals(cleanEmailPrefix, ignoreCase = true)
+                    ) ->
                 currentDisplayName ?: "Praveen Zalaki"
             dto.authorUsername.contains("praveenzalaki", ignoreCase = true) ->
                 currentDisplayName ?: "Praveen Zalaki"
@@ -100,7 +110,7 @@ object IssueMapper {
                 title = m.title,
                 actor = m.actor,
                 timestamp = runCatching { Instant.parse(m.timestampLabel) }.getOrDefault(instant),
-                isCompleted = m.isCompleted,
+                isCompleted = m.isCompleted
             )
         }
         return Issue(
@@ -120,7 +130,7 @@ object IssueMapper {
             longitude = dto.longitude,
             authorId = dto.authorId,
             authorUsername = dto.authorUsername,
-            milestones = domainMilestones,
+            milestones = domainMilestones
         )
     }
 }

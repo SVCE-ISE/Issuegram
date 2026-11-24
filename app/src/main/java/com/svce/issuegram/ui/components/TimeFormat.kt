@@ -23,20 +23,19 @@ fun relativeTime(instant: Instant, now: Instant = Instant.now()): String {
             instant.toEpochMilli(),
             now.toEpochMilli(),
             DateUtils.MINUTE_IN_MILLIS,
-            DateUtils.FORMAT_ABBREV_RELATIVE,
+            DateUtils.FORMAT_ABBREV_RELATIVE
         ).toString()
         days <= 30 -> pluralStringResource(
             R.plurals.days_ago,
             days.toInt(),
-            days.toInt(),
+            days.toInt()
         )
         else -> absoluteDateTime(instant)
     }
 }
 
-fun absoluteDateTime(instant: Instant): String =
-    DateFormat.getDateTimeInstance(
-        DateFormat.MEDIUM,
-        DateFormat.SHORT,
-        Locale.getDefault(),
-    ).format(Date.from(instant))
+fun absoluteDateTime(instant: Instant): String = DateFormat.getDateTimeInstance(
+    DateFormat.MEDIUM,
+    DateFormat.SHORT,
+    Locale.getDefault()
+).format(Date.from(instant))

@@ -10,16 +10,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-data class IssueDetailUiState(
-    val issue: Issue? = null,
-    val isLiked: Boolean = false,
-    val isLoading: Boolean = false,
-)
+data class IssueDetailUiState(val issue: Issue? = null, val isLiked: Boolean = false, val isLoading: Boolean = false)
 
-class IssueDetailViewModel(
-    private val getIssueDetailUseCase: GetIssueDetailUseCase,
-    private val toggleLikeUseCase: ToggleLikeUseCase,
-) : ViewModel() {
+class IssueDetailViewModel(private val getIssueDetailUseCase: GetIssueDetailUseCase, private val toggleLikeUseCase: ToggleLikeUseCase) : ViewModel() {
 
     private val _uiState = MutableStateFlow(IssueDetailUiState(isLoading = true))
     val uiState: StateFlow<IssueDetailUiState> = _uiState.asStateFlow()

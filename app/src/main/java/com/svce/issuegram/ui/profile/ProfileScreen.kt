@@ -15,9 +15,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,12 +43,12 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,7 +60,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.statusBarsPadding
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -86,7 +86,7 @@ fun ProfileScreen(
     isModerator: Boolean = false,
     moderationFlags: List<IssueFlagDto> = emptyList(),
     onReviewFlag: (Long, String) -> Unit = { _, _ -> },
-    onSignOut: () -> Unit = {},
+    onSignOut: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
 
@@ -121,14 +121,16 @@ fun ProfileScreen(
             displayName = domainUser.displayName,
             avatarUrl = domainUser.avatarUrl,
             email = domainUser.email,
-            bio = domainUser.bio,
+            bio = domainUser.bio
         )
     } ?: remember(firebaseUser, customAvatarUri, customDisplayName) {
         val email = firebaseUser?.email.orEmpty()
         val derivedUsername = email.substringBefore('@').ifBlank { "citizen_${firebaseUser?.uid?.take(6) ?: "user"}" }
         val name = customDisplayName
             ?: firebaseUser?.displayName?.takeIf { it.isNotBlank() }
-            ?: email.substringBefore('@').takeIf { it.isNotBlank() }?.replace('.', ' ')?.replace('_', ' ')?.replaceFirstChar { it.uppercase() }
+            ?: email.substringBefore('@').takeIf {
+                it.isNotBlank()
+            }?.replace('.', ' ')?.replace('_', ' ')?.replaceFirstChar { it.uppercase() }
             ?: "Citizen Reporter"
         val photo = customAvatarUri?.toString()
             ?: firebaseUser?.photoUrl?.toString()
@@ -167,7 +169,7 @@ fun ProfileScreen(
                     issue = it,
                     id = idx.toLong() + 1,
                     authorId = activeUser.id,
-                    authorUsername = activeUser.username,
+                    authorUsername = activeUser.username
                 )
             }
         }
@@ -190,33 +192,33 @@ fun ProfileScreen(
                     imageVector = Icons.Outlined.Edit,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier.size(28.dp)
                 )
             },
             title = {
                 Text(
                     text = "Edit report",
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Bold
                 )
             },
             text = {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
                         text = "Ticket: ${target.ticketCode}",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.SemiBold
                     )
                     OutlinedTextField(
                         value = editTitle,
                         onValueChange = { editTitle = it.take(100) },
                         label = { Text("Title") },
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
                         value = editCaption,
@@ -224,14 +226,14 @@ fun ProfileScreen(
                         label = { Text("Description") },
                         minLines = 3,
                         maxLines = 5,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
                         value = editLocation,
                         onValueChange = { editLocation = it.take(160) },
                         label = { Text("Location") },
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             },
@@ -245,7 +247,7 @@ fun ProfileScreen(
                         issueToEdit = null
                         viewModel?.editIssue(ticketCode, newT, newC, newL)
                     },
-                    enabled = canSave && !effectiveBusy,
+                    enabled = canSave && !effectiveBusy
                 ) {
                     Text("Save")
                 }
@@ -254,55 +256,59 @@ fun ProfileScreen(
                 TextButton(onClick = { issueToEdit = null }) {
                     Text("Cancel")
                 }
-            },
+            }
         )
     }
 
     var editingName by remember { mutableStateOf(false) }
     var editedName by remember(activeUser.displayName) { mutableStateOf(activeUser.displayName) }
-    if (editingName) androidx.compose.material3.AlertDialog(
-        onDismissRequest = { if (!effectiveBusy) editingName = false },
-        title = { Text("Your name") },
-        text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            androidx.compose.material3.OutlinedTextField(
-                value = editedName,
-                onValueChange = { editedName = it.take(36) },
-                enabled = !effectiveBusy,
-                label = { Text("Name") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            val nameLength = editedName.trim().length
-            if (nameLength !in 2..36) {
-                Text(
-                    text = "Name must be between 2 and 36 characters",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            effectiveErrorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        } },
-        confirmButton = {
-            androidx.compose.material3.TextButton(
-                onClick = {
-                    val sanitizedName = editedName.trim()
-                    customDisplayName = sanitizedName
-                    if (viewModel != null) {
-                        viewModel.updateDisplayName(sanitizedName) { editingName = false }
+    if (editingName) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { if (!effectiveBusy) editingName = false },
+            title = { Text("Your name") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    androidx.compose.material3.OutlinedTextField(
+                        value = editedName,
+                        onValueChange = { editedName = it.take(36) },
+                        enabled = !effectiveBusy,
+                        label = { Text("Name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    val nameLength = editedName.trim().length
+                    if (nameLength !in 2..36) {
+                        Text(
+                            text = "Name must be between 2 and 36 characters",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
-                    onUpdateName(sanitizedName) { editingName = false }
-                    editingName = false
-                },
-                enabled = !effectiveBusy && editedName.trim().length in 2..36
-            ) { Text("Save") }
-        },
-        dismissButton = {
-            androidx.compose.material3.TextButton(
-                onClick = { editingName = false },
-                enabled = !effectiveBusy
-            ) { Text("Cancel") }
-        }
-    )
+                    effectiveErrorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                }
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        val sanitizedName = editedName.trim()
+                        customDisplayName = sanitizedName
+                        if (viewModel != null) {
+                            viewModel.updateDisplayName(sanitizedName) { editingName = false }
+                        }
+                        onUpdateName(sanitizedName) { editingName = false }
+                        editingName = false
+                    },
+                    enabled = !effectiveBusy && editedName.trim().length in 2..36
+                ) { Text("Save") }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = { editingName = false },
+                    enabled = !effectiveBusy
+                ) { Text("Cancel") }
+            }
+        )
+    }
 
     val reportedCount = userPostedIssues.size
     val solvedCount = userPostedIssues.count { it.isResolved }
@@ -399,14 +405,16 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         if (effectiveBusy) androidx.compose.material3.LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-        if (customAvatarUri != null || activeUser.avatarUrl != null) androidx.compose.material3.TextButton(
-            onClick = {
-                customAvatarUri = null
-                viewModel?.removeAvatar()
-                onRemoveAvatar()
-            },
-            enabled = !effectiveBusy
-        ) { Text("Remove profile photo") }
+        if (customAvatarUri != null || activeUser.avatarUrl != null) {
+            androidx.compose.material3.TextButton(
+                onClick = {
+                    customAvatarUri = null
+                    viewModel?.removeAvatar()
+                    onRemoveAvatar()
+                },
+                enabled = !effectiveBusy
+            ) { Text("Remove profile photo") }
+        }
 
         // 3. Compact Horizontal Alignment of the Two Items Below
         Row(
@@ -573,7 +581,7 @@ fun ProfileScreen(
                 text = stringResource(R.string.profile_swipe_hint),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
             )
         }
 
@@ -584,18 +592,18 @@ fun ProfileScreen(
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surfaceContainer,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 32.dp, horizontal = 16.dp),
-                    contentAlignment = Alignment.Center,
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = stringResource(R.string.profile_empty_posted),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -631,190 +639,199 @@ fun ProfileScreen(
                             }
                         )
 
-                    val timestampLabel = com.svce.issuegram.domain.displayTime(issue.createdAt)
-                    val thumbRef = issue.mediaUrls.firstOrNull()
+                        val timestampLabel = com.svce.issuegram.domain.displayTime(issue.createdAt)
+                        val thumbRef = issue.mediaUrls.firstOrNull()
 
-                    SwipeToDismissBox(
-                        state = dismissState,
-                        enableDismissFromStartToEnd = true,
-                        enableDismissFromEndToStart = true,
-                        backgroundContent = {
-                            val direction = dismissState.dismissDirection
-                            val color = when (direction) {
-                                SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.primaryContainer
-                                SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
-                                SwipeToDismissBoxValue.Settled -> Color.Transparent
-                            }
-                            val alignment = when (direction) {
-                                SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
-                                SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
-                                SwipeToDismissBoxValue.Settled -> Alignment.Center
-                            }
-                            val tint = when (direction) {
-                                SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.onPrimaryContainer
-                                SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.onErrorContainer
-                                SwipeToDismissBoxValue.Settled -> Color.Transparent
-                            }
-
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(itemShape)
-                                    .background(color)
-                                    .padding(horizontal = 20.dp),
-                                contentAlignment = alignment,
-                            ) {
-                                when (direction) {
-                                    SwipeToDismissBoxValue.StartToEnd -> {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Outlined.Edit,
-                                                contentDescription = "Edit",
-                                                tint = tint,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                            Text(
-                                                text = "Edit",
-                                                color = tint,
-                                                fontWeight = FontWeight.Bold,
-                                                style = MaterialTheme.typography.labelLarge
-                                            )
-                                        }
-                                    }
-                                    SwipeToDismissBoxValue.EndToStart -> {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                        ) {
-                                            Text(
-                                                text = "Delete",
-                                                color = tint,
-                                                fontWeight = FontWeight.Bold,
-                                                style = MaterialTheme.typography.labelLarge
-                                            )
-                                            Icon(
-                                                imageVector = Icons.Outlined.Delete,
-                                                contentDescription = "Delete",
-                                                tint = tint,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                        }
-                                    }
-                                    else -> Unit
+                        SwipeToDismissBox(
+                            state = dismissState,
+                            enableDismissFromStartToEnd = true,
+                            enableDismissFromEndToStart = true,
+                            backgroundContent = {
+                                val direction = dismissState.dismissDirection
+                                val color = when (direction) {
+                                    SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.primaryContainer
+                                    SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
+                                    SwipeToDismissBoxValue.Settled -> Color.Transparent
                                 }
-                            }
-                        },
-                        modifier = Modifier.clip(itemShape)
-                    ) {
-                        Card(
-                            onClick = { onOpenIssue(issue) },
-                            shape = itemShape,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer
-                            ),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                // Issue Image Thumbnail
-                                Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                    modifier = Modifier.size(46.dp)
-                                ) {
-                                    IssuegramMediaImage(
-                                        mediaRef = thumbRef,
-                                        contentDescription = issue.title,
-                                        contentScale = ContentScale.Crop,
-                                        fallbackDrawableRes = R.drawable.image_placeholder,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
+                                val alignment = when (direction) {
+                                    SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                                    SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                                    SwipeToDismissBoxValue.Settled -> Alignment.Center
+                                }
+                                val tint = when (direction) {
+                                    SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.onPrimaryContainer
+                                    SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.onErrorContainer
+                                    SwipeToDismissBoxValue.Settled -> Color.Transparent
                                 }
 
-                                // Middle Info: ID + Title, Location & Timestamp
-                                Column(
-                                    modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(itemShape)
+                                        .background(color)
+                                        .padding(horizontal = 20.dp),
+                                    contentAlignment = alignment
                                 ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        Text(
-                                            text = issue.ticketCode,
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 11.sp
-                                            ),
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                        Text(
-                                            text = issue.title,
-                                            style = MaterialTheme.typography.bodyMedium.copy(
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = 13.sp
-                                            ),
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(R.drawable.ic_map_pin),
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                            modifier = Modifier.size(11.dp)
-                                        )
-                                        Text(
-                                            text = listOf(issue.locationName, timestampLabel).filter { it.isNotBlank() }.joinToString(" • "),
-                                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
-
-                                // Status Badge on Right
-                                Surface(
-                                    shape = CircleShape,
-                                    color = if (issue.isResolved) Color(0xFF4CAF50).copy(alpha = 0.15f) else Color(0xFFFFA726).copy(alpha = 0.15f)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(6.dp)
-                                                .background(
-                                                    color = if (issue.isResolved) Color(0xFF4CAF50) else Color(0xFFFFA726),
-                                                    shape = CircleShape
+                                    when (direction) {
+                                        SwipeToDismissBoxValue.StartToEnd -> {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.Edit,
+                                                    contentDescription = "Edit",
+                                                    tint = tint,
+                                                    modifier = Modifier.size(20.dp)
                                                 )
+                                                Text(
+                                                    text = "Edit",
+                                                    color = tint,
+                                                    fontWeight = FontWeight.Bold,
+                                                    style = MaterialTheme.typography.labelLarge
+                                                )
+                                            }
+                                        }
+                                        SwipeToDismissBoxValue.EndToStart -> {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Text(
+                                                    text = "Delete",
+                                                    color = tint,
+                                                    fontWeight = FontWeight.Bold,
+                                                    style = MaterialTheme.typography.labelLarge
+                                                )
+                                                Icon(
+                                                    imageVector = Icons.Outlined.Delete,
+                                                    contentDescription = "Delete",
+                                                    tint = tint,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            }
+                                        }
+                                        else -> Unit
+                                    }
+                                }
+                            },
+                            modifier = Modifier.clip(itemShape)
+                        ) {
+                            Card(
+                                onClick = { onOpenIssue(issue) },
+                                shape = itemShape,
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainer
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    // Issue Image Thumbnail
+                                    Surface(
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                        modifier = Modifier.size(46.dp)
+                                    ) {
+                                        IssuegramMediaImage(
+                                            mediaRef = thumbRef,
+                                            contentDescription = issue.title,
+                                            contentScale = ContentScale.Crop,
+                                            fallbackDrawableRes = R.drawable.image_placeholder,
+                                            modifier = Modifier.fillMaxSize()
                                         )
-                                        Text(
-                                            text = issue.status.replace('_', ' '),
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 10.sp
-                                            ),
-                                            color = if (issue.isResolved) Color(0xFF4CAF50) else Color(0xFFFFA726)
-                                        )
+                                    }
+
+                                    // Middle Info: ID + Title, Location & Timestamp
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            Text(
+                                                text = issue.ticketCode,
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 11.sp
+                                                ),
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                            Text(
+                                                text = issue.title,
+                                                style = MaterialTheme.typography.bodyMedium.copy(
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    fontSize = 13.sp
+                                                ),
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(R.drawable.ic_map_pin),
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                                modifier = Modifier.size(11.dp)
+                                            )
+                                            Text(
+                                                text = listOf(issue.locationName, timestampLabel).filter {
+                                                    it.isNotBlank()
+                                                }.joinToString(" • "),
+                                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+
+                                    // Status Badge on Right
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = if (issue.isResolved) {
+                                            Color(
+                                                0xFF4CAF50
+                                            ).copy(alpha = 0.15f)
+                                        } else {
+                                            Color(0xFFFFA726).copy(alpha = 0.15f)
+                                        }
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(6.dp)
+                                                    .background(
+                                                        color = if (issue.isResolved) Color(0xFF4CAF50) else Color(0xFFFFA726),
+                                                        shape = CircleShape
+                                                    )
+                                            )
+                                            Text(
+                                                text = issue.status.replace('_', ' '),
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 10.sp
+                                                ),
+                                                color = if (issue.isResolved) Color(0xFF4CAF50) else Color(0xFFFFA726)
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -822,7 +839,6 @@ fun ProfileScreen(
                     }
                 }
             }
-        }
         }
 
         if (isModerator) {
@@ -933,14 +949,14 @@ fun ProfileScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.error,
+                contentColor = MaterialTheme.colorScheme.error
             ),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_user),
                 contentDescription = null,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(18.dp)
             )
             Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.profile_sign_out), fontWeight = FontWeight.SemiBold)

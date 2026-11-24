@@ -1,0 +1,447 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:CivicMapScreen.kt$!initiallyCentered &amp;&amp; displayIssues.isNotEmpty() &amp;&amp; initialCenter == null &amp;&amp; initialPickLocation == null &amp;&amp; !hasLocationPermission &amp;&amp; userLocation == null</ID>
+    <ID>ComplexCondition:CivicMapScreen.kt$animate &amp;&amp; (lastKnown == null || freshLatLng.latitude != lastKnown.latitude || freshLatLng.longitude != lastKnown.longitude)</ID>
+    <ID>ComplexCondition:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$!issue.photoUri.isNullOrBlank() &amp;&amp; !issue.photoUri.startsWith("http://") &amp;&amp; !issue.photoUri.startsWith("https://") &amp;&amp; !issue.photoUri.startsWith("drawable://")</ID>
+    <ID>ComplexCondition:FormatLocation.kt$latitude != null &amp;&amp; longitude != null &amp;&amp; (latitude != 0.0 || longitude != 0.0)</ID>
+    <ID>ComplexCondition:FormatLocation.kt$sub != null &amp;&amp; !sub.equals(loc, ignoreCase = true) &amp;&amp; !loc.equals(sub, ignoreCase = true) &amp;&amp; !loc.contains(sub, ignoreCase = true) &amp;&amp; !sub.contains(loc, ignoreCase = true)</ID>
+    <ID>ComplexCondition:PixelCameraScreen.kt$capturedPhotoPath != null || pickedGalleryPath != null || issueTitle.isNotBlank() || issueText.isNotBlank()</ID>
+    <ID>ComplexCondition:PixelCameraScreen.kt$issueTitle.isNotBlank() || issueText.isNotBlank() || capturedPhotoPath != null || pickedGalleryPath != null</ID>
+    <ID>CyclomaticComplexMethod:CivicMapScreen.kt$@Composable fun CivicMapScreen( modifier: Modifier = Modifier, issues: List&lt;CivicIssueDto&gt; = emptyList(), onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, isPickingLocation: Boolean = false, initialPickLocation: LatLng? = null, initialCenter: LatLng? = null, onLocationPicked: (Double, Double) -&gt; Unit = { _, _ -&gt; }, onCancelPickLocation: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp )</ID>
+    <ID>CyclomaticComplexMethod:FeedScreenV6.kt$@Composable fun FeedScreenV6( modifier: Modifier = Modifier, viewModel: FeedViewModel? = null, onIssueClick: (String) -&gt; Unit = {}, onAlertsClick: () -&gt; Unit = {}, onProfileClick: () -&gt; Unit = {}, onOpenMapLocation: ((Double, Double) -&gt; Unit)? = null, bottomBarPadding: Dp = 0.dp, isDetailExpanded: Boolean = false, onDetailExpandedChange: (Boolean) -&gt; Unit = {} )</ID>
+    <ID>CyclomaticComplexMethod:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$override suspend fun postIssue(issue: Issue): Issue</ID>
+    <ID>CyclomaticComplexMethod:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$private fun mapDocumentToIssue(docId: String, data: Map&lt;String, Any?&gt;): Issue?</ID>
+    <ID>CyclomaticComplexMethod:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$override suspend fun fetchNotifications(): List&lt;Notification&gt;</ID>
+    <ID>CyclomaticComplexMethod:FormatLocation.kt$fun formatLocationAddress(locationName: String?, area: String?, latitude: Double? = null, longitude: Double? = null): FormattedAddress</ID>
+    <ID>CyclomaticComplexMethod:FormatLocation.kt$fun resolveReporterDisplayName( authorName: String?, authorUsername: String?, authorId: String?, currentFirebaseUser: FirebaseUser? = null ): String</ID>
+    <ID>CyclomaticComplexMethod:IssueMapper.kt$IssueMapper$fun fromCivicDto(dto: CivicIssueDto): Issue</ID>
+    <ID>CyclomaticComplexMethod:IssuegramApp.kt$@Composable fun IssuegramApp()</ID>
+    <ID>CyclomaticComplexMethod:MainActivity.kt$MainActivity$override fun onCreate(savedInstanceState: Bundle?)</ID>
+    <ID>CyclomaticComplexMethod:PixelCameraScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PixelCameraScreen( modifier: Modifier = Modifier, isPosting: Boolean = false, pickedLatitude: Double? = null, pickedLongitude: Double? = null, onRequestPickLocationOnMap: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp, onPostIssue: ( title: String, description: String, category: String, locationName: String, subLocation: String, latitude: Double, longitude: Double, capturedFile: File?, pickedUri: Uri? ) -&gt; Unit = { _, _, _, _, _, _, _, _, _ -&gt; } )</ID>
+    <ID>CyclomaticComplexMethod:ProfileScreen.kt$@Composable fun ProfileScreen( modifier: Modifier = Modifier, viewModel: ProfileViewModel? = null, currentUser: UserProfileDto? = null, allIssues: List&lt;CivicIssueDto&gt; = emptyList(), onUpdateAvatar: (Uri) -&gt; Unit = {}, onUpdateName: (String, () -&gt; Unit) -&gt; Unit = { _, _ -&gt; }, onRemoveAvatar: () -&gt; Unit = {}, profileBusy: Boolean = false, onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, onCreate: () -&gt; Unit = {}, errorMessage: String? = null, isModerator: Boolean = false, moderationFlags: List&lt;IssueFlagDto&gt; = emptyList(), onReviewFlag: (Long, String) -&gt; Unit = { _, _ -&gt; }, onSignOut: () -&gt; Unit = {} )</ID>
+    <ID>EmptyFunctionBlock:HomeFeedOperationsUnitTest.kt$HomeFeedOperationsUnitTest.FakeHomeFeedAuthRepository${}</ID>
+    <ID>EmptyFunctionBlock:IssuePerformanceUnitTest.kt$IssuePerformanceUnitTest.DelayedRemoteDataSource${}</ID>
+    <ID>EmptyFunctionBlock:PhotoCaptureAndFeedIntegrationTest.kt$PhotoCaptureAndFeedIntegrationTest.FakePhotoIssueRemoteDataSource${}</ID>
+    <ID>EmptyFunctionBlock:PhotoCaptureAndFeedIntegrationTest.kt$PhotoCaptureAndFeedIntegrationTest.FakeSimpleAuthRepository${}</ID>
+    <ID>ExplicitItLambdaParameter:ProfileScreen.kt${ idx, it -&gt; com.svce.issuegram.data.mapper.IssueMapper.toCivicDto( issue = it, id = idx.toLong() + 1, authorId = activeUser.id, authorUsername = activeUser.username ) }</ID>
+    <ID>FunctionNaming:AlertsScreen.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun AlertsScreen( modifier: Modifier = Modifier, bottomBarPadding: Dp = 0.dp, onBack: (() -&gt; Unit)? = null, onIssueClick: (String) -&gt; Unit, viewModel: AlertsViewModel? = null )</ID>
+    <ID>FunctionNaming:AlertsScreen.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable private fun AlertRow(notification: AppNotification)</ID>
+    <ID>FunctionNaming:CategoryAvatar.kt$@Composable fun CategoryAvatar( category: IssueCategory, modifier: Modifier = Modifier, size: Dp = 40.dp, containerColor: Color = MaterialTheme.colorScheme.primaryContainer, contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer )</ID>
+    <ID>FunctionNaming:CivicMapScreen.kt$@Composable fun CivicMapScreen( modifier: Modifier = Modifier, issues: List&lt;CivicIssueDto&gt; = emptyList(), onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, isPickingLocation: Boolean = false, initialPickLocation: LatLng? = null, initialCenter: LatLng? = null, onLocationPicked: (Double, Double) -&gt; Unit = { _, _ -&gt; }, onCancelPickLocation: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp )</ID>
+    <ID>FunctionNaming:CivicMapScreen.kt$@Composable private fun MapSelectedIssueCard( pins: List&lt;CivicIssuePin&gt;, selectedPinId: androidx.compose.runtime.State&lt;String?&gt;, issues: List&lt;CivicIssueDto&gt;, onOpenIssue: (CivicIssueDto) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:EmptyState.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun EmptyState(icon: ImageVector, title: String, body: String, modifier: Modifier = Modifier)</ID>
+    <ID>FunctionNaming:ExpressiveMotion.kt$@Composable fun DigitRoll(text: String, style: TextStyle, modifier: Modifier = Modifier, contentDescription: String = text, staggerMillis: Int = 30)</ID>
+    <ID>FunctionNaming:ExpressiveMotion.kt$@Composable fun SwipeToRevealRow( onDelete: () -&gt; Unit, modifier: Modifier = Modifier, revealWidth: Dp = 80.dp, showHint: Boolean = false, onHintShown: () -&gt; Unit = {}, action: @Composable BoxScope.() -&gt; Unit = { Text( "Delete", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onError, modifier = Modifier.align(Alignment.Center) ) }, content: @Composable () -&gt; Unit )</ID>
+    <ID>FunctionNaming:Eyebrow.kt$@Composable fun Eyebrow(text: String, modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary)</ID>
+    <ID>FunctionNaming:FeedScreenV6.kt$@Composable fun FeedScreenV6( modifier: Modifier = Modifier, viewModel: FeedViewModel? = null, onIssueClick: (String) -&gt; Unit = {}, onAlertsClick: () -&gt; Unit = {}, onProfileClick: () -&gt; Unit = {}, onOpenMapLocation: ((Double, Double) -&gt; Unit)? = null, bottomBarPadding: Dp = 0.dp, isDetailExpanded: Boolean = false, onDetailExpandedChange: (Boolean) -&gt; Unit = {} )</ID>
+    <ID>FunctionNaming:FeedScreenV6.kt$@Composable private fun Timeline(events: List&lt;TimelineEvent&gt;)</ID>
+    <ID>FunctionNaming:GroupedList.kt$@Composable fun GroupedList(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -&gt; Unit)</ID>
+    <ID>FunctionNaming:GroupedList.kt$@Composable fun GroupedRow( index: Int, count: Int, modifier: Modifier = Modifier, onClick: (() -&gt; Unit)? = null, containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow, content: @Composable RowScope.() -&gt; Unit )</ID>
+    <ID>FunctionNaming:IssueCard.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun IssueCard(issue: Issue, modifier: Modifier = Modifier, onClick: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:IssueDetailScreen.kt$@Composable fun IssueDetailScreen( ticketId: String, onBack: () -&gt; Unit, viewModel: IssueDetailViewModel? = null, onOpenFullMap: ((LatLng) -&gt; Unit)? = null )</ID>
+    <ID>FunctionNaming:IssueDetailScreen.kt$@Composable private fun Timeline(events: List&lt;TimelineEvent&gt;)</ID>
+    <ID>FunctionNaming:IssuegramApp.kt$@Composable fun IssuegramApp()</ID>
+    <ID>FunctionNaming:IssuegramMediaImage.kt$@Composable fun IssuegramMediaImage( mediaRef: String?, contentDescription: String?, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Crop, fallbackDrawableRes: Int = R.drawable.image_placeholder )</ID>
+    <ID>FunctionNaming:LocationPickerDialog.kt$@Composable fun LocationPickerDialog(initialLatitude: Double?, initialLongitude: Double?, onDismiss: () -&gt; Unit, onSelected: (Double, Double) -&gt; Unit)</ID>
+    <ID>FunctionNaming:LoginScreen.kt$@Composable fun LoginScreen(modifier: Modifier = Modifier, isSigningIn: Boolean = false, onGoogleSignIn: () -&gt; Unit = {})</ID>
+    <ID>FunctionNaming:MyIssuesScreen.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun MyIssuesScreen(modifier: Modifier = Modifier, issues: List&lt;Issue&gt; = emptyList(), onIssueClick: (String) -&gt; Unit)</ID>
+    <ID>FunctionNaming:PixelCameraScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PixelCameraScreen( modifier: Modifier = Modifier, isPosting: Boolean = false, pickedLatitude: Double? = null, pickedLongitude: Double? = null, onRequestPickLocationOnMap: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp, onPostIssue: ( title: String, description: String, category: String, locationName: String, subLocation: String, latitude: Double, longitude: Double, capturedFile: File?, pickedUri: Uri? ) -&gt; Unit = { _, _, _, _, _, _, _, _, _ -&gt; } )</ID>
+    <ID>FunctionNaming:ProfileScreen.kt$@Composable fun ProfileScreen( modifier: Modifier = Modifier, viewModel: ProfileViewModel? = null, currentUser: UserProfileDto? = null, allIssues: List&lt;CivicIssueDto&gt; = emptyList(), onUpdateAvatar: (Uri) -&gt; Unit = {}, onUpdateName: (String, () -&gt; Unit) -&gt; Unit = { _, _ -&gt; }, onRemoveAvatar: () -&gt; Unit = {}, profileBusy: Boolean = false, onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, onCreate: () -&gt; Unit = {}, errorMessage: String? = null, isModerator: Boolean = false, moderationFlags: List&lt;IssueFlagDto&gt; = emptyList(), onReviewFlag: (Long, String) -&gt; Unit = { _, _ -&gt; }, onSignOut: () -&gt; Unit = {} )</ID>
+    <ID>FunctionNaming:StatusBadge.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun StatusBadge(status: IssueStatus, modifier: Modifier = Modifier)</ID>
+    <ID>FunctionNaming:Theme.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun IssuegramTheme( darkTheme: Boolean = isSystemInDarkTheme(), motionScheme: MotionScheme = MotionScheme.expressive(), dynamicColor: Boolean = false, amoledBlack: Boolean = false, typography: Typography = ExpressiveTypography, content: @Composable () -&gt; Unit )</ID>
+    <ID>ImplicitDefaultLocale:IssuePerformanceUnitTest.kt$IssuePerformanceUnitTest$String.format("%.3f", localEvictionDurationMs)</ID>
+    <ID>LongMethod:AlertsScreen.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun AlertsScreen( modifier: Modifier = Modifier, bottomBarPadding: Dp = 0.dp, onBack: (() -&gt; Unit)? = null, onIssueClick: (String) -&gt; Unit, viewModel: AlertsViewModel? = null )</ID>
+    <ID>LongMethod:AlertsScreen.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable private fun AlertRow(notification: AppNotification)</ID>
+    <ID>LongMethod:CivicMapScreen.kt$@Composable fun CivicMapScreen( modifier: Modifier = Modifier, issues: List&lt;CivicIssueDto&gt; = emptyList(), onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, isPickingLocation: Boolean = false, initialPickLocation: LatLng? = null, initialCenter: LatLng? = null, onLocationPicked: (Double, Double) -&gt; Unit = { _, _ -&gt; }, onCancelPickLocation: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp )</ID>
+    <ID>LongMethod:CivicMapScreen.kt$@Composable private fun MapSelectedIssueCard( pins: List&lt;CivicIssuePin&gt;, selectedPinId: androidx.compose.runtime.State&lt;String?&gt;, issues: List&lt;CivicIssueDto&gt;, onOpenIssue: (CivicIssueDto) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:ExpressiveMotion.kt$@Composable fun SwipeToRevealRow( onDelete: () -&gt; Unit, modifier: Modifier = Modifier, revealWidth: Dp = 80.dp, showHint: Boolean = false, onHintShown: () -&gt; Unit = {}, action: @Composable BoxScope.() -&gt; Unit = { Text( "Delete", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onError, modifier = Modifier.align(Alignment.Center) ) }, content: @Composable () -&gt; Unit )</ID>
+    <ID>LongMethod:FeedScreenV6.kt$@Composable fun FeedScreenV6( modifier: Modifier = Modifier, viewModel: FeedViewModel? = null, onIssueClick: (String) -&gt; Unit = {}, onAlertsClick: () -&gt; Unit = {}, onProfileClick: () -&gt; Unit = {}, onOpenMapLocation: ((Double, Double) -&gt; Unit)? = null, bottomBarPadding: Dp = 0.dp, isDetailExpanded: Boolean = false, onDetailExpandedChange: (Boolean) -&gt; Unit = {} )</ID>
+    <ID>LongMethod:FeedScreenV6.kt$@Composable private fun Timeline(events: List&lt;TimelineEvent&gt;)</ID>
+    <ID>LongMethod:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$override suspend fun postIssue(issue: Issue): Issue</ID>
+    <ID>LongMethod:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$override suspend fun fetchNotifications(): List&lt;Notification&gt;</ID>
+    <ID>LongMethod:IssueCard.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun IssueCard(issue: Issue, modifier: Modifier = Modifier, onClick: () -&gt; Unit)</ID>
+    <ID>LongMethod:IssueDetailScreen.kt$@Composable fun IssueDetailScreen( ticketId: String, onBack: () -&gt; Unit, viewModel: IssueDetailViewModel? = null, onOpenFullMap: ((LatLng) -&gt; Unit)? = null )</ID>
+    <ID>LongMethod:IssueDetailScreen.kt$@Composable private fun Timeline(events: List&lt;TimelineEvent&gt;)</ID>
+    <ID>LongMethod:IssueMapper.kt$IssueMapper$fun fromCivicDto(dto: CivicIssueDto): Issue</ID>
+    <ID>LongMethod:IssuegramApp.kt$@Composable fun IssuegramApp()</ID>
+    <ID>LongMethod:LoginScreen.kt$@Composable fun LoginScreen(modifier: Modifier = Modifier, isSigningIn: Boolean = false, onGoogleSignIn: () -&gt; Unit = {})</ID>
+    <ID>LongMethod:MainActivity.kt$MainActivity$override fun onCreate(savedInstanceState: Bundle?)</ID>
+    <ID>LongMethod:MyIssuesScreen.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun MyIssuesScreen(modifier: Modifier = Modifier, issues: List&lt;Issue&gt; = emptyList(), onIssueClick: (String) -&gt; Unit)</ID>
+    <ID>LongMethod:PixelCameraScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PixelCameraScreen( modifier: Modifier = Modifier, isPosting: Boolean = false, pickedLatitude: Double? = null, pickedLongitude: Double? = null, onRequestPickLocationOnMap: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp, onPostIssue: ( title: String, description: String, category: String, locationName: String, subLocation: String, latitude: Double, longitude: Double, capturedFile: File?, pickedUri: Uri? ) -&gt; Unit = { _, _, _, _, _, _, _, _, _ -&gt; } )</ID>
+    <ID>LongMethod:ProfileScreen.kt$@Composable fun ProfileScreen( modifier: Modifier = Modifier, viewModel: ProfileViewModel? = null, currentUser: UserProfileDto? = null, allIssues: List&lt;CivicIssueDto&gt; = emptyList(), onUpdateAvatar: (Uri) -&gt; Unit = {}, onUpdateName: (String, () -&gt; Unit) -&gt; Unit = { _, _ -&gt; }, onRemoveAvatar: () -&gt; Unit = {}, profileBusy: Boolean = false, onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, onCreate: () -&gt; Unit = {}, errorMessage: String? = null, isModerator: Boolean = false, moderationFlags: List&lt;IssueFlagDto&gt; = emptyList(), onReviewFlag: (Long, String) -&gt; Unit = { _, _ -&gt; }, onSignOut: () -&gt; Unit = {} )</ID>
+    <ID>LongMethod:Type.kt$fun expressiveTypography(sans: (Float) -&gt; FontFamily = ::sansFamily, display: (Float) -&gt; FontFamily = ::displayFamily): Typography</ID>
+    <ID>LongParameterList:CivicMapOperationsAndPerformanceUnitTest.kt$CivicMapOperationsAndPerformanceUnitTest$( id: Long, ticketCode: String, title: String, locationName: String, latitude: Double, longitude: Double, isResolved: Boolean, status: String, category: String )</ID>
+    <ID>LongParameterList:CivicMapScreen.kt$( modifier: Modifier = Modifier, issues: List&lt;CivicIssueDto&gt; = emptyList(), onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, isPickingLocation: Boolean = false, initialPickLocation: LatLng? = null, initialCenter: LatLng? = null, onLocationPicked: (Double, Double) -&gt; Unit = { _, _ -&gt; }, onCancelPickLocation: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp )</ID>
+    <ID>LongParameterList:CreateIssueUseCase.kt$CreateIssueUseCase$( title: String, description: String?, category: IssueCategory, locationName: String, photoUri: String?, latitude: Double = 12.9716, longitude: Double = 77.5946, authorName: String = "Praveen Zalaki", authorUsername: String? = null )</ID>
+    <ID>LongParameterList:ExpressiveMotion.kt$( onDelete: () -&gt; Unit, modifier: Modifier = Modifier, revealWidth: Dp = 80.dp, showHint: Boolean = false, onHintShown: () -&gt; Unit = {}, action: @Composable BoxScope.() -&gt; Unit = { Text( "Delete", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onError, modifier = Modifier.align(Alignment.Center) ) }, content: @Composable () -&gt; Unit )</ID>
+    <ID>LongParameterList:FeedScreenV6.kt$( modifier: Modifier = Modifier, viewModel: FeedViewModel? = null, onIssueClick: (String) -&gt; Unit = {}, onAlertsClick: () -&gt; Unit = {}, onProfileClick: () -&gt; Unit = {}, onOpenMapLocation: ((Double, Double) -&gt; Unit)? = null, bottomBarPadding: Dp = 0.dp, isDetailExpanded: Boolean = false, onDetailExpandedChange: (Boolean) -&gt; Unit = {} )</ID>
+    <ID>LongParameterList:GroupedList.kt$( index: Int, count: Int, modifier: Modifier = Modifier, onClick: (() -&gt; Unit)? = null, containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow, content: @Composable RowScope.() -&gt; Unit )</ID>
+    <ID>LongParameterList:IssueRepository.kt$IssueRepository$( title: String, description: String?, category: IssueCategory, locationName: String, photoUri: String?, latitude: Double = 12.9716, longitude: Double = 77.5946, authorName: String = "Praveen Zalaki", authorUsername: String? = null )</ID>
+    <ID>LongParameterList:PixelCameraScreen.kt$( modifier: Modifier = Modifier, isPosting: Boolean = false, pickedLatitude: Double? = null, pickedLongitude: Double? = null, onRequestPickLocationOnMap: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp, onPostIssue: ( title: String, description: String, category: String, locationName: String, subLocation: String, latitude: Double, longitude: Double, capturedFile: File?, pickedUri: Uri? ) -&gt; Unit = { _, _, _, _, _, _, _, _, _ -&gt; } )</ID>
+    <ID>LongParameterList:ProfileScreen.kt$( modifier: Modifier = Modifier, viewModel: ProfileViewModel? = null, currentUser: UserProfileDto? = null, allIssues: List&lt;CivicIssueDto&gt; = emptyList(), onUpdateAvatar: (Uri) -&gt; Unit = {}, onUpdateName: (String, () -&gt; Unit) -&gt; Unit = { _, _ -&gt; }, onRemoveAvatar: () -&gt; Unit = {}, profileBusy: Boolean = false, onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, onCreate: () -&gt; Unit = {}, errorMessage: String? = null, isModerator: Boolean = false, moderationFlags: List&lt;IssueFlagDto&gt; = emptyList(), onReviewFlag: (Long, String) -&gt; Unit = { _, _ -&gt; }, onSignOut: () -&gt; Unit = {} )</ID>
+    <ID>LongParameterList:Theme.kt$( darkTheme: Boolean = isSystemInDarkTheme(), motionScheme: MotionScheme = MotionScheme.expressive(), dynamicColor: Boolean = false, amoledBlack: Boolean = false, typography: Typography = ExpressiveTypography, content: @Composable () -&gt; Unit )</ID>
+    <ID>MagicNumber:AlertsViewModel.kt$AlertsViewModel$5000</ID>
+    <ID>MagicNumber:CategoryAvatar.kt$0.5f</ID>
+    <ID>MagicNumber:CivicMapScreen.kt$0xFF1B5E20</ID>
+    <ID>MagicNumber:CivicMapScreen.kt$0xFF2E7D32</ID>
+    <ID>MagicNumber:CivicMapScreen.kt$0xFFE65100</ID>
+    <ID>MagicNumber:CivicMapScreen.kt$12.5f</ID>
+    <ID>MagicNumber:CivicMapScreen.kt$13.0827</ID>
+    <ID>MagicNumber:CivicMapScreen.kt$13f</ID>
+    <ID>MagicNumber:CivicMapScreen.kt$15f</ID>
+    <ID>MagicNumber:CivicMapScreen.kt$16f</ID>
+    <ID>MagicNumber:CivicMapScreen.kt$500</ID>
+    <ID>MagicNumber:CivicMapScreen.kt$80.2707</ID>
+    <ID>MagicNumber:Color.kt$0.35f</ID>
+    <ID>MagicNumber:Color.kt$0.6f</ID>
+    <ID>MagicNumber:Color.kt$0x66140C08</ID>
+    <ID>MagicNumber:Color.kt$0x8F000000</ID>
+    <ID>MagicNumber:Color.kt$0xFF00201F</ID>
+    <ID>MagicNumber:Color.kt$0xFF00210C</ID>
+    <ID>MagicNumber:Color.kt$0xFF003735</ID>
+    <ID>MagicNumber:Color.kt$0xFF0F4A28</ID>
+    <ID>MagicNumber:Color.kt$0xFF140D0B</ID>
+    <ID>MagicNumber:Color.kt$0xFF1A1210</ID>
+    <ID>MagicNumber:Color.kt$0xFF1B6D3B</ID>
+    <ID>MagicNumber:Color.kt$0xFF1D4E4C</ID>
+    <ID>MagicNumber:Color.kt$0xFF1F1A16</ID>
+    <ID>MagicNumber:Color.kt$0xFF221815</ID>
+    <ID>MagicNumber:Color.kt$0xFF271D19</ID>
+    <ID>MagicNumber:Color.kt$0xFF2B1700</ID>
+    <ID>MagicNumber:Color.kt$0xFF2C6765</ID>
+    <ID>MagicNumber:Color.kt$0xFF2F0A44</ID>
+    <ID>MagicNumber:Color.kt$0xFF322723</ID>
+    <ID>MagicNumber:Color.kt$0xFF362F2B</ID>
+    <ID>MagicNumber:Color.kt$0xFF3B0900</ID>
+    <ID>MagicNumber:Color.kt$0xFF3D312C</ID>
+    <ID>MagicNumber:Color.kt$0xFF410002</ID>
+    <ID>MagicNumber:Color.kt$0xFF46205A</ID>
+    <ID>MagicNumber:Color.kt$0xFF54453E</ID>
+    <ID>MagicNumber:Color.kt$0xFF54463D</ID>
+    <ID>MagicNumber:Color.kt$0xFF5B3A6C</ID>
+    <ID>MagicNumber:Color.kt$0xFF5C1900</ID>
+    <ID>MagicNumber:Color.kt$0xFF690005</ID>
+    <ID>MagicNumber:Color.kt$0xFF7A4E8F</ID>
+    <ID>MagicNumber:Color.kt$0xFF7C2A0E</ID>
+    <ID>MagicNumber:Color.kt$0xFF7FD9A3</ID>
+    <ID>MagicNumber:Color.kt$0xFF85736A</ID>
+    <ID>MagicNumber:Color.kt$0xFF93000A</ID>
+    <ID>MagicNumber:Color.kt$0xFF97D1CE</ID>
+    <ID>MagicNumber:Color.kt$0xFFA28E85</ID>
+    <ID>MagicNumber:Color.kt$0xFFA8330F</ID>
+    <ID>MagicNumber:Color.kt$0xFFBA1A1A</ID>
+    <ID>MagicNumber:Color.kt$0xFFBDEEEA</ID>
+    <ID>MagicNumber:Color.kt$0xFFC3EFCF</ID>
+    <ID>MagicNumber:Color.kt$0xFFD8C3B8</ID>
+    <ID>MagicNumber:Color.kt$0xFFD9C7BC</ID>
+    <ID>MagicNumber:Color.kt$0xFFE3B6FB</ID>
+    <ID>MagicNumber:Color.kt$0xFFE4DACD</ID>
+    <ID>MagicNumber:Color.kt$0xFFEBE2D6</ID>
+    <ID>MagicNumber:Color.kt$0xFFF0E1D9</ID>
+    <ID>MagicNumber:Color.kt$0xFFF1E9DF</ID>
+    <ID>MagicNumber:Color.kt$0xFFF3DAFF</ID>
+    <ID>MagicNumber:Color.kt$0xFFF6EFE6</ID>
+    <ID>MagicNumber:Color.kt$0xFFFBEEE8</ID>
+    <ID>MagicNumber:Color.kt$0xFFFBF6EE</ID>
+    <ID>MagicNumber:Color.kt$0xFFFC9500</ID>
+    <ID>MagicNumber:Color.kt$0xFFFFB4AB</ID>
+    <ID>MagicNumber:Color.kt$0xFFFFB59C</ID>
+    <ID>MagicNumber:Color.kt$0xFFFFB84D</ID>
+    <ID>MagicNumber:Color.kt$0xFFFFDAD6</ID>
+    <ID>MagicNumber:Color.kt$0xFFFFDBCF</ID>
+    <ID>MagicNumber:Color.kt$0xFFFFFFFF</ID>
+    <ID>MagicNumber:CreateIssueUseCase.kt$CreateIssueUseCase$3</ID>
+    <ID>MagicNumber:DeviceLocation.kt$20_000</ID>
+    <ID>MagicNumber:DeviceLocation.kt$5_000</ID>
+    <ID>MagicNumber:ExpressiveMotion.kt$0.1f</ID>
+    <ID>MagicNumber:ExpressiveMotion.kt$0.55f</ID>
+    <ID>MagicNumber:ExpressiveMotion.kt$10</ID>
+    <ID>MagicNumber:ExpressiveMotion.kt$1000</ID>
+    <ID>MagicNumber:ExpressiveMotion.kt$120</ID>
+    <ID>MagicNumber:ExpressiveMotion.kt$144f</ID>
+    <ID>MagicNumber:ExpressiveMotion.kt$180</ID>
+    <ID>MagicNumber:ExpressiveMotion.kt$180f</ID>
+    <ID>MagicNumber:ExpressiveMotion.kt$350</ID>
+    <ID>MagicNumber:ExpressiveMotion.kt$360f</ID>
+    <ID>MagicNumber:ExpressiveMotion.kt$3f</ID>
+    <ID>MagicNumber:ExpressiveMotion.kt$500</ID>
+    <ID>MagicNumber:ExpressiveMotion.kt$6f</ID>
+    <ID>MagicNumber:ExpressiveMotion.kt$90</ID>
+    <ID>MagicNumber:FeedScreenV6.kt$0xFF00201F</ID>
+    <ID>MagicNumber:FeedScreenV6.kt$0xFF00796B</ID>
+    <ID>MagicNumber:FeedScreenV6.kt$0xFFBDEEEA</ID>
+    <ID>MagicNumber:FeedScreenV6.kt$15f</ID>
+    <ID>MagicNumber:FeedScreenV6.kt$16f</ID>
+    <ID>MagicNumber:FeedScreenV6.kt$300</ID>
+    <ID>MagicNumber:FeedScreenV6.kt$9f</ID>
+    <ID>MagicNumber:FeedViewModel.kt$FeedViewModel$5000</ID>
+    <ID>MagicNumber:FeedViewModel.kt$FeedViewModel$600</ID>
+    <ID>MagicNumber:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$1000</ID>
+    <ID>MagicNumber:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$3</ID>
+    <ID>MagicNumber:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$3L</ID>
+    <ID>MagicNumber:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$4</ID>
+    <ID>MagicNumber:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$4L</ID>
+    <ID>MagicNumber:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$9999</ID>
+    <ID>MagicNumber:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$20</ID>
+    <ID>MagicNumber:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$50</ID>
+    <ID>MagicNumber:FormatLocation.kt$3</ID>
+    <ID>MagicNumber:FormatLocation.kt$6</ID>
+    <ID>MagicNumber:IssueCard.kt$16f</ID>
+    <ID>MagicNumber:IssueCard.kt$8f</ID>
+    <ID>MagicNumber:IssueDetailScreen.kt$0xFF00201F</ID>
+    <ID>MagicNumber:IssueDetailScreen.kt$0xFF00796B</ID>
+    <ID>MagicNumber:IssueDetailScreen.kt$0xFFBDEEEA</ID>
+    <ID>MagicNumber:IssueDetailScreen.kt$100f</ID>
+    <ID>MagicNumber:IssueDetailScreen.kt$15f</ID>
+    <ID>MagicNumber:IssueDetailScreen.kt$16f</ID>
+    <ID>MagicNumber:IssueDetailScreen.kt$300</ID>
+    <ID>MagicNumber:IssueDetailScreen.kt$9f</ID>
+    <ID>MagicNumber:IssueRepositoryImpl.kt$IssueRepositoryImpl$2482</ID>
+    <ID>MagicNumber:IssuegramApplication.kt$IssuegramApplication$0.02</ID>
+    <ID>MagicNumber:IssuegramApplication.kt$IssuegramApplication$0.25</ID>
+    <ID>MagicNumber:LocationPickerDialog.kt$15f</ID>
+    <ID>MagicNumber:LocationPickerDialog.kt$20.5937</ID>
+    <ID>MagicNumber:LocationPickerDialog.kt$4f</ID>
+    <ID>MagicNumber:LocationPickerDialog.kt$78.9629</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$12501</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$8</ID>
+    <ID>MagicNumber:MockIssues.kt$MockIssues$11</ID>
+    <ID>MagicNumber:MockIssues.kt$MockIssues$13</ID>
+    <ID>MagicNumber:MockIssues.kt$MockIssues$16</ID>
+    <ID>MagicNumber:MockIssues.kt$MockIssues$3</ID>
+    <ID>MagicNumber:MockIssues.kt$MockIssues$4</ID>
+    <ID>MagicNumber:MockIssues.kt$MockIssues$5</ID>
+    <ID>MagicNumber:MockIssues.kt$MockIssues$9</ID>
+    <ID>MagicNumber:Notifications.kt$MockAlerts$26</ID>
+    <ID>MagicNumber:Notifications.kt$MockAlerts$3</ID>
+    <ID>MagicNumber:Notifications.kt$MockAlerts$30</ID>
+    <ID>MagicNumber:Notifications.kt$MockAlerts$7</ID>
+    <ID>MagicNumber:PixelCameraScreen.kt$0xFF0F2A30</ID>
+    <ID>MagicNumber:PixelCameraScreen.kt$0xFF16181A</ID>
+    <ID>MagicNumber:PixelCameraScreen.kt$0xFF1E2022</ID>
+    <ID>MagicNumber:PixelCameraScreen.kt$0xFF2C2C2E</ID>
+    <ID>MagicNumber:PixelCameraScreen.kt$0xFFAFC8CD</ID>
+    <ID>MagicNumber:PixelCameraScreen.kt$100</ID>
+    <ID>MagicNumber:PixelCameraScreen.kt$10f</ID>
+    <ID>MagicNumber:PixelCameraScreen.kt$12.9716</ID>
+    <ID>MagicNumber:PixelCameraScreen.kt$15f</ID>
+    <ID>MagicNumber:PixelCameraScreen.kt$16f</ID>
+    <ID>MagicNumber:PixelCameraScreen.kt$3</ID>
+    <ID>MagicNumber:PixelCameraScreen.kt$320</ID>
+    <ID>MagicNumber:PixelCameraScreen.kt$5</ID>
+    <ID>MagicNumber:PixelCameraScreen.kt$500</ID>
+    <ID>MagicNumber:PixelCameraScreen.kt$77.5946</ID>
+    <ID>MagicNumber:ProfileScreen.kt$0xFF0E3D4F</ID>
+    <ID>MagicNumber:ProfileScreen.kt$0xFF0F2A30</ID>
+    <ID>MagicNumber:ProfileScreen.kt$0xFF30363D</ID>
+    <ID>MagicNumber:ProfileScreen.kt$0xFF35254A</ID>
+    <ID>MagicNumber:ProfileScreen.kt$0xFF4CAF50</ID>
+    <ID>MagicNumber:ProfileScreen.kt$0xFF67B7F7</ID>
+    <ID>MagicNumber:ProfileScreen.kt$0xFFB39DDB</ID>
+    <ID>MagicNumber:ProfileScreen.kt$0xFFFFA726</ID>
+    <ID>MagicNumber:ProfileScreen.kt$100</ID>
+    <ID>MagicNumber:ProfileScreen.kt$160</ID>
+    <ID>MagicNumber:ProfileScreen.kt$3</ID>
+    <ID>MagicNumber:ProfileScreen.kt$36</ID>
+    <ID>MagicNumber:ProfileScreen.kt$5</ID>
+    <ID>MagicNumber:ProfileScreen.kt$500</ID>
+    <ID>MagicNumber:ProfileScreen.kt$6</ID>
+    <ID>MagicNumber:ProfileViewModel.kt$ProfileViewModel$5000</ID>
+    <ID>MagicNumber:ReportRules.kt$ReportRules$12</ID>
+    <ID>MagicNumber:ReportRules.kt$ReportRules$180.0</ID>
+    <ID>MagicNumber:ReportRules.kt$ReportRules$5</ID>
+    <ID>MagicNumber:ReportRules.kt$ReportRules$500</ID>
+    <ID>MagicNumber:ReportRules.kt$ReportRules$90.0</ID>
+    <ID>MagicNumber:TimeFormat.kt$24</ID>
+    <ID>MagicNumber:TimeFormat.kt$30</ID>
+    <ID>MagicNumber:TimeFormat.kt$60</ID>
+    <ID>MagicNumber:Timeline.kt$120L</ID>
+    <ID>MagicNumber:Timeline.kt$144L</ID>
+    <ID>MagicNumber:Timeline.kt$28L</ID>
+    <ID>MagicNumber:Timeline.kt$3</ID>
+    <ID>MagicNumber:Timeline.kt$34L</ID>
+    <ID>MagicNumber:Timeline.kt$4</ID>
+    <ID>MagicNumber:Timeline.kt$8L</ID>
+    <ID>MagicNumber:Type.kt$11f</ID>
+    <ID>MagicNumber:Type.kt$12f</ID>
+    <ID>MagicNumber:Type.kt$144f</ID>
+    <ID>MagicNumber:Type.kt$14f</ID>
+    <ID>MagicNumber:Type.kt$16f</ID>
+    <ID>MagicNumber:Type.kt$22f</ID>
+    <ID>MagicNumber:Type.kt$24f</ID>
+    <ID>MagicNumber:Type.kt$28f</ID>
+    <ID>MagicNumber:Type.kt$32f</ID>
+    <ID>MagicNumber:Type.kt$36f</ID>
+    <ID>MagicNumber:Type.kt$400</ID>
+    <ID>MagicNumber:Type.kt$45f</ID>
+    <ID>MagicNumber:Type.kt$500</ID>
+    <ID>MagicNumber:Type.kt$57f</ID>
+    <ID>MagicNumber:Type.kt$600</ID>
+    <ID>MagicNumber:Type.kt$6f</ID>
+    <ID>MagicNumber:Type.kt$700</ID>
+    <ID>MagicNumber:Type.kt$800</ID>
+    <ID>MagicNumber:Type.kt$ExpressiveTextStyles$28f</ID>
+    <ID>MagicNumber:Type.kt$ExpressiveTextStyles$40f</ID>
+    <ID>MagicNumber:Type.kt$ExpressiveTextStyles$500</ID>
+    <ID>MagicNumber:Type.kt$ExpressiveTextStyles$56f</ID>
+    <ID>MagicNumber:Type.kt$ExpressiveTextStyles$700</ID>
+    <ID>MagicNumber:UserMapper.kt$UserMapper$6</ID>
+    <ID>MatchingDeclarationName:CivicMapScreen.kt$CivicIssuePin</ID>
+    <ID>MatchingDeclarationName:FormatLocation.kt$FormattedAddress</ID>
+    <ID>MatchingDeclarationName:ShapeDefaults.kt$IssuegramShapeDefaults</ID>
+    <ID>MatchingDeclarationName:StatusBadge.kt$StatusTone</ID>
+    <ID>MatchingDeclarationName:Timeline.kt$TimelineEvent</ID>
+    <ID>MaxLineLength:AppPermissionsAuditUnitTest.kt$AppPermissionsAuditUnitTest$*</ID>
+    <ID>MaxLineLength:AppPermissionsAuditUnitTest.kt$AppPermissionsAuditUnitTest$assertFalse("App should not request MANAGE_EXTERNAL_STORAGE", content.contains("android.permission.MANAGE_EXTERNAL_STORAGE"))</ID>
+    <ID>MaxLineLength:AppPermissionsAuditUnitTest.kt$AppPermissionsAuditUnitTest$assertTrue("Manifest must declare ACCESS_COARSE_LOCATION", content.contains("android.permission.ACCESS_COARSE_LOCATION"))</ID>
+    <ID>MaxLineLength:AppPermissionsAuditUnitTest.kt$AppPermissionsAuditUnitTest$assertTrue("Manifest must declare ACCESS_FINE_LOCATION", content.contains("android.permission.ACCESS_FINE_LOCATION"))</ID>
+    <ID>MaxLineLength:AppPermissionsAuditUnitTest.kt$AppPermissionsAuditUnitTest$assertTrue("Manifest must declare ACCESS_NETWORK_STATE", content.contains("android.permission.ACCESS_NETWORK_STATE"))</ID>
+    <ID>MaxLineLength:AppPermissionsAuditUnitTest.kt$AppPermissionsAuditUnitTest$fun</ID>
+    <ID>MaxLineLength:CivicMapOperationsAndPerformanceUnitTest.kt$CivicMapOperationsAndPerformanceUnitTest$CivicIssuePin("102", "#IG-102", "RESOLVED", "Garbage", "B Street", LatLng(10.1, 10.1), true, "Sanitation", "now")</ID>
+    <ID>MaxLineLength:CivicMapOperationsAndPerformanceUnitTest.kt$CivicMapOperationsAndPerformanceUnitTest$private</ID>
+    <ID>MaxLineLength:CivicMapOperationsAndPerformanceUnitTest.kt$CivicMapOperationsAndPerformanceUnitTest$val pin3 = CivicIssuePin("3", "#IG-3", "IN_PROGRESS", "Issue 3", "Loc 3", LatLng(10.2, 10.2), false, "Garbage", "now")</ID>
+    <ID>MaxLineLength:CivicMapScreen.kt$(lastKnown == null || freshLatLng.latitude != lastKnown.latitude || freshLatLng.longitude != lastKnown.longitude)</ID>
+    <ID>MaxLineLength:CivicMapScreen.kt$ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED</ID>
+    <ID>MaxLineLength:CivicMapScreen.kt$ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED</ID>
+    <ID>MaxLineLength:CivicMapScreen.kt$fontWeight = if (selectedFilter == "Resolved") FontWeight.Bold else FontWeight.Medium</ID>
+    <ID>MaxLineLength:CivicMapScreen.kt$if (selectedFilter == "Active") MaterialTheme.colorScheme.onPrimary else Color(0xFFE65100)</ID>
+    <ID>MaxLineLength:CivicMapScreen.kt$if (selectedFilter == "Resolved") MaterialTheme.colorScheme.onPrimary else Color(0xFF2E7D32)</ID>
+    <ID>MaxLineLength:CivicMapScreen.kt$initialPickLocation ?: initialCenter ?: initialLastKnown?.let { LatLng(it.latitude, it.longitude) } ?: defaultCenter</ID>
+    <ID>MaxLineLength:CivicMapScreen.kt$snippet = String.format(java.util.Locale.US, "%.6f, %.6f", pickedLatLng!!.latitude, pickedLatLng!!.longitude)</ID>
+    <ID>MaxLineLength:CivicMapScreen.kt$stringResource(R.string.map_selected_coords, pickedLatLng!!.latitude, pickedLatLng!!.longitude)</ID>
+    <ID>MaxLineLength:CivicMapScreen.kt$tint = if (hasLocationPermission) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant</ID>
+    <ID>MaxLineLength:CivicMapScreen.kt$tint = if (isSatelliteView) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface</ID>
+    <ID>MaxLineLength:CivicMapScreen.kt$val startZoom = if (initialPickLocation != null || initialCenter != null || initialLastKnown != null) 15f else 12.5f</ID>
+    <ID>MaxLineLength:DeviceLocation.kt$LocationManagerCompat</ID>
+    <ID>MaxLineLength:DeviceLocation.kt$continuation.resumeWithException(IllegalStateException("Couldn't get a recent location. Choose it on the map."))</ID>
+    <ID>MaxLineLength:DisplayTime.kt$DateTimeFormatter.ofPattern("MMM d · h:mm a", Locale.getDefault()).withZone(ZoneId.systemDefault()).format(Instant.parse(value))</ID>
+    <ID>MaxLineLength:ExpressiveMotion.kt$fun</ID>
+    <ID>MaxLineLength:FeedScreenV6.kt$border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))</ID>
+    <ID>MaxLineLength:FeedScreenV6.kt$imageVector = if (isDetailLiked) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp</ID>
+    <ID>MaxLineLength:FeedScreenV6.kt$imageVector = if (isPostLiked) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp</ID>
+    <ID>MaxLineLength:FeedScreenV6.kt$modifier = Modifier.padding(horizontal = Spacing.space3, vertical = Spacing.space2)</ID>
+    <ID>MaxLineLength:FeedScreenV6.kt$onOpenMapLocation.invoke(currentIssue.latitude, currentIssue.longitude)</ID>
+    <ID>MaxLineLength:FeedScreenV6.kt$sharedContentState = rememberSharedContentState(key = "issue_photo_$currentTicketKey")</ID>
+    <ID>MaxLineLength:FeedScreenV6.kt$sharedContentState = rememberSharedContentState(key = "issue_photo_${issue.ticketId}")</ID>
+    <ID>MaxLineLength:FeedScreenV6.kt$sharedContentState = rememberSharedContentState(key = "issue_title_$currentTicketKey")</ID>
+    <ID>MaxLineLength:FeedScreenV6.kt$sharedContentState = rememberSharedContentState(key = "issue_title_${issue.ticketId}")</ID>
+    <ID>MaxLineLength:FeedScreenV6.kt$val captionText = issue.description?.takeIf { it.isNotBlank() } ?: issue.locationName</ID>
+    <ID>MaxLineLength:FeedScreenV6.kt$val detailDescription = currentIssue?.description?.takeIf { it.isNotBlank() } ?: currentIssue?.title.orEmpty()</ID>
+    <ID>MaxLineLength:FeedScreenV6.kt$var isPostLiked by rememberSaveable(issue.ticketId) { mutableStateOf(false) }</ID>
+    <ID>MaxLineLength:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$override suspend</ID>
+    <ID>MaxLineLength:FormatLocation.kt$first.length &lt;= 6 || first.all { it.isDigit() || it.isLetter() &amp;&amp; it.isLowerCase() || it == '/' || it == '-' || it == '#' }</ID>
+    <ID>MaxLineLength:FormatLocation.kt$fun</ID>
+    <ID>MaxLineLength:FormatLocation.kt$if</ID>
+    <ID>MaxLineLength:GetUserIssuesUseCase.kt$GetUserIssuesUseCase$operator fun invoke(userId: String, authorName: String): Flow&lt;List&lt;Issue&gt;&gt;</ID>
+    <ID>MaxLineLength:HomeFeedOperationsUnitTest.kt$HomeFeedOperationsUnitTest.FakeHomeFeedIssueRepository$override fun getIssueById(ticketId: String): Flow&lt;Issue?&gt;</ID>
+    <ID>MaxLineLength:HomeFeedOperationsUnitTest.kt$HomeFeedOperationsUnitTest.FakeHomeFeedIssueRepository$override suspend</ID>
+    <ID>MaxLineLength:IssueCard.kt$color = if (liked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant</ID>
+    <ID>MaxLineLength:IssueCard.kt$tint = if (liked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant</ID>
+    <ID>MaxLineLength:IssueDetailOperationsUnitTest.kt$IssueDetailOperationsUnitTest$private</ID>
+    <ID>MaxLineLength:IssueDetailOperationsUnitTest.kt$IssueDetailOperationsUnitTest.&lt;no name provided&gt;$override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result&lt;Issue&gt;</ID>
+    <ID>MaxLineLength:IssueDetailScreen.kt$contentDescription = stringResource(if (isLiked) R.string.detail_btn_unlike else R.string.detail_btn_like)</ID>
+    <ID>MaxLineLength:IssueDetailViewModel.kt$IssueDetailViewModel$class</ID>
+    <ID>MaxLineLength:IssueMapper.kt$IssueMapper$catLower.contains("road") || catLower.contains("pothole") || catLower.contains("transit") -&gt; IssueCategory.Pothole</ID>
+    <ID>MaxLineLength:IssueMapper.kt$IssueMapper$if (words.isNotEmpty()) words.joinToString(" ") { it.replaceFirstChar { c -&gt; c.uppercase() } } else candidate</ID>
+    <ID>MaxLineLength:IssueMapper.kt$IssueMapper$val</ID>
+    <ID>MaxLineLength:IssuePerformanceUnitTest.kt$IssuePerformanceUnitTest.DelayedRemoteDataSource$override suspend</ID>
+    <ID>MaxLineLength:IssueRepositoryImpl.kt$IssueRepositoryImpl$override suspend</ID>
+    <ID>MaxLineLength:IssueSyncUnitTest.kt$IssueSyncUnitTest$assertFalse("Local feed should no longer contain deleted issue", localFeed.any { it.ticketId == issue.ticketId })</ID>
+    <ID>MaxLineLength:IssueSyncUnitTest.kt$IssueSyncUnitTest.FakeIssueRemoteDataSource$locationName = locationName?.trim()?.ifBlank { remoteStorage[idx].locationName } ?: remoteStorage[idx].locationName</ID>
+    <ID>MaxLineLength:IssueSyncUnitTest.kt$IssueSyncUnitTest.FakeIssueRemoteDataSource$override suspend</ID>
+    <ID>MaxLineLength:IssuegramApp.kt$TopLevelDestination$MyIssues : TopLevelDestination</ID>
+    <ID>MaxLineLength:IssuegramApp.kt$TopLevelDestination$Notifications : TopLevelDestination</ID>
+    <ID>MaxLineLength:IssuegramApp.kt$TopLevelDestination$private enum</ID>
+    <ID>MaxLineLength:IssuegramApp.kt$onPostIssue</ID>
+    <ID>MaxLineLength:LocationPickerDialog.kt$ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED</ID>
+    <ID>MaxLineLength:LocationPickerDialog.kt$ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED</ID>
+    <ID>MaxLineLength:LocationPickerDialog.kt$fun</ID>
+    <ID>MaxLineLength:LocationPickerDialog.kt$uiSettings = MapUiSettings(zoomControlsEnabled = true, myLocationButtonEnabled = hasLocationPermission)</ID>
+    <ID>MaxLineLength:LoginScreen.kt$animationSpec = tween(durationMillis = 700, delayMillis = 240, easing = FastOutSlowInEasing)</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$"Credential Manager encountered ${e::class.java.simpleName}: ${e.message}. Triggering fallback..."</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$// setFilterByAuthorizedAccounts(false) surfaces the native bottom sheet with all Google accounts on device</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$Log.d("IssuegramAuth", "Triggering modern Credential Manager bottom sheet (GetGoogleIdOption)...")</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$Log.i("IssuegramAuth", "No Credential Manager accounts; falling back to GoogleSignInClient...")</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$Log.w("IssuegramAuth", "Legacy Google Sign-In failed or cancelled: statusCode=${e.statusCode}")</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$Toast.makeText(context, "Google authentication did not provide an ID token", Toast.LENGTH_SHORT).show()</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$Toast.makeText(context, "Sign-in failed: ${e.localizedMessage ?: "Unknown error"}", Toast.LENGTH_SHORT).show()</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_SIWG_CREDENTIAL</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$val displayName = user.displayName?.takeIf { it.isNotBlank() } ?: user.email?.substringBefore('@') ?: "Citizen Reporter"</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$val username = user.email?.substringBefore('@')?.replace('.', '_')?.replace('-', '_') ?: "user_${user.uid.take(8)}"</ID>
+    <ID>MaxLineLength:MockIssues.kt$MockIssues$description = "Water has been standing for three days and is spilling onto the footpath. Mosquitoes are breeding around it."</ID>
+    <ID>MaxLineLength:NotificationOperationsUnitTest.kt$NotificationOperationsUnitTest$assertFalse("All notifications should now be marked read", viewModel.uiState.value.notifications.any { it.isUnread })</ID>
+    <ID>MaxLineLength:PhotoCaptureAndFeedIntegrationTest.kt$PhotoCaptureAndFeedIntegrationTest.FakePhotoIssueRemoteDataSource$override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result&lt;Issue&gt;</ID>
+    <ID>MaxLineLength:PhotoCaptureAndFeedIntegrationTest.kt$PhotoCaptureAndFeedIntegrationTest.FakePhotoIssueRemoteDataSource$override suspend fun fetchIssueById(ticketId: String): Issue?</ID>
+    <ID>MaxLineLength:PixelCameraScreen.kt$// Persist photo to permanent app storage before clearing draft state so it is not deleted</ID>
+    <ID>MaxLineLength:PixelCameraScreen.kt$&lt;no name provided&gt;$cameraError = "Couldn't take the photo. Please try again or choose a photo."</ID>
+    <ID>MaxLineLength:PixelCameraScreen.kt$&lt;no name provided&gt;$capturedPhotoFile?.takeIf { it.parentFile?.name == "drafts" }?.delete()</ID>
+    <ID>MaxLineLength:PixelCameraScreen.kt$&lt;no name provided&gt;$override</ID>
+    <ID>MaxLineLength:PixelCameraScreen.kt$cameraError?.let { Text(it, color = Color.White, modifier = Modifier.padding(horizontal = 20.dp), fontSize = 12.sp) }</ID>
+    <ID>MaxLineLength:PixelCameraScreen.kt$color = if (issueText.length &gt;= 450) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant</ID>
+    <ID>MaxLineLength:PixelCameraScreen.kt$dismissButton = { androidx.compose.material3.TextButton(onClick = { confirmingDraftDiscard = false }) { Text("Keep draft", fontFamily = GoogleSans) } }</ID>
+    <ID>MaxLineLength:PixelCameraScreen.kt$if</ID>
+    <ID>MaxLineLength:PixelCameraScreen.kt$runCatching { context.contentResolver.takePersistableUriPermission(uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION) }</ID>
+    <ID>MaxLineLength:PixelCameraScreen.kt$style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)</ID>
+    <ID>MaxLineLength:PixelCameraScreen.kt$text = { Text("Remove this report's saved photo, title, description and location from this device?", fontFamily = GoogleSans) }</ID>
+    <ID>MaxLineLength:PixelCameraScreen.kt$val categories = listOf("Pothole", "Streetlight", "Garbage", "Water", "Drainage", "Road", "Safety", "Other")</ID>
+    <ID>MaxLineLength:PixelCameraScreen.kt$val permanentDir = File(context.filesDir, "issue_photos").apply { mkdirs() }</ID>
+    <ID>MaxLineLength:PixelCameraScreen.kt$val target = File(permanentDir, "issue_${System.currentTimeMillis()}.jpg")</ID>
+    <ID>MaxLineLength:PixelCameraScreen.kt$var isPhotoCaptured by rememberSaveable { mutableStateOf(restoredDraft.photoPath != null || restoredDraft.pickedUri != null) }</ID>
+    <ID>MaxLineLength:PixelCameraScreen.kt$}</ID>
+    <ID>MaxLineLength:ProfileOperationsUnitTest.kt$ProfileOperationsUnitTest$fun isValidReportEdit(title: String, caption: String): Boolean</ID>
+    <ID>MaxLineLength:ProfileOperationsUnitTest.kt$ProfileOperationsUnitTest.&lt;no name provided&gt;$override fun getIssueById(ticketId: String): Flow&lt;Issue?&gt;</ID>
+    <ID>MaxLineLength:ProfileOperationsUnitTest.kt$ProfileOperationsUnitTest.&lt;no name provided&gt;$override suspend</ID>
+    <ID>MaxLineLength:ProfileOperationsUnitTest.kt$ProfileOperationsUnitTest.&lt;no name provided&gt;$val modified = it.copy(title = title, description = description, locationName = locationName ?: it.locationName)</ID>
+    <ID>MaxLineLength:ProfileScreen.kt$color = if (issue.isResolved) Color(0xFF4CAF50) else Color(0xFFFFA726)</ID>
+    <ID>MaxLineLength:ProfileScreen.kt$style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)</ID>
+    <ID>MaxLineLength:ProfileViewModel.kt$ProfileViewModel$fun</ID>
+    <ID>MaxLineLength:ReportDraftStore.kt$ReportDraftStore$fun read(): ReportDraft</ID>
+    <ID>MaxLineLength:ReportRules.kt$ReportRules$val categories = listOf("Public Works", "Power &amp; Lighting", "Water &amp; Sanitation", "Smart City / IT", "Roads &amp; Transit")</ID>
+    <ID>MaxLineLength:ShapeDefaults.kt$IssuegramShapeDefaults$fun</ID>
+    <ID>MaxLineLength:StatusBadge.kt$IssueStatus.Acknowledged -&gt; StatusTone(scheme.secondaryContainer, scheme.onSecondaryContainer, Icons.Outlined.Visibility)</ID>
+    <ID>MaxLineLength:StatusBadge.kt$IssueStatus.Assigned -&gt; StatusTone(scheme.tertiaryContainer, scheme.onTertiaryContainer, Icons.Outlined.PersonAdd)</ID>
+    <ID>MaxLineLength:StatusBadge.kt$IssueStatus.Open -&gt; StatusTone(scheme.surfaceContainerHighest, scheme.onSurfaceVariant, Icons.Outlined.RadioButtonUnchecked)</ID>
+    <ID>MaxLineLength:StatusBadge.kt$IssueStatus.Resolved -&gt; StatusTone(extended.positiveContainer, extended.onPositiveContainer, Icons.Outlined.CheckCircle)</ID>
+    <ID>MaxLineLength:Type.kt$ExpressiveTextStyles$TextStyle(fontFamily = GoogleSans, fontSize = 11.sp, lineHeight = 14.sp, fontWeight = FontWeight(500), letterSpacing = (0.3).sp)</ID>
+    <ID>MaxLineLength:Type.kt$ExpressiveTextStyles$TextStyle(fontFamily = GoogleSans, fontSize = 11.sp, lineHeight = 16.sp, fontWeight = FontWeight(700), letterSpacing = (1.2).sp)</ID>
+    <ID>MaxLineLength:Type.kt$ExpressiveTextStyles$TextStyle(fontFamily = GoogleSans, fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight(500), letterSpacing = (0).sp)</ID>
+    <ID>MaxLineLength:Type.kt$fun</ID>
+    <ID>NestedBlockDepth:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$override suspend fun fetchNotifications(): List&lt;Notification&gt;</ID>
+    <ID>ReturnCount:DeviceLocation.kt$fun getLastKnownLocation(context: Context): Location?</ID>
+    <ID>ReturnCount:FormatLocation.kt$fun resolveReporterDisplayName( authorName: String?, authorUsername: String?, authorId: String?, currentFirebaseUser: FirebaseUser? = null ): String</ID>
+    <ID>SwallowedException:ExpressiveMotion.kt$e: CancellationException</ID>
+    <ID>SwallowedException:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$e: Exception</ID>
+    <ID>SwallowedException:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$e: Exception</ID>
+    <ID>SwallowedException:IssueRepositoryImpl.kt$IssueRepositoryImpl$e: Exception</ID>
+    <ID>SwallowedException:MainActivity.kt$MainActivity$e: GetCredentialCancellationException</ID>
+    <ID>SwallowedException:MainActivity.kt$MainActivity$e: NoCredentialException</ID>
+    <ID>TooGenericExceptionCaught:DeviceLocation.kt$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:IssueRepositoryImpl.kt$IssueRepositoryImpl$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:MainActivity.kt$MainActivity$e: Exception</ID>
+    <ID>TooGenericExceptionThrown:IssueSyncUnitTest.kt$IssueSyncUnitTest.FakeIssueRemoteDataSource$throw RuntimeException("Network unreachable")</ID>
+    <ID>TooGenericExceptionThrown:IssueSyncUnitTest.kt$IssueSyncUnitTest.FakeIssueRemoteDataSource$throw RuntimeException("Supabase POST error: 500")</ID>
+    <ID>TooManyFunctions:ExpressiveMotion.kt$com.svce.issuegram.ui.motion.ExpressiveMotion.kt</ID>
+    <ID>UnusedParameter:FeedScreenV6.kt$onIssueClick: (String) -&gt; Unit = {}</ID>
+    <ID>UnusedParameter:HomeFeedOperationsUnitTest.kt$HomeFeedOperationsUnitTest$categoryName: String</ID>
+    <ID>UnusedParameter:ProfileScreen.kt$onCreate: () -&gt; Unit = {}</ID>
+    <ID>UnusedPrivateProperty:FeedScreenV6.kt$var isLiked by rememberSaveable { mutableStateOf(false) }</ID>
+    <ID>UnusedPrivateProperty:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$val uploadTask = storageRef.putBytes(bytes).await()</ID>
+    <ID>UnusedPrivateProperty:IssueSyncUnitTest.kt$IssueSyncUnitTest$val edited = editResult.getOrThrow()</ID>
+    <ID>UnusedPrivateProperty:ProfileOperationsUnitTest.kt$ProfileOperationsUnitTest$val collectIssuesJob = backgroundScope.launch { viewModel.userPostedIssues.collect {} }</ID>
+    <ID>UnusedPrivateProperty:ProfileOperationsUnitTest.kt$ProfileOperationsUnitTest$val collectJob = backgroundScope.launch { viewModel.currentUser.collect {} }</ID>
+    <ID>UnusedPrivateProperty:ProfileOperationsUnitTest.kt$ProfileOperationsUnitTest$val collectUserJob = backgroundScope.launch { viewModel.currentUser.collect {} }</ID>
+    <ID>UseCheckOrError:MainActivity.kt$MainActivity$throw IllegalStateException("Unexpected credential: ${credential.type}")</ID>
+    <ID>WildcardImport:ExampleUnitTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:IssueSyncUnitTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:LocationPickerDialog.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:LocationPickerDialog.kt$import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:LocationPickerDialog.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:LocationPickerDialog.kt$import com.google.maps.android.compose.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -6,11 +6,12 @@ import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
-import coil.util.DebugLogger
 import com.svce.issuegram.di.AppContainer
 import com.svce.issuegram.di.DefaultAppContainer
 
-class IssuegramApplication : Application(), ImageLoaderFactory {
+class IssuegramApplication :
+    Application(),
+    ImageLoaderFactory {
     lateinit var appContainer: AppContainer
         private set
 
@@ -41,23 +42,21 @@ class IssuegramApplication : Application(), ImageLoaderFactory {
         appContainer = DefaultAppContainer(this)
     }
 
-    override fun newImageLoader(): ImageLoader {
-        return ImageLoader.Builder(this)
-            .memoryCache {
-                MemoryCache.Builder(this)
-                    .maxSizePercent(0.25)
-                    .build()
-            }
-            .diskCache {
-                DiskCache.Builder()
-                    .directory(cacheDir.resolve("image_cache"))
-                    .maxSizePercent(0.02)
-                    .build()
-            }
-            .respectCacheHeaders(false)
-            .crossfade(true)
-            .build()
-    }
+    override fun newImageLoader(): ImageLoader = ImageLoader.Builder(this)
+        .memoryCache {
+            MemoryCache.Builder(this)
+                .maxSizePercent(0.25)
+                .build()
+        }
+        .diskCache {
+            DiskCache.Builder()
+                .directory(cacheDir.resolve("image_cache"))
+                .maxSizePercent(0.02)
+                .build()
+        }
+        .respectCacheHeaders(false)
+        .crossfade(true)
+        .build()
 
     companion object {
         lateinit var instance: IssuegramApplication

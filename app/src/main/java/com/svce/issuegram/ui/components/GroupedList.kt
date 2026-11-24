@@ -18,14 +18,11 @@ import com.svce.issuegram.ui.theme.Spacing
 
 /** Rows stacked 2dp apart: large outer corners, small inner corners — one object, separate parts. */
 @Composable
-fun GroupedList(
-    modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit,
-) {
+fun GroupedList(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Spacing.space0_5),
-        content = content,
+        content = content
     )
 }
 
@@ -36,7 +33,7 @@ fun GroupedRow(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
-    content: @Composable RowScope.() -> Unit,
+    content: @Composable RowScope.() -> Unit
 ) {
     val outer = MaterialTheme.shapes.extraLarge
     val inner = MaterialTheme.shapes.small
@@ -44,7 +41,7 @@ fun GroupedRow(
         topStart = if (index == 0) outer.topStart else inner.topStart,
         topEnd = if (index == 0) outer.topEnd else inner.topEnd,
         bottomEnd = if (index == count - 1) outer.bottomEnd else inner.bottomEnd,
-        bottomStart = if (index == count - 1) outer.bottomStart else inner.bottomStart,
+        bottomStart = if (index == count - 1) outer.bottomStart else inner.bottomStart
     )
     val rowModifier = Modifier
         .fillMaxWidth()
@@ -55,24 +52,24 @@ fun GroupedRow(
             onClick = onClick,
             modifier = modifier,
             shape = shape,
-            color = containerColor,
+            color = containerColor
         ) {
             Row(
                 modifier = rowModifier,
                 verticalAlignment = Alignment.CenterVertically,
-                content = content,
+                content = content
             )
         }
     } else {
         Surface(
             modifier = modifier,
             shape = shape,
-            color = containerColor,
+            color = containerColor
         ) {
             Row(
                 modifier = rowModifier,
                 verticalAlignment = Alignment.CenterVertically,
-                content = content,
+                content = content
             )
         }
     }

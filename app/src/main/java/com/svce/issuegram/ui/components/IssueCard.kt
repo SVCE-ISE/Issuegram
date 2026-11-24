@@ -49,11 +49,7 @@ import com.svce.issuegram.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun IssueCard(
-    issue: Issue,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
+fun IssueCard(issue: Issue, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val context = LocalContext.current
     val haptic = rememberHaptics()
     var liked by rememberSaveable(issue.ticketId) { mutableStateOf(false) }
@@ -68,8 +64,8 @@ fun IssueCard(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        ),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        )
     ) {
         // Photo when attached; otherwise the category shape stands in.
         Box(
@@ -77,14 +73,14 @@ fun IssueCard(
                 .fillMaxWidth()
                 .aspectRatio(16f / 8f)
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center
         ) {
             if (photo != null) {
                 Image(
                     bitmap = photo,
                     contentDescription = stringResource(R.string.issue_photo_desc, issue.ticketId),
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize()
                 )
             } else {
                 CategoryAvatar(category = issue.category, size = 88.dp)
@@ -95,7 +91,7 @@ fun IssueCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top,
+                verticalAlignment = Alignment.Top
             ) {
                 Text(
                     text = issue.title,
@@ -105,7 +101,7 @@ fun IssueCard(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
                         .weight(1f)
-                        .padding(end = Spacing.space3),
+                        .padding(end = Spacing.space3)
                 )
                 StatusBadge(status = issue.status)
             }
@@ -116,10 +112,10 @@ fun IssueCard(
                 text = stringResource(
                     R.string.issue_meta,
                     issue.ticketId,
-                    stringResource(issue.category.labelRes),
+                    stringResource(issue.category.labelRes)
                 ),
                 style = ExpressiveTextStyles.dataSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(Modifier.height(Spacing.space3))
@@ -127,19 +123,19 @@ fun IssueCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = stringResource(
                         R.string.issue_footer,
                         relativeTime(issue.createdAt),
-                        issue.area,
+                        issue.area
                     ),
                     style = ExpressiveTextStyles.dataSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f)
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconToggleButton(
@@ -148,33 +144,33 @@ fun IssueCard(
                             liked = it
                             haptic(if (it) ExpressiveHaptic.Confirm else ExpressiveHaptic.Tick)
                         },
-                        modifier = Modifier.statePulse(liked),
+                        modifier = Modifier.statePulse(liked)
                     ) {
                         Icon(
                             imageVector = if (liked) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUpOffAlt,
                             contentDescription = stringResource(R.string.like_issue, issue.ticketId),
                             tint = if (liked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                     DigitRoll(
                         text = likeCount.toString(),
                         style = ExpressiveTextStyles.dataSmall.copy(
-                            color = if (liked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        ),
+                            color = if (liked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     )
                     Spacer(Modifier.width(Spacing.space1))
                     IconButton(
                         onClick = {
                             haptic(ExpressiveHaptic.Tap)
                             shareIssue(context, issue.ticketId, issue.title)
-                        },
+                        }
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Share,
                             contentDescription = stringResource(R.string.share_issue, issue.ticketId),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }

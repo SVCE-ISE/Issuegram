@@ -64,8 +64,8 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.svce.issuegram.R
 import com.svce.issuegram.data.location.currentDeviceLocation
 import com.svce.issuegram.data.location.getLastKnownLocation
@@ -82,7 +82,7 @@ data class CivicIssuePin(
     val position: LatLng,
     val isResolved: Boolean,
     val category: String,
-    val timestamp: String,
+    val timestamp: String
 )
 
 @Composable
@@ -95,7 +95,7 @@ fun CivicMapScreen(
     initialCenter: LatLng? = null,
     onLocationPicked: (Double, Double) -> Unit = { _, _ -> },
     onCancelPickLocation: () -> Unit = {},
-    bottomBarPadding: Dp = 0.dp,
+    bottomBarPadding: Dp = 0.dp
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -103,7 +103,7 @@ fun CivicMapScreen(
     var hasLocationPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
         )
     }
 
@@ -132,7 +132,8 @@ fun CivicMapScreen(
 
     val cameraPositionState = rememberCameraPositionState {
         val initialLastKnown = if (hasLocationPermission) getLastKnownLocation(context) else null
-        val startCenter = initialPickLocation ?: initialCenter ?: initialLastKnown?.let { LatLng(it.latitude, it.longitude) } ?: defaultCenter
+        val startCenter =
+            initialPickLocation ?: initialCenter ?: initialLastKnown?.let { LatLng(it.latitude, it.longitude) } ?: defaultCenter
         val startZoom = if (initialPickLocation != null || initialCenter != null || initialLastKnown != null) 15f else 12.5f
         position = CameraPosition.fromLatLngZoom(startCenter, startZoom)
     }
@@ -158,7 +159,9 @@ fun CivicMapScreen(
                 if (updatePickedIfEmpty && isPickingLocation && pickedLatLng == null) {
                     pickedLatLng = freshLatLng
                 }
-                if (animate && (lastKnown == null || freshLatLng.latitude != lastKnown.latitude || freshLatLng.longitude != lastKnown.longitude)) {
+                if (animate &&
+                    (lastKnown == null || freshLatLng.latitude != lastKnown.latitude || freshLatLng.longitude != lastKnown.longitude)
+                ) {
                     cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(freshLatLng, targetZoom), 500)
                 }
             }
@@ -169,7 +172,7 @@ fun CivicMapScreen(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         hasLocationPermission = granted
         if (granted) {
             updateUserLocation(targetZoom = 15.5f, animate = true, updatePickedIfEmpty = isPickingLocation)
@@ -213,7 +216,13 @@ fun CivicMapScreen(
     }
     var initiallyCentered by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(displayIssues.firstOrNull()?.id) {
-        if (!initiallyCentered && displayIssues.isNotEmpty() && initialCenter == null && initialPickLocation == null && !hasLocationPermission && userLocation == null) {
+        if (!initiallyCentered &&
+            displayIssues.isNotEmpty() &&
+            initialCenter == null &&
+            initialPickLocation == null &&
+            !hasLocationPermission &&
+            userLocation == null
+        ) {
             val first = displayIssues.first()
             cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(LatLng(first.latitude, first.longitude), 13f))
             initiallyCentered = true
@@ -238,7 +247,7 @@ fun CivicMapScreen(
             isMyLocationEnabled = hasLocationPermission,
             mapType = if (isSatelliteView) MapType.HYBRID else MapType.NORMAL,
             isBuildingEnabled = false,
-            isIndoorEnabled = false,
+            isIndoorEnabled = false
         )
     }
 
@@ -285,8 +294,8 @@ fun CivicMapScreen(
                                 BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
                             } else {
                                 val isHighOrCritical = issue.status.equals("CRITICAL", ignoreCase = true) ||
-                                        issue.category.contains("Emergency", ignoreCase = true) ||
-                                        issue.category.contains("Power", ignoreCase = true)
+                                    issue.category.contains("Emergency", ignoreCase = true) ||
+                                    issue.category.contains("Power", ignoreCase = true)
                                 if (isHighOrCritical) {
                                     BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
                                 } else {
@@ -347,7 +356,7 @@ fun CivicMapScreen(
                     .statusBarsPadding()
                     .padding(horizontal = 14.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 // Scrollable category chips
                 Row(
@@ -376,8 +385,11 @@ fun CivicMapScreen(
                         ),
                         border = BorderStroke(
                             0.5.dp,
-                            if (selectedFilter == "All") MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                            if (selectedFilter == "All") {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                            }
                         )
                     )
 
@@ -410,8 +422,11 @@ fun CivicMapScreen(
                         ),
                         border = BorderStroke(
                             0.5.dp,
-                            if (selectedFilter == "Active") MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                            if (selectedFilter == "Active") {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                            }
                         )
                     )
 
@@ -444,8 +459,11 @@ fun CivicMapScreen(
                         ),
                         border = BorderStroke(
                             0.5.dp,
-                            if (selectedFilter == "Resolved") MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                            if (selectedFilter == "Resolved") {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                            }
                         )
                     )
                 }
@@ -456,11 +474,23 @@ fun CivicMapScreen(
                 Surface(
                     onClick = { isSatelliteView = !isSatelliteView },
                     shape = CircleShape,
-                    color = if (isSatelliteView) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                    color = if (isSatelliteView) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surface.copy(
+                            alpha = 0.95f
+                        )
+                    },
                     shadowElevation = 3.dp,
                     border = BorderStroke(
                         0.5.dp,
-                        if (isSatelliteView) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                        if (isSatelliteView) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.outlineVariant.copy(
+                                alpha = 0.4f
+                            )
+                        }
                     ),
                     modifier = Modifier.size(40.dp)
                 ) {
@@ -543,12 +573,20 @@ fun CivicMapScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = if (pickedLatLng != null)
+                        text = if (pickedLatLng != null) {
                             stringResource(R.string.map_selected_coords, pickedLatLng!!.latitude, pickedLatLng!!.longitude)
-                        else stringResource(R.string.map_tap_anywhere),
+                        } else {
+                            stringResource(R.string.map_tap_anywhere)
+                        },
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium,
-                        color = if (pickedLatLng != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (pickedLatLng !=
+                            null
+                        ) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -582,7 +620,7 @@ private fun MapSelectedIssueCard(
     selectedPinId: androidx.compose.runtime.State<String?>,
     issues: List<CivicIssueDto>,
     onOpenIssue: (CivicIssueDto) -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val selectedPin = pins.firstOrNull { it.id == selectedPinId.value }
     AnimatedVisibility(
@@ -628,8 +666,11 @@ private fun MapSelectedIssueCard(
 
                         Surface(
                             shape = CircleShape,
-                            color = if (pin.isResolved) Color(0xFF1B5E20).copy(alpha = 0.85f)
-                            else Color(0xFFE65100).copy(alpha = 0.85f)
+                            color = if (pin.isResolved) {
+                                Color(0xFF1B5E20).copy(alpha = 0.85f)
+                            } else {
+                                Color(0xFFE65100).copy(alpha = 0.85f)
+                            }
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),

@@ -5,15 +5,11 @@ import com.svce.issuegram.domain.model.User
 import com.svce.issuegram.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
 
-class AuthRepositoryImpl(
-    private val authRemoteDataSource: AuthRemoteDataSource,
-) : AuthRepository {
+class AuthRepositoryImpl(private val authRemoteDataSource: AuthRemoteDataSource) : AuthRepository {
 
-    override fun observeCurrentUser(): Flow<User?> =
-        authRemoteDataSource.observeAuthState()
+    override fun observeCurrentUser(): Flow<User?> = authRemoteDataSource.observeAuthState()
 
-    override fun getCurrentUser(): User? =
-        authRemoteDataSource.getCurrentUser()
+    override fun getCurrentUser(): User? = authRemoteDataSource.getCurrentUser()
 
     override suspend fun updateDisplayName(name: String): Result<Unit> = runCatching {
         authRemoteDataSource.updateDisplayName(name)

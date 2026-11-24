@@ -43,9 +43,8 @@ import androidx.compose.ui.unit.dp
 import com.svce.issuegram.R
 import com.svce.issuegram.data.AlertKind
 import com.svce.issuegram.data.AppNotification
-import com.svce.issuegram.data.MockAlerts
-import com.svce.issuegram.ui.components.Eyebrow
 import com.svce.issuegram.ui.components.EmptyState
+import com.svce.issuegram.ui.components.Eyebrow
 import com.svce.issuegram.ui.components.GroupedList
 import com.svce.issuegram.ui.components.GroupedRow
 import com.svce.issuegram.ui.components.badgeTone
@@ -78,7 +77,7 @@ fun AlertsScreen(
     bottomBarPadding: Dp = 0.dp,
     onBack: (() -> Unit)? = null,
     onIssueClick: (String) -> Unit,
-    viewModel: AlertsViewModel? = null,
+    viewModel: AlertsViewModel? = null
 ) {
     if (onBack != null) {
         BackHandler { onBack() }
@@ -92,7 +91,7 @@ fun AlertsScreen(
     val groups = listOf(
         BUCKET_TODAY to alerts.filter { bucketOf(it.at) == BUCKET_TODAY },
         BUCKET_YESTERDAY to alerts.filter { bucketOf(it.at) == BUCKET_YESTERDAY },
-        BUCKET_EARLIER to alerts.filter { bucketOf(it.at) == BUCKET_EARLIER },
+        BUCKET_EARLIER to alerts.filter { bucketOf(it.at) == BUCKET_EARLIER }
     )
 
     if (alerts.isEmpty()) {
@@ -102,7 +101,7 @@ fun AlertsScreen(
             body = stringResource(R.string.alerts_empty_body),
             modifier = modifier
                 .fillMaxSize()
-                .statusBarsPadding(),
+                .statusBarsPadding()
         )
         return
     }
@@ -115,14 +114,14 @@ fun AlertsScreen(
             start = Spacing.space4,
             end = Spacing.space4,
             top = Spacing.space5,
-            bottom = bottomBarPadding + Spacing.space6,
+            bottom = bottomBarPadding + Spacing.space6
         ),
-        verticalArrangement = Arrangement.spacedBy(Spacing.space3),
+        verticalArrangement = Arrangement.spacedBy(Spacing.space3)
     ) {
         item(key = "header") {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Bottom,
+                verticalAlignment = Alignment.Bottom
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Eyebrow(stringResource(R.string.alerts_eyebrow))
@@ -130,7 +129,7 @@ fun AlertsScreen(
                     Text(
                         text = stringResource(R.string.alerts_title),
                         style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 if (alerts.any { it.unread }) {
@@ -141,7 +140,7 @@ fun AlertsScreen(
                             } else {
                                 localAlerts = localAlerts.map { it.copy(unread = false) }
                             }
-                        },
+                        }
                     ) {
                         Text(stringResource(R.string.alerts_mark_all_read))
                     }
@@ -158,14 +157,14 @@ fun AlertsScreen(
                                 BUCKET_TODAY -> R.string.alerts_group_today
                                 BUCKET_YESTERDAY -> R.string.alerts_group_yesterday
                                 else -> R.string.alerts_group_earlier
-                            },
+                            }
                         ).uppercase(java.util.Locale.getDefault()),
                         style = ExpressiveTextStyles.eyebrow,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(
                             start = Spacing.space1,
-                            top = Spacing.space2,
-                        ),
+                            top = Spacing.space2
+                        )
                     )
                 }
                 item(key = "rows-$bucket") {
@@ -174,7 +173,7 @@ fun AlertsScreen(
                             GroupedRow(
                                 index = index,
                                 count = items.size,
-                                onClick = { onIssueClick(notification.ticketId) },
+                                onClick = { onIssueClick(notification.ticketId) }
                             ) {
                                 AlertRow(notification)
                             }
@@ -204,13 +203,13 @@ private fun AlertRow(notification: AppNotification) {
                 .size(40.dp)
                 .clip(CircleShape)
                 .background(container),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = tone?.icon ?: Icons.Outlined.Forum,
                 contentDescription = null,
                 tint = content,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(20.dp)
             )
         }
         Spacer(Modifier.width(Spacing.space3))
@@ -222,7 +221,7 @@ private fun AlertRow(notification: AppNotification) {
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f, fill = false),
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    overflow = TextOverflow.Ellipsis
                 )
                 if (notification.unread) {
                     Spacer(Modifier.width(Spacing.space2))
@@ -231,7 +230,7 @@ private fun AlertRow(notification: AppNotification) {
                             .size(8.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.primary)
-                            .semantics { contentDescription = unreadLabel },
+                            .semantics { contentDescription = unreadLabel }
                     )
                 }
             }
@@ -241,7 +240,7 @@ private fun AlertRow(notification: AppNotification) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(Modifier.height(Spacing.space1))
             Text(
@@ -249,10 +248,10 @@ private fun AlertRow(notification: AppNotification) {
                     R.string.alert_meta,
                     typeLabel,
                     notification.ticketId,
-                    relativeTime(notification.at),
+                    relativeTime(notification.at)
                 ),
                 style = ExpressiveTextStyles.dataSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

@@ -1,11 +1,9 @@
 package com.svce.issuegram
 
-import android.net.Uri
 import com.svce.issuegram.data.datasource.local.IssueLocalDataSource
 import com.svce.issuegram.data.datasource.remote.IssueRemoteDataSource
 import com.svce.issuegram.data.model.Issue
 import com.svce.issuegram.data.model.IssueCategory
-import com.svce.issuegram.data.model.IssueStatus
 import com.svce.issuegram.data.repository.IssueRepositoryImpl
 import com.svce.issuegram.domain.model.User
 import com.svce.issuegram.domain.repository.AuthRepository
@@ -16,10 +14,10 @@ import com.svce.issuegram.domain.usecase.issue.GetFeedIssuesUseCase
 import com.svce.issuegram.domain.usecase.issue.ToggleLikeUseCase
 import com.svce.issuegram.domain.usecase.notification.GetNotificationsUseCase
 import com.svce.issuegram.ui.feed.FeedViewModel
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -37,8 +35,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.io.File
-import java.time.Instant
 
 /**
  * Unit and integration tests covering the complete Photo Capture -> Post -> Feed Presentation journey:
@@ -73,8 +69,7 @@ class PhotoCaptureAndFeedIntegrationTest {
 
         override suspend fun fetchIssues(): List<Issue> = storedIssues.toList()
 
-        override suspend fun fetchIssueById(ticketId: String): Issue? =
-            storedIssues.firstOrNull { it.ticketId == ticketId }
+        override suspend fun fetchIssueById(ticketId: String): Issue? = storedIssues.firstOrNull { it.ticketId == ticketId }
 
         override suspend fun postIssue(issue: Issue): Issue {
             lastReceivedPhotoUri = issue.photoUri
@@ -97,12 +92,7 @@ class PhotoCaptureAndFeedIntegrationTest {
             storedIssues.removeAll { it.ticketId == ticketId }
             return Result.success(Unit)
         }
-        override suspend fun editIssue(
-            ticketId: String,
-            title: String,
-            description: String?,
-            locationName: String?
-        ): Result<Issue> = Result.success(storedIssues.first())
+        override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result<Issue> = Result.success(storedIssues.first())
     }
 
     class FakeSimpleAuthRepository : AuthRepository {
@@ -125,7 +115,7 @@ class PhotoCaptureAndFeedIntegrationTest {
         localDataSource = IssueLocalDataSource()
         repository = IssueRepositoryImpl(
             remoteDataSource = fakeRemoteDataSource,
-            localDataSource = localDataSource,
+            localDataSource = localDataSource
         )
         createIssueUseCase = CreateIssueUseCase(repository)
         getFeedIssuesUseCase = GetFeedIssuesUseCase(repository)
@@ -135,7 +125,7 @@ class PhotoCaptureAndFeedIntegrationTest {
             observeCurrentUserUseCase = ObserveCurrentUserUseCase(FakeSimpleAuthRepository()),
             getNotificationsUseCase = GetNotificationsUseCase(FakeSimpleNotificationRepository()),
             toggleLikeUseCase = ToggleLikeUseCase(repository),
-            issueRepository = repository,
+            issueRepository = repository
         )
     }
 
@@ -170,7 +160,7 @@ class PhotoCaptureAndFeedIntegrationTest {
             description = "Dangerous pothole",
             category = IssueCategory.Pothole,
             locationName = "Main Road",
-            photoUri = photoUri,
+            photoUri = photoUri
         )
         assertTrue(result.isSuccess)
 
@@ -197,7 +187,7 @@ class PhotoCaptureAndFeedIntegrationTest {
             description = "Flooding the street",
             category = IssueCategory.Water,
             locationName = "Water Works Lane",
-            photoUri = galleryContentUri,
+            photoUri = galleryContentUri
         )
         assertTrue(result.isSuccess)
 
@@ -227,7 +217,7 @@ class PhotoCaptureAndFeedIntegrationTest {
             description = null,
             category = IssueCategory.Streetlight,
             locationName = "Oak Avenue",
-            photoUri = localPhotoUri,
+            photoUri = localPhotoUri
         )
         assertTrue(result.isSuccess)
 
@@ -249,7 +239,7 @@ class PhotoCaptureAndFeedIntegrationTest {
             description = "Near community dustbin",
             category = IssueCategory.Garbage,
             locationName = "Market Square",
-            photoUri = null,
+            photoUri = null
         )
         assertTrue(result.isSuccess)
 
@@ -267,17 +257,19 @@ class PhotoCaptureAndFeedIntegrationTest {
 
     @Test
     fun testCategoryParsingFromCameraToFeed() {
-        fun parseCategory(categoryText: String): IssueCategory {
-            return when {
-                categoryText.contains("pothole", ignoreCase = true) -> IssueCategory.Pothole
-                categoryText.contains("streetlight", ignoreCase = true) || categoryText.contains("light", ignoreCase = true) -> IssueCategory.Streetlight
-                categoryText.contains("garbage", ignoreCase = true) -> IssueCategory.Garbage
-                categoryText.contains("water", ignoreCase = true) -> IssueCategory.Water
-                categoryText.contains("drain", ignoreCase = true) -> IssueCategory.Drainage
-                categoryText.contains("road", ignoreCase = true) -> IssueCategory.Road
-                categoryText.contains("safety", ignoreCase = true) -> IssueCategory.Safety
-                else -> IssueCategory.Other
-            }
+        fun parseCategory(categoryText: String): IssueCategory = when {
+            categoryText.contains("pothole", ignoreCase = true) -> IssueCategory.Pothole
+            categoryText.contains(
+                "streetlight",
+                ignoreCase = true
+            ) ||
+                categoryText.contains("light", ignoreCase = true) -> IssueCategory.Streetlight
+            categoryText.contains("garbage", ignoreCase = true) -> IssueCategory.Garbage
+            categoryText.contains("water", ignoreCase = true) -> IssueCategory.Water
+            categoryText.contains("drain", ignoreCase = true) -> IssueCategory.Drainage
+            categoryText.contains("road", ignoreCase = true) -> IssueCategory.Road
+            categoryText.contains("safety", ignoreCase = true) -> IssueCategory.Safety
+            else -> IssueCategory.Other
         }
 
         assertEquals(IssueCategory.Pothole, parseCategory("Pothole"))

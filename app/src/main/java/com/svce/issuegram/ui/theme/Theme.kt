@@ -36,7 +36,7 @@ fun IssuegramTheme(
     dynamicColor: Boolean = false,
     amoledBlack: Boolean = false,
     typography: Typography = ExpressiveTypography,
-    content: @Composable () -> Unit,
+    content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
     val base = when {
@@ -50,14 +50,14 @@ fun IssuegramTheme(
     CompositionLocalProvider(
         LocalExtendedColors provides if (darkTheme) ExpressiveDarkExtended else ExpressiveLightExtended,
         // Tonal elevation would paint grey back over a true-black page.
-        LocalTonalElevationEnabled provides !amoled,
+        LocalTonalElevationEnabled provides !amoled
     ) {
         MaterialExpressiveTheme(
             colorScheme = colorScheme,
             motionScheme = motionScheme,
             shapes = ExpressiveShapes,
             typography = typography,
-            content = content,
+            content = content
         )
     }
 }

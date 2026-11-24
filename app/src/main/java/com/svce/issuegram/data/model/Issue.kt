@@ -13,7 +13,7 @@ enum class IssueCategory(@StringRes val labelRes: Int) {
     Drainage(R.string.category_drainage),
     Road(R.string.category_road),
     Safety(R.string.category_safety),
-    Other(R.string.category_other),
+    Other(R.string.category_other)
 }
 
 enum class IssueStatus(@StringRes val labelRes: Int) {
@@ -22,7 +22,7 @@ enum class IssueStatus(@StringRes val labelRes: Int) {
     Assigned(R.string.status_assigned),
     InProgress(R.string.status_in_progress),
     Resolved(R.string.status_resolved),
-    Reopened(R.string.status_reopened),
+    Reopened(R.string.status_reopened)
 }
 
 @Immutable
@@ -32,7 +32,7 @@ data class IssueMilestone(
     val title: String,
     val actor: String,
     val timestamp: Instant,
-    val isCompleted: Boolean,
+    val isCompleted: Boolean
 )
 
 @Immutable
@@ -54,5 +54,5 @@ data class Issue(
     val longitude: Double = 77.5946,
     val authorId: String? = null,
     val authorUsername: String? = null,
-    val milestones: List<IssueMilestone> = emptyList(),
+    val milestones: List<IssueMilestone> = emptyList()
 )

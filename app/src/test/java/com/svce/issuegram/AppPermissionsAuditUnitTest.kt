@@ -1,16 +1,11 @@
 package com.svce.issuegram
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
-import com.svce.issuegram.data.location.getLastKnownLocation
-import org.junit.Assert.assertEquals
+import java.io.File
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.io.File
 
 /**
  * Exhaustive unit and security audit tests for App Permissions:
@@ -72,9 +67,7 @@ class AppPermissionsAuditUnitTest {
 
     @Test
     fun testLocationPermissionContract_checksFineAndCoarse() {
-        fun isLocationPermitted(fineGranted: Boolean, coarseGranted: Boolean): Boolean {
-            return fineGranted || coarseGranted
-        }
+        fun isLocationPermitted(fineGranted: Boolean, coarseGranted: Boolean): Boolean = fineGranted || coarseGranted
 
         // Both granted
         assertTrue(isLocationPermitted(fineGranted = true, coarseGranted = true))
@@ -91,9 +84,7 @@ class AppPermissionsAuditUnitTest {
 
     @Test
     fun testCameraPermissionContract_grantAndDenialStates() {
-        fun hasCameraPermission(checkResult: Int): Boolean {
-            return checkResult == PackageManager.PERMISSION_GRANTED
-        }
+        fun hasCameraPermission(checkResult: Int): Boolean = checkResult == PackageManager.PERMISSION_GRANTED
 
         assertTrue(hasCameraPermission(PackageManager.PERMISSION_GRANTED))
         assertFalse(hasCameraPermission(PackageManager.PERMISSION_DENIED))
@@ -102,19 +93,26 @@ class AppPermissionsAuditUnitTest {
     @Test
     fun testGetLastKnownLocation_safeFallbackWhenLocationDisabledOrDenied() {
         // Validation of check logic: returns null when neither fine nor coarse is permitted
-        fun checkPermitted(permissions: List<String>, isFineGranted: Boolean, isCoarseGranted: Boolean): Boolean {
-            return permissions.any { perm ->
-                when (perm) {
-                    Manifest.permission.ACCESS_FINE_LOCATION -> isFineGranted
-                    Manifest.permission.ACCESS_COARSE_LOCATION -> isCoarseGranted
-                    else -> false
-                }
+        fun checkPermitted(permissions: List<String>, isFineGranted: Boolean, isCoarseGranted: Boolean): Boolean = permissions.any { perm ->
+            when (perm) {
+                Manifest.permission.ACCESS_FINE_LOCATION -> isFineGranted
+                Manifest.permission.ACCESS_COARSE_LOCATION -> isCoarseGranted
+                else -> false
             }
         }
 
         val requiredPerms = listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
-        assertFalse("When both denied, permitted must be false", checkPermitted(requiredPerms, isFineGranted = false, isCoarseGranted = false))
-        assertTrue("When coarse granted, permitted must be true", checkPermitted(requiredPerms, isFineGranted = false, isCoarseGranted = true))
-        assertTrue("When fine granted, permitted must be true", checkPermitted(requiredPerms, isFineGranted = true, isCoarseGranted = false))
+        assertFalse(
+            "When both denied, permitted must be false",
+            checkPermitted(requiredPerms, isFineGranted = false, isCoarseGranted = false)
+        )
+        assertTrue(
+            "When coarse granted, permitted must be true",
+            checkPermitted(requiredPerms, isFineGranted = false, isCoarseGranted = true)
+        )
+        assertTrue(
+            "When fine granted, permitted must be true",
+            checkPermitted(requiredPerms, isFineGranted = true, isCoarseGranted = false)
+        )
     }
 }

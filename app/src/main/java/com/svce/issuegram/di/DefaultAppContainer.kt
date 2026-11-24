@@ -22,9 +22,7 @@ import com.svce.issuegram.domain.usecase.issue.ToggleLikeUseCase
 import com.svce.issuegram.domain.usecase.notification.GetNotificationsUseCase
 import com.svce.issuegram.domain.usecase.notification.MarkNotificationsAsReadUseCase
 
-class DefaultAppContainer(
-    private val context: Context = IssuegramApplication.instance,
-) : AppContainer {
+class DefaultAppContainer(private val context: Context = IssuegramApplication.instance) : AppContainer {
 
     private val issueRemoteDataSource by lazy {
         FirestoreIssueRemoteDataSource(context)
