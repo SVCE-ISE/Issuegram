@@ -25,7 +25,9 @@ private val progression = listOf(
 
 fun Issue.timeline(): List<TimelineEvent> {
     if (milestones.isNotEmpty()) {
-        return milestones.map { m ->
+        val completedMilestones = milestones.filter { it.isCompleted }
+        val milestonesToUse = if (completedMilestones.isNotEmpty()) completedMilestones else listOf(milestones.first())
+        return milestonesToUse.map { m ->
             val eventStatus = when {
                 m.title.contains("resolved", ignoreCase = true) -> IssueStatus.Resolved
                 m.title.contains("progress", ignoreCase = true) || m.stepOrder >= 4 -> IssueStatus.InProgress
