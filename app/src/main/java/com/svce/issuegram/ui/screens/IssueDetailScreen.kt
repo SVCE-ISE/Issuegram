@@ -110,7 +110,7 @@ private val EventTimeFormatter = DateTimeFormatter
     .ofPattern("MMM d, h:mm a", Locale.getDefault())
     .withZone(ZoneId.systemDefault())
 
-private fun formatEventTime(instant: Instant): String = EventTimeFormatter.format(instant)
+private fun formatEventTime(instant: Instant?): String = if (instant != null) EventTimeFormatter.format(instant) else ""
 
 private val GoogleSansLightFamily = FontFamily(
     Font(

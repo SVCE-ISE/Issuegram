@@ -4,7 +4,7 @@ import com.svce.issuegram.data.model.Issue
 import com.svce.issuegram.data.model.IssueStatus
 import java.time.Instant
 
-data class TimelineEvent(val status: IssueStatus, val at: Instant)
+data class TimelineEvent(val status: IssueStatus, val at: Instant?)
 
 /**
  * The 5 canonical sequential lifecycle steps requested for the civic issue timeline:
@@ -42,26 +42,23 @@ fun Issue.timeline(): List<TimelineEvent> {
 
     val activeIndex = canonicalStatuses.indexOf(status).coerceAtLeast(0)
 
-    // Compute progression timestamps: completed steps use recorded/updated milestone time or createdAt
-    var lastRecordedTime = milestoneTimeByStatus[IssueStatus.Open] ?: createdAt
-
     return canonicalStatuses.mapIndexed { index, stepStatus ->
         val eventTime = when {
-            // Milestone timestamp explicitly available
+            // Milestone timestamp explicitly recorded
             milestoneTimeByStatus.containsKey(stepStatus) -> {
-                val time = milestoneTimeByStatus.getValue(stepStatus)
-                lastRecordedTime = time
-                time
+                milestoneTimeByStatus[stepStatus]
             }
-            // Step is at or prior to active status but lacks explicit milestone time
+            // Step 0 is Open: always has at least createdAt
+            index == 0 -> {
+                createdAt
+            }
+            // Reached step but no custom milestone time recorded
             index <= activeIndex -> {
-                // If it's the currently active transition, use current/last known active time
-                lastRecordedTime
+                createdAt
             }
-            // Future step: extrapolate from last recorded time
+            // Future unreached step: no dummy fallback, show empty
             else -> {
-                val additionalMinutes = (index - activeIndex) * 30L
-                lastRecordedTime.plusSeconds(additionalMinutes * 60L)
+                null
             }
         }
         TimelineEvent(stepStatus, eventTime)
