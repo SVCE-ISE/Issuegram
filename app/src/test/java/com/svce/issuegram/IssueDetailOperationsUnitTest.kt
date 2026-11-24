@@ -184,7 +184,12 @@ class IssueDetailOperationsUnitTest {
         assertEquals(IssueStatus.Assigned, timelineOpen[2].status)
         assertEquals(IssueStatus.InProgress, timelineOpen[3].status)
         assertEquals(IssueStatus.Resolved, timelineOpen[4].status)
+        // Open has baseTime, but future steps must be null (displaying empty)
         assertEquals(baseTime, timelineOpen[0].at)
+        assertNull(timelineOpen[1].at)
+        assertNull(timelineOpen[2].at)
+        assertNull(timelineOpen[3].at)
+        assertNull(timelineOpen[4].at)
 
         val inProgressIssue = createTestIssue("IG-2", "In Progress Issue", IssueStatus.InProgress, createdAt = baseTime)
         val timelineProgress = inProgressIssue.timeline()
@@ -195,6 +200,8 @@ class IssueDetailOperationsUnitTest {
         assertEquals(IssueStatus.Assigned, timelineProgress[2].status)
         assertEquals(IssueStatus.InProgress, timelineProgress[3].status)
         assertEquals(IssueStatus.Resolved, timelineProgress[4].status)
+        // Future step (Resolved) must be null
+        assertNull(timelineProgress[4].at)
     }
 
     @Test

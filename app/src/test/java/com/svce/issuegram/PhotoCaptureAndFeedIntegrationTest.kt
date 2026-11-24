@@ -93,7 +93,7 @@ class PhotoCaptureAndFeedIntegrationTest {
             storedIssues.removeAll { it.ticketId == ticketId }
             return Result.success(Unit)
         }
-        override suspend fun updateStatus(ticketId: String, status: IssueStatus): Result<Unit> = Result.success(Unit)
+        override suspend fun updateStatus(ticketId: String, status: IssueStatus, milestones: List<com.svce.issuegram.data.model.IssueMilestone>): Result<Unit> = Result.success(Unit)
         override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result<Issue> = Result.success(storedIssues.first())
     }
 

@@ -1,6 +1,8 @@
 package com.svce.issuegram.data.datasource.local
 
 import com.svce.issuegram.data.model.Issue
+import com.svce.issuegram.data.model.IssueMilestone
+import com.svce.issuegram.data.model.IssueStatus
 import java.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,33 +44,73 @@ class IssueLocalDataSource {
         }
     }
 
-    suspend fun updateStatus(ticketId: String, status: com.svce.issuegram.data.model.IssueStatus) = mutex.withLock {
+    /**
+     * Updates an issue's status and milestones:
+     * - Only the newly transitioned step is stamped with Instant.now().
+     * - All previously completed steps keep their original timestamp.
+     * - Future steps have isCompleted = false and timestamp = null.
+     */
+    suspend fun updateStatus(
+        ticketId: String,
+        status: IssueStatus
+    ): Issue? = mutex.withLock {
         val now = Instant.now()
+        var updatedIssueResult: Issue? = null
+
         _issuesFlow.value = _issuesFlow.value.map { issue ->
             if (issue.ticketId.equals(ticketId, ignoreCase = true) || issue.ticketId.endsWith(ticketId, ignoreCase = true)) {
-                val stepOrderThreshold = when (status) {
-                    com.svce.issuegram.data.model.IssueStatus.Open -> 1
-                    com.svce.issuegram.data.model.IssueStatus.Acknowledged -> 2
-                    com.svce.issuegram.data.model.IssueStatus.Assigned -> 3
-                    com.svce.issuegram.data.model.IssueStatus.InProgress -> 4
-                    com.svce.issuegram.data.model.IssueStatus.Resolved -> 5
-                    com.svce.issuegram.data.model.IssueStatus.Reopened -> 5
+                val targetStep = when (status) {
+                    IssueStatus.Open -> 1
+                    IssueStatus.Acknowledged -> 2
+                    IssueStatus.Assigned -> 3
+                    IssueStatus.InProgress -> 4
+                    IssueStatus.Resolved -> 5
+                    IssueStatus.Reopened -> 5
                 }
-                val updatedMilestones = issue.milestones.map { m ->
-                    val shouldComplete = m.stepOrder <= stepOrderThreshold
-                    if (shouldComplete) {
-                        // If newly completed or matching the selected status transition, update timestamp to now
-                        val timestampToUse = if (!m.isCompleted || m.stepOrder == stepOrderThreshold) now else m.timestamp
-                        m.copy(isCompleted = true, timestamp = timestampToUse)
-                    } else {
-                        m.copy(isCompleted = false)
+
+                // If milestones are empty or incomplete, create standard 5-step milestone template
+                val existingMilestones = if (issue.milestones.size >= 5) {
+                    issue.milestones
+                } else {
+                    listOf(
+                        IssueMilestone(1, 1, "Issue Reported", issue.authorName, issue.createdAt, true),
+                        IssueMilestone(2, 2, "Acknowledged by Authority", "Civic Control", issue.createdAt, false),
+                        IssueMilestone(3, 3, "Assigned to Department", "Public Works", issue.createdAt, false),
+                        IssueMilestone(4, 4, "Work In Progress", "Field Operations", issue.createdAt, false),
+                        IssueMilestone(5, 5, "Issue Resolved", "Civic Authority", issue.createdAt, false)
+                    )
+                }
+
+                val updatedMilestones = existingMilestones.map { m ->
+                    when {
+                        // Step 1: Open always stays completed with original issue creation time
+                        m.stepOrder == 1 -> {
+                            m.copy(isCompleted = true, timestamp = issue.createdAt)
+                        }
+                        // Earlier completed steps: keep existing timestamp and completed state
+                        m.stepOrder < targetStep -> {
+                            val time = if (m.isCompleted) m.timestamp else now
+                            m.copy(isCompleted = true, timestamp = time)
+                        }
+                        // Target step being activated: stamp with current time
+                        m.stepOrder == targetStep -> {
+                            m.copy(isCompleted = true, timestamp = now)
+                        }
+                        // Future steps: not completed, no timestamp
+                        else -> {
+                            m.copy(isCompleted = false)
+                        }
                     }
                 }
-                issue.copy(status = status, milestones = updatedMilestones)
+
+                val updated = issue.copy(status = status, milestones = updatedMilestones)
+                updatedIssueResult = updated
+                updated
             } else {
                 issue
             }
         }
+        updatedIssueResult
     }
 
     suspend fun updateIssue(updatedIssue: Issue) = mutex.withLock {

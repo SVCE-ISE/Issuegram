@@ -17,6 +17,7 @@
     <ID>CyclomaticComplexMethod:FormatLocation.kt$fun formatLocationAddress(locationName: String?, area: String?, latitude: Double? = null, longitude: Double? = null): FormattedAddress</ID>
     <ID>CyclomaticComplexMethod:FormatLocation.kt$fun resolveReporterDisplayName( authorName: String?, authorUsername: String?, authorId: String?, currentFirebaseUser: FirebaseUser? = null ): String</ID>
     <ID>CyclomaticComplexMethod:IssueDetailScreen.kt$@Composable private fun Timeline(events: List&lt;TimelineEvent&gt;, currentStatus: com.svce.issuegram.data.model.IssueStatus)</ID>
+    <ID>CyclomaticComplexMethod:IssueLocalDataSource.kt$IssueLocalDataSource$suspend fun updateStatus( ticketId: String, status: IssueStatus ): Issue?</ID>
     <ID>CyclomaticComplexMethod:IssueMapper.kt$IssueMapper$fun fromCivicDto(dto: CivicIssueDto): Issue</ID>
     <ID>CyclomaticComplexMethod:IssuegramApp.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun IssuegramApp()</ID>
     <ID>CyclomaticComplexMethod:MainActivity.kt$MainActivity$override fun onCreate(savedInstanceState: Bundle?)</ID>
@@ -359,15 +360,16 @@
     <ID>MaxLineLength:IssueDetailScreen.kt$contentDescription = stringResource(if (isLiked) R.string.detail_btn_unlike else R.string.detail_btn_like)</ID>
     <ID>MaxLineLength:IssueDetailScreen.kt$tint = if (isFuture) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else tone.content</ID>
     <ID>MaxLineLength:IssueLocalDataSource.kt$IssueLocalDataSource$if</ID>
-    <ID>MaxLineLength:IssueLocalDataSource.kt$IssueLocalDataSource$val timestampToUse = if (!m.isCompleted || m.stepOrder == stepOrderThreshold) now else m.timestamp</ID>
     <ID>MaxLineLength:IssueMapper.kt$IssueMapper$catLower.contains("road") || catLower.contains("pothole") || catLower.contains("transit") -&gt; IssueCategory.Pothole</ID>
     <ID>MaxLineLength:IssueMapper.kt$IssueMapper$if (words.isNotEmpty()) words.joinToString(" ") { it.replaceFirstChar { c -&gt; c.uppercase() } } else candidate</ID>
     <ID>MaxLineLength:IssueMapper.kt$IssueMapper$val</ID>
     <ID>MaxLineLength:IssuePerformanceUnitTest.kt$IssuePerformanceUnitTest.DelayedRemoteDataSource$override suspend</ID>
+    <ID>MaxLineLength:IssuePerformanceUnitTest.kt$IssuePerformanceUnitTest.DelayedRemoteDataSource$override suspend fun updateStatus(ticketId: String, status: IssueStatus, milestones: List&lt;com.svce.issuegram.data.model.IssueMilestone&gt;): Result&lt;Unit&gt;</ID>
     <ID>MaxLineLength:IssueRepositoryImpl.kt$IssueRepositoryImpl$override suspend</ID>
     <ID>MaxLineLength:IssueSyncUnitTest.kt$IssueSyncUnitTest$assertFalse("Local feed should no longer contain deleted issue", localFeed.any { it.ticketId == issue.ticketId })</ID>
     <ID>MaxLineLength:IssueSyncUnitTest.kt$IssueSyncUnitTest.FakeIssueRemoteDataSource$locationName = locationName?.trim()?.ifBlank { remoteStorage[idx].locationName } ?: remoteStorage[idx].locationName</ID>
     <ID>MaxLineLength:IssueSyncUnitTest.kt$IssueSyncUnitTest.FakeIssueRemoteDataSource$override suspend</ID>
+    <ID>MaxLineLength:IssueSyncUnitTest.kt$IssueSyncUnitTest.FakeIssueRemoteDataSource$override suspend fun updateStatus(ticketId: String, status: IssueStatus, milestones: List&lt;com.svce.issuegram.data.model.IssueMilestone&gt;): Result&lt;Unit&gt;</ID>
     <ID>MaxLineLength:IssuegramApp.kt$Toast.makeText(context, "Admin Control Panel unlocked", Toast.LENGTH_SHORT).show()</ID>
     <ID>MaxLineLength:IssuegramApp.kt$TopLevelDestination$MyIssues : TopLevelDestination</ID>
     <ID>MaxLineLength:IssuegramApp.kt$TopLevelDestination$Notifications : TopLevelDestination</ID>
@@ -394,6 +396,7 @@
     <ID>MaxLineLength:NotificationOperationsUnitTest.kt$NotificationOperationsUnitTest$assertFalse("All notifications should now be marked read", viewModel.uiState.value.notifications.any { it.isUnread })</ID>
     <ID>MaxLineLength:PhotoCaptureAndFeedIntegrationTest.kt$PhotoCaptureAndFeedIntegrationTest.FakePhotoIssueRemoteDataSource$override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result&lt;Issue&gt;</ID>
     <ID>MaxLineLength:PhotoCaptureAndFeedIntegrationTest.kt$PhotoCaptureAndFeedIntegrationTest.FakePhotoIssueRemoteDataSource$override suspend fun fetchIssueById(ticketId: String): Issue?</ID>
+    <ID>MaxLineLength:PhotoCaptureAndFeedIntegrationTest.kt$PhotoCaptureAndFeedIntegrationTest.FakePhotoIssueRemoteDataSource$override suspend fun updateStatus(ticketId: String, status: IssueStatus, milestones: List&lt;com.svce.issuegram.data.model.IssueMilestone&gt;): Result&lt;Unit&gt;</ID>
     <ID>MaxLineLength:PixelCameraScreen.kt$// Persist photo to permanent app storage before clearing draft state so it is not deleted</ID>
     <ID>MaxLineLength:PixelCameraScreen.kt$&lt;no name provided&gt;$cameraError = "Couldn't take the photo. Please try again or choose a photo."</ID>
     <ID>MaxLineLength:PixelCameraScreen.kt$&lt;no name provided&gt;$capturedPhotoFile?.takeIf { it.parentFile?.name == "drafts" }?.delete()</ID>

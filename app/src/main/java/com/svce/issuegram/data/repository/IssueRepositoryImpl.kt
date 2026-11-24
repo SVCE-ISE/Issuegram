@@ -158,9 +158,10 @@ class IssueRepositoryImpl(
     }
 
     override suspend fun updateStatus(ticketId: String, status: com.svce.issuegram.data.model.IssueStatus): Result<Unit> {
-        localDataSource.updateStatus(ticketId, status)
+        val updatedIssue = localDataSource.updateStatus(ticketId, status)
         return try {
-            remoteDataSource.updateStatus(ticketId, status)
+            val milestones = updatedIssue?.milestones ?: emptyList()
+            remoteDataSource.updateStatus(ticketId, status, milestones)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.success(Unit)

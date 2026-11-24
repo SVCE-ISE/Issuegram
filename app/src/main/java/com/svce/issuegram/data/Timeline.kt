@@ -23,8 +23,8 @@ private val canonicalStatuses = listOf(
 )
 
 fun Issue.timeline(): List<TimelineEvent> {
-    // Map completed milestone timestamps if present
-    val milestoneTimeByStatus = mutableMapOf<IssueStatus, Instant>()
+    // Collect completed milestones with their recorded timestamps
+    val completedMilestonesMap = mutableMapOf<IssueStatus, Instant>()
     if (milestones.isNotEmpty()) {
         for (m in milestones) {
             val eventStatus = when {
@@ -35,7 +35,7 @@ fun Issue.timeline(): List<TimelineEvent> {
                 else -> IssueStatus.Open
             }
             if (m.isCompleted) {
-                milestoneTimeByStatus[eventStatus] = m.timestamp
+                completedMilestonesMap[eventStatus] = m.timestamp
             }
         }
     }
@@ -44,19 +44,19 @@ fun Issue.timeline(): List<TimelineEvent> {
 
     return canonicalStatuses.mapIndexed { index, stepStatus ->
         val eventTime = when {
-            // Milestone timestamp explicitly recorded
-            milestoneTimeByStatus.containsKey(stepStatus) -> {
-                milestoneTimeByStatus[stepStatus]
-            }
-            // Step 0 is Open: always has at least createdAt
+            // Step 1 is always Open: show createdAt
             index == 0 -> {
+                completedMilestonesMap[IssueStatus.Open] ?: createdAt
+            }
+            // Step is explicitly marked as completed with a recorded timestamp
+            completedMilestonesMap.containsKey(stepStatus) -> {
+                completedMilestonesMap[stepStatus]
+            }
+            // Step is at or prior to active status but lacked milestone map entry: fallback to createdAt
+            index <= activeIndex && index != 0 -> {
                 createdAt
             }
-            // Reached step but no custom milestone time recorded
-            index <= activeIndex -> {
-                createdAt
-            }
-            // Future unreached step: no dummy fallback, show empty
+            // Future uncompleted step: strictly null (display empty)
             else -> {
                 null
             }

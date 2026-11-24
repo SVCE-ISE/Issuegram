@@ -226,15 +226,30 @@ class FirestoreIssueRemoteDataSource(
         Result.failure(e)
     }
 
-    override suspend fun updateStatus(ticketId: String, status: com.svce.issuegram.data.model.IssueStatus): Result<Unit> = try {
+    override suspend fun updateStatus(
+        ticketId: String,
+        status: com.svce.issuegram.data.model.IssueStatus,
+        milestones: List<IssueMilestone>
+    ): Result<Unit> = try {
         val cleanTicketId = ticketId.removePrefix("#")
         val docRef = issuesCollection.document(cleanTicketId)
-        docRef.update(
-            mapOf(
-                "status" to status.name,
-                "updatedAt" to Instant.now().toString()
-            )
-        ).await()
+        val updateMap = mutableMapOf<String, Any>(
+            "status" to status.name,
+            "updatedAt" to Instant.now().toString()
+        )
+        if (milestones.isNotEmpty()) {
+            updateMap["milestones"] = milestones.map { m ->
+                mapOf(
+                    "id" to m.id,
+                    "stepOrder" to m.stepOrder,
+                    "title" to m.title,
+                    "actor" to m.actor,
+                    "timestamp" to m.timestamp.toString(),
+                    "isCompleted" to m.isCompleted
+                )
+            }
+        }
+        docRef.update(updateMap).await()
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)
