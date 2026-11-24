@@ -4,6 +4,7 @@ import com.svce.issuegram.data.datasource.local.IssueLocalDataSource
 import com.svce.issuegram.data.datasource.remote.IssueRemoteDataSource
 import com.svce.issuegram.data.model.Issue
 import com.svce.issuegram.data.model.IssueCategory
+import com.svce.issuegram.data.model.IssueStatus
 import com.svce.issuegram.data.repository.IssueRepositoryImpl
 import kotlin.system.measureNanoTime
 import kotlin.system.measureTimeMillis
@@ -52,6 +53,8 @@ class IssuePerformanceUnitTest {
             remoteStorage.removeAll { it.ticketId == ticketId }
             return Result.success(Unit)
         }
+
+        override suspend fun updateStatus(ticketId: String, status: IssueStatus): Result<Unit> = Result.success(Unit)
 
         override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result<Issue> {
             kotlinx.coroutines.delay(simulatedNetworkDelayMs)

@@ -7,12 +7,16 @@
 package com.svce.issuegram.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -53,6 +58,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -63,6 +69,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -90,6 +97,8 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.absoluteValue
+import kotlin.math.roundToInt
 
 private val EventDateFormatter = DateTimeFormatter
     .ofPattern("MMM d, yyyy", Locale.getDefault())
@@ -129,6 +138,8 @@ fun IssueDetailScreen(
     }
 
     val uiState by viewModel?.uiState?.collectAsState() ?: remember { mutableStateOf(null) }
+    val currentUser by viewModel?.currentUser?.collectAsState() ?: remember { mutableStateOf(null) }
+    val isAdmin = currentUser?.isAdmin == true
     val context = LocalContext.current
     val issue = uiState?.issue
 
@@ -229,6 +240,16 @@ fun IssueDetailScreen(
                     .navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(Spacing.space4)
             ) {
+                // Admin Status Action Tab Bar (Exact Kimon Segmented Capsule UI)
+                if (isAdmin) {
+                    AdminStatusTabBar(
+                        currentStatus = issue.status,
+                        onStatusSelected = { newStatus ->
+                            viewModel?.updateStatus(issue.ticketId, newStatus)
+                        }
+                    )
+                }
+
                 // 1. Detailed Summary / Story Description on Top
                 Text(
                     text = issue.description?.takeIf { it.isNotBlank() }
@@ -577,6 +598,114 @@ private fun Timeline(events: List<TimelineEvent>) {
                         style = ExpressiveTextStyles.dataSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            }
+        }
+    }
+}
+
+private val ADMIN_STATUS_OPTIONS = listOf(
+    com.svce.issuegram.data.model.IssueStatus.Open,
+    com.svce.issuegram.data.model.IssueStatus.Acknowledged,
+    com.svce.issuegram.data.model.IssueStatus.Assigned,
+    com.svce.issuegram.data.model.IssueStatus.Resolved
+)
+
+@Composable
+private fun AdminStatusTabBar(
+    currentStatus: com.svce.issuegram.data.model.IssueStatus,
+    onStatusSelected: (com.svce.issuegram.data.model.IssueStatus) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val selectedIndex = remember(currentStatus) {
+        val idx = ADMIN_STATUS_OPTIONS.indexOf(currentStatus)
+        if (idx >= 0) {
+            idx
+        } else if (currentStatus == com.svce.issuegram.data.model.IssueStatus.InProgress) {
+            2
+        } else {
+            0
+        }
+    }
+
+    val animatedIndex by animateFloatAsState(
+        targetValue = selectedIndex.toFloat(),
+        animationSpec = spring(
+            dampingRatio = 0.85f,
+            stiffness = 380f
+        ),
+        label = "admin_tab_spring"
+    )
+
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+        ),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp)
+        ) {
+            val tabCount = ADMIN_STATUS_OPTIONS.size
+            val tabWidth = maxWidth / tabCount
+
+            // 1. Continuous Floating Indicator Pill with Spring Physics (Exact Kimon UI)
+            Box(
+                modifier = Modifier
+                    .offset {
+                        val xOffsetPx = (tabWidth.toPx() * animatedIndex).roundToInt()
+                        IntOffset(x = xOffsetPx, y = 0)
+                    }
+                    .width(tabWidth)
+                    .height(40.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+            )
+
+            // 2. Interactive Label Layer with Interpolated Color States (Exact Kimon UI)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ADMIN_STATUS_OPTIONS.forEachIndexed { index, status ->
+                    val distance = (animatedIndex - index).absoluteValue.coerceIn(0f, 1f)
+                    val textColor = lerp(
+                        MaterialTheme.colorScheme.onPrimaryContainer,
+                        MaterialTheme.colorScheme.onSurfaceVariant,
+                        distance
+                    )
+                    val fontWeight = if (distance < 0.5f) FontWeight.Bold else FontWeight.Medium
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                onStatusSelected(status)
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(status.labelRes),
+                            fontWeight = fontWeight,
+                            fontSize = 12.sp,
+                            letterSpacing = (-0.2).sp,
+                            color = textColor,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
                 }
             }
         }

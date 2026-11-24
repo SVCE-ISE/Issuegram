@@ -42,6 +42,7 @@
     <ID>FunctionNaming:GroupedList.kt$@Composable fun GroupedRow( index: Int, count: Int, modifier: Modifier = Modifier, onClick: (() -&gt; Unit)? = null, containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow, content: @Composable RowScope.() -&gt; Unit )</ID>
     <ID>FunctionNaming:IssueCard.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun IssueCard( issue: Issue, modifier: Modifier = Modifier, onToggleLike: (String) -&gt; Unit = {}, onClick: () -&gt; Unit )</ID>
     <ID>FunctionNaming:IssueDetailScreen.kt$@Composable fun IssueDetailScreen( ticketId: String, onBack: () -&gt; Unit, viewModel: IssueDetailViewModel? = null, onOpenFullMap: ((LatLng) -&gt; Unit)? = null )</ID>
+    <ID>FunctionNaming:IssueDetailScreen.kt$@Composable private fun AdminStatusTabBar( currentStatus: com.svce.issuegram.data.model.IssueStatus, onStatusSelected: (com.svce.issuegram.data.model.IssueStatus) -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>FunctionNaming:IssueDetailScreen.kt$@Composable private fun Timeline(events: List&lt;TimelineEvent&gt;)</ID>
     <ID>FunctionNaming:IssuegramApp.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun IssuegramApp()</ID>
     <ID>FunctionNaming:IssuegramMediaImage.kt$@Composable fun IssuegramMediaImage( mediaRef: String?, contentDescription: String?, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Crop, fallbackDrawableRes: Int = R.drawable.image_placeholder )</ID>
@@ -66,6 +67,7 @@
     <ID>LongMethod:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$override suspend fun fetchNotifications(): List&lt;Notification&gt;</ID>
     <ID>LongMethod:IssueCard.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun IssueCard( issue: Issue, modifier: Modifier = Modifier, onToggleLike: (String) -&gt; Unit = {}, onClick: () -&gt; Unit )</ID>
     <ID>LongMethod:IssueDetailScreen.kt$@Composable fun IssueDetailScreen( ticketId: String, onBack: () -&gt; Unit, viewModel: IssueDetailViewModel? = null, onOpenFullMap: ((LatLng) -&gt; Unit)? = null )</ID>
+    <ID>LongMethod:IssueDetailScreen.kt$@Composable private fun AdminStatusTabBar( currentStatus: com.svce.issuegram.data.model.IssueStatus, onStatusSelected: (com.svce.issuegram.data.model.IssueStatus) -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:IssueDetailScreen.kt$@Composable private fun Timeline(events: List&lt;TimelineEvent&gt;)</ID>
     <ID>LongMethod:IssueMapper.kt$IssueMapper$fun fromCivicDto(dto: CivicIssueDto): Issue</ID>
     <ID>LongMethod:IssuegramApp.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun IssuegramApp()</ID>
@@ -195,6 +197,7 @@
     <ID>MagicNumber:FormatLocation.kt$6</ID>
     <ID>MagicNumber:IssueCard.kt$16f</ID>
     <ID>MagicNumber:IssueCard.kt$8f</ID>
+    <ID>MagicNumber:IssueDetailScreen.kt$0.5f</ID>
     <ID>MagicNumber:IssueDetailScreen.kt$0xFF00201F</ID>
     <ID>MagicNumber:IssueDetailScreen.kt$0xFF00796B</ID>
     <ID>MagicNumber:IssueDetailScreen.kt$0xFFBDEEEA</ID>
@@ -203,6 +206,7 @@
     <ID>MagicNumber:IssueDetailScreen.kt$16f</ID>
     <ID>MagicNumber:IssueDetailScreen.kt$300</ID>
     <ID>MagicNumber:IssueDetailScreen.kt$9f</ID>
+    <ID>MagicNumber:IssueDetailViewModel.kt$IssueDetailViewModel$5000</ID>
     <ID>MagicNumber:IssueRepositoryImpl.kt$IssueRepositoryImpl$2482</ID>
     <ID>MagicNumber:IssuegramApplication.kt$IssuegramApplication$0.02</ID>
     <ID>MagicNumber:IssuegramApplication.kt$IssuegramApplication$0.25</ID>
@@ -349,7 +353,6 @@
     <ID>MaxLineLength:IssueDetailOperationsUnitTest.kt$IssueDetailOperationsUnitTest$private</ID>
     <ID>MaxLineLength:IssueDetailOperationsUnitTest.kt$IssueDetailOperationsUnitTest.&lt;no name provided&gt;$override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result&lt;Issue&gt;</ID>
     <ID>MaxLineLength:IssueDetailScreen.kt$contentDescription = stringResource(if (isLiked) R.string.detail_btn_unlike else R.string.detail_btn_like)</ID>
-    <ID>MaxLineLength:IssueDetailViewModel.kt$IssueDetailViewModel$class</ID>
     <ID>MaxLineLength:IssueMapper.kt$IssueMapper$catLower.contains("road") || catLower.contains("pothole") || catLower.contains("transit") -&gt; IssueCategory.Pothole</ID>
     <ID>MaxLineLength:IssueMapper.kt$IssueMapper$if (words.isNotEmpty()) words.joinToString(" ") { it.replaceFirstChar { c -&gt; c.uppercase() } } else candidate</ID>
     <ID>MaxLineLength:IssueMapper.kt$IssueMapper$val</ID>

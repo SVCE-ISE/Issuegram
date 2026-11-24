@@ -88,6 +88,8 @@ class IssueDetailOperationsUnitTest {
 
         override suspend fun deleteIssue(ticketId: String): Result<Unit> = Result.success(Unit)
 
+        override suspend fun updateStatus(ticketId: String, status: IssueStatus): Result<Unit> = Result.success(Unit)
+
         override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result<Issue> = Result.failure(NotImplementedError())
 
         override suspend fun refreshIssues(): Result<Unit> = Result.success(Unit)

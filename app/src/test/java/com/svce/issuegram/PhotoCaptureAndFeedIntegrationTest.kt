@@ -4,6 +4,7 @@ import com.svce.issuegram.data.datasource.local.IssueLocalDataSource
 import com.svce.issuegram.data.datasource.remote.IssueRemoteDataSource
 import com.svce.issuegram.data.model.Issue
 import com.svce.issuegram.data.model.IssueCategory
+import com.svce.issuegram.data.model.IssueStatus
 import com.svce.issuegram.data.repository.IssueRepositoryImpl
 import com.svce.issuegram.domain.model.User
 import com.svce.issuegram.domain.repository.AuthRepository
@@ -92,6 +93,7 @@ class PhotoCaptureAndFeedIntegrationTest {
             storedIssues.removeAll { it.ticketId == ticketId }
             return Result.success(Unit)
         }
+        override suspend fun updateStatus(ticketId: String, status: IssueStatus): Result<Unit> = Result.success(Unit)
         override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result<Issue> = Result.success(storedIssues.first())
     }
 

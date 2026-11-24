@@ -130,6 +130,8 @@ class HomeFeedOperationsUnitTest {
             return Result.success(Unit)
         }
 
+        override suspend fun updateStatus(ticketId: String, status: IssueStatus): Result<Unit> = Result.success(Unit)
+
         override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result<Issue> {
             val currentList = issuesFlowInternal.value.toMutableList()
             val index = currentList.indexOfFirst { it.ticketId == ticketId }

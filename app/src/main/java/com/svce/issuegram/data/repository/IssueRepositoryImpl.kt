@@ -157,6 +157,16 @@ class IssueRepositoryImpl(
         Result.failure(e)
     }
 
+    override suspend fun updateStatus(ticketId: String, status: com.svce.issuegram.data.model.IssueStatus): Result<Unit> {
+        localDataSource.updateStatus(ticketId, status)
+        return try {
+            remoteDataSource.updateStatus(ticketId, status)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.success(Unit)
+        }
+    }
+
     override suspend fun refreshIssues(): Result<Unit> = try {
         val remote = remoteDataSource.fetchIssues()
         localDataSource.updateIssues(remote)

@@ -38,7 +38,9 @@ class ViewModelFactory(private val appContainer: AppContainer) : ViewModelProvid
         modelClass.isAssignableFrom(IssueDetailViewModel::class.java) -> {
             IssueDetailViewModel(
                 getIssueDetailUseCase = appContainer.getIssueDetailUseCase,
-                toggleLikeUseCase = appContainer.toggleLikeUseCase
+                toggleLikeUseCase = appContainer.toggleLikeUseCase,
+                issueRepository = appContainer.issueRepository,
+                observeCurrentUserUseCase = appContainer.observeCurrentUserUseCase
             ) as T
         }
         else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

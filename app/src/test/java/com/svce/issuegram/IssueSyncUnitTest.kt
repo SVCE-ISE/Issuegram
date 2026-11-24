@@ -4,6 +4,7 @@ import com.svce.issuegram.data.datasource.local.IssueLocalDataSource
 import com.svce.issuegram.data.datasource.remote.IssueRemoteDataSource
 import com.svce.issuegram.data.model.Issue
 import com.svce.issuegram.data.model.IssueCategory
+import com.svce.issuegram.data.model.IssueStatus
 import com.svce.issuegram.data.repository.IssueRepositoryImpl
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -66,6 +67,8 @@ class IssueSyncUnitTest {
             val removed = remoteStorage.removeAll { it.ticketId == ticketId }
             return if (removed) Result.success(Unit) else Result.failure(IllegalArgumentException("Not found"))
         }
+
+        override suspend fun updateStatus(ticketId: String, status: IssueStatus): Result<Unit> = Result.success(Unit)
 
         override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result<Issue> {
             callCountEdit++

@@ -22,5 +22,6 @@ interface IssueRepository {
     suspend fun toggleLike(ticketId: String): Result<Unit>
     suspend fun deleteIssue(ticketId: String): Result<Unit>
     suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result<Issue>
+    suspend fun updateStatus(ticketId: String, status: com.svce.issuegram.data.model.IssueStatus): Result<Unit>
     suspend fun refreshIssues(): Result<Unit>
 }

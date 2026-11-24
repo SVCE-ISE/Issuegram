@@ -218,6 +218,20 @@ class FirestoreIssueRemoteDataSource(
         Result.failure(e)
     }
 
+    override suspend fun updateStatus(ticketId: String, status: com.svce.issuegram.data.model.IssueStatus): Result<Unit> = try {
+        val cleanTicketId = ticketId.removePrefix("#")
+        val docRef = issuesCollection.document(cleanTicketId)
+        docRef.update(
+            mapOf(
+                "status" to status.name,
+                "updatedAt" to Instant.now().toString()
+            )
+        ).await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
     private fun mapDocumentToIssue(docId: String, data: Map<String, Any?>): Issue? = try {
         val currentUserId = runCatching { Firebase.auth.currentUser?.uid }.getOrNull()
         val reporterId = data["reporterId"] as? String ?: ""

@@ -41,6 +41,16 @@ class IssueLocalDataSource {
         }
     }
 
+    suspend fun updateStatus(ticketId: String, status: com.svce.issuegram.data.model.IssueStatus) = mutex.withLock {
+        _issuesFlow.value = _issuesFlow.value.map {
+            if (it.ticketId.equals(ticketId, ignoreCase = true) || it.ticketId.endsWith(ticketId, ignoreCase = true)) {
+                it.copy(status = status)
+            } else {
+                it
+            }
+        }
+    }
+
     suspend fun updateIssue(updatedIssue: Issue) = mutex.withLock {
         _issuesFlow.value = _issuesFlow.value.map {
             if (it.ticketId.equals(updatedIssue.ticketId, ignoreCase = true) ||
