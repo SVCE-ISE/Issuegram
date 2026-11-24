@@ -627,6 +627,7 @@ private val ADMIN_STATUS_OPTIONS = listOf(
     com.svce.issuegram.data.model.IssueStatus.Open,
     com.svce.issuegram.data.model.IssueStatus.Acknowledged,
     com.svce.issuegram.data.model.IssueStatus.Assigned,
+    com.svce.issuegram.data.model.IssueStatus.InProgress,
     com.svce.issuegram.data.model.IssueStatus.Resolved
 )
 
@@ -640,8 +641,6 @@ private fun AdminStatusTabBar(
         val idx = ADMIN_STATUS_OPTIONS.indexOf(currentStatus)
         if (idx >= 0) {
             idx
-        } else if (currentStatus == com.svce.issuegram.data.model.IssueStatus.InProgress) {
-            2
         } else {
             0
         }
@@ -718,8 +717,8 @@ private fun AdminStatusTabBar(
                         Text(
                             text = stringResource(status.labelRes),
                             fontWeight = fontWeight,
-                            fontSize = 12.sp,
-                            letterSpacing = (-0.2).sp,
+                            fontSize = 11.sp,
+                            letterSpacing = (-0.3).sp,
                             color = textColor,
                             maxLines = 1,
                             softWrap = false

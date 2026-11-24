@@ -1,6 +1,7 @@
 package com.svce.issuegram.data.datasource.local
 
 import com.svce.issuegram.data.model.Issue
+import java.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,22 +43,30 @@ class IssueLocalDataSource {
     }
 
     suspend fun updateStatus(ticketId: String, status: com.svce.issuegram.data.model.IssueStatus) = mutex.withLock {
-        _issuesFlow.value = _issuesFlow.value.map {
-            if (it.ticketId.equals(ticketId, ignoreCase = true) || it.ticketId.endsWith(ticketId, ignoreCase = true)) {
-                val updatedMilestones = it.milestones.map { m ->
-                    val stepMatches = when (status) {
-                        com.svce.issuegram.data.model.IssueStatus.Open -> m.stepOrder <= 1
-                        com.svce.issuegram.data.model.IssueStatus.Acknowledged -> m.stepOrder <= 2
-                        com.svce.issuegram.data.model.IssueStatus.Assigned -> m.stepOrder <= 3
-                        com.svce.issuegram.data.model.IssueStatus.InProgress -> m.stepOrder <= 4
-                        com.svce.issuegram.data.model.IssueStatus.Resolved -> m.stepOrder <= 5
-                        com.svce.issuegram.data.model.IssueStatus.Reopened -> true
-                    }
-                    m.copy(isCompleted = stepMatches)
+        val now = Instant.now()
+        _issuesFlow.value = _issuesFlow.value.map { issue ->
+            if (issue.ticketId.equals(ticketId, ignoreCase = true) || issue.ticketId.endsWith(ticketId, ignoreCase = true)) {
+                val stepOrderThreshold = when (status) {
+                    com.svce.issuegram.data.model.IssueStatus.Open -> 1
+                    com.svce.issuegram.data.model.IssueStatus.Acknowledged -> 2
+                    com.svce.issuegram.data.model.IssueStatus.Assigned -> 3
+                    com.svce.issuegram.data.model.IssueStatus.InProgress -> 4
+                    com.svce.issuegram.data.model.IssueStatus.Resolved -> 5
+                    com.svce.issuegram.data.model.IssueStatus.Reopened -> 5
                 }
-                it.copy(status = status, milestones = updatedMilestones)
+                val updatedMilestones = issue.milestones.map { m ->
+                    val shouldComplete = m.stepOrder <= stepOrderThreshold
+                    if (shouldComplete) {
+                        // If newly completed or matching the selected status transition, update timestamp to now
+                        val timestampToUse = if (!m.isCompleted || m.stepOrder == stepOrderThreshold) now else m.timestamp
+                        m.copy(isCompleted = true, timestamp = timestampToUse)
+                    } else {
+                        m.copy(isCompleted = false)
+                    }
+                }
+                issue.copy(status = status, milestones = updatedMilestones)
             } else {
-                it
+                issue
             }
         }
     }
@@ -71,6 +80,12 @@ class IssueLocalDataSource {
             } else {
                 it
             }
+        }
+    }
+
+    suspend fun getIssue(ticketId: String): Issue? = mutex.withLock {
+        _issuesFlow.value.find {
+            it.ticketId.equals(ticketId, ignoreCase = true) || it.ticketId.endsWith(ticketId, ignoreCase = true)
         }
     }
 }

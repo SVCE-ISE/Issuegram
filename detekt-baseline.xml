@@ -22,6 +22,7 @@
     <ID>CyclomaticComplexMethod:MainActivity.kt$MainActivity$override fun onCreate(savedInstanceState: Bundle?)</ID>
     <ID>CyclomaticComplexMethod:PixelCameraScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PixelCameraScreen( modifier: Modifier = Modifier, isPosting: Boolean = false, pickedLatitude: Double? = null, pickedLongitude: Double? = null, onRequestPickLocationOnMap: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp, onPostIssue: ( title: String, description: String, category: String, locationName: String, subLocation: String, latitude: Double, longitude: Double, capturedFile: File?, pickedUri: Uri? ) -&gt; Unit = { _, _, _, _, _, _, _, _, _ -&gt; } )</ID>
     <ID>CyclomaticComplexMethod:ProfileScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProfileScreen( modifier: Modifier = Modifier, viewModel: ProfileViewModel? = null, currentUser: UserProfileDto? = null, allIssues: List&lt;CivicIssueDto&gt; = emptyList(), onUpdateAvatar: (Uri) -&gt; Unit = {}, onUpdateName: (String, () -&gt; Unit) -&gt; Unit = { _, _ -&gt; }, onRemoveAvatar: () -&gt; Unit = {}, profileBusy: Boolean = false, onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, onCreate: () -&gt; Unit = {}, errorMessage: String? = null, isModerator: Boolean = false, moderationFlags: List&lt;IssueFlagDto&gt; = emptyList(), onReviewFlag: (Long, String) -&gt; Unit = { _, _ -&gt; }, onSignOut: () -&gt; Unit = {} )</ID>
+    <ID>CyclomaticComplexMethod:Timeline.kt$fun Issue.timeline(): List&lt;TimelineEvent&gt;</ID>
     <ID>EmptyFunctionBlock:HomeFeedOperationsUnitTest.kt$HomeFeedOperationsUnitTest.FakeHomeFeedAuthRepository${}</ID>
     <ID>EmptyFunctionBlock:IssuePerformanceUnitTest.kt$IssuePerformanceUnitTest.DelayedRemoteDataSource${}</ID>
     <ID>EmptyFunctionBlock:PhotoCaptureAndFeedIntegrationTest.kt$PhotoCaptureAndFeedIntegrationTest.FakePhotoIssueRemoteDataSource${}</ID>
@@ -274,13 +275,11 @@
     <ID>MagicNumber:TimeFormat.kt$24</ID>
     <ID>MagicNumber:TimeFormat.kt$30</ID>
     <ID>MagicNumber:TimeFormat.kt$60</ID>
-    <ID>MagicNumber:Timeline.kt$24L</ID>
     <ID>MagicNumber:Timeline.kt$3</ID>
+    <ID>MagicNumber:Timeline.kt$30L</ID>
     <ID>MagicNumber:Timeline.kt$4</ID>
-    <ID>MagicNumber:Timeline.kt$48L</ID>
     <ID>MagicNumber:Timeline.kt$5</ID>
-    <ID>MagicNumber:Timeline.kt$8L</ID>
-    <ID>MagicNumber:Timeline.kt$96L</ID>
+    <ID>MagicNumber:Timeline.kt$60L</ID>
     <ID>MagicNumber:Type.kt$11f</ID>
     <ID>MagicNumber:Type.kt$12f</ID>
     <ID>MagicNumber:Type.kt$144f</ID>
@@ -361,6 +360,8 @@
     <ID>MaxLineLength:IssueDetailScreen.kt$color = if (isFuture) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f) else MaterialTheme.colorScheme.onSurfaceVariant</ID>
     <ID>MaxLineLength:IssueDetailScreen.kt$contentDescription = stringResource(if (isLiked) R.string.detail_btn_unlike else R.string.detail_btn_like)</ID>
     <ID>MaxLineLength:IssueDetailScreen.kt$tint = if (isFuture) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else tone.content</ID>
+    <ID>MaxLineLength:IssueLocalDataSource.kt$IssueLocalDataSource$if</ID>
+    <ID>MaxLineLength:IssueLocalDataSource.kt$IssueLocalDataSource$val timestampToUse = if (!m.isCompleted || m.stepOrder == stepOrderThreshold) now else m.timestamp</ID>
     <ID>MaxLineLength:IssueMapper.kt$IssueMapper$catLower.contains("road") || catLower.contains("pothole") || catLower.contains("transit") -&gt; IssueCategory.Pothole</ID>
     <ID>MaxLineLength:IssueMapper.kt$IssueMapper$if (words.isNotEmpty()) words.joinToString(" ") { it.replaceFirstChar { c -&gt; c.uppercase() } } else candidate</ID>
     <ID>MaxLineLength:IssueMapper.kt$IssueMapper$val</ID>
