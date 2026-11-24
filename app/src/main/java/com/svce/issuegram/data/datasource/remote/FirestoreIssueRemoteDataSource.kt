@@ -250,6 +250,32 @@ class FirestoreIssueRemoteDataSource(
             }
         }
         docRef.update(updateMap).await()
+
+        // Also create a live notification document in Firestore for instant alerts across all devices
+        try {
+            val snapshot = docRef.get().await()
+            val issueData = snapshot.data ?: emptyMap<String, Any?>()
+            val reporterId = issueData["reporterId"] as? String ?: ""
+            val issueTitle = issueData["title"] as? String ?: "Civic Issue"
+            val activeMilestone = milestones.lastOrNull { it.isCompleted }
+            val milestoneDetail = activeMilestone?.title ?: "Status changed to ${status.name}"
+
+            val notifDoc = mapOf(
+                "ticketId" to ticketId,
+                "userId" to reporterId,
+                "title" to issueTitle,
+                "issueTitle" to issueTitle,
+                "status" to status.name,
+                "kind" to "Status",
+                "message" to "Status updated: $milestoneDetail",
+                "createdAt" to Instant.now().toString(),
+                "isRead" to false
+            )
+            firestore.collection("notifications").add(notifDoc).await()
+        } catch (_: Exception) {
+            // Notification creation is best-effort alongside issue update
+        }
+
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)

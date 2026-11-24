@@ -21,7 +21,9 @@ class NotificationRepositoryImpl(
 
     init {
         repositoryScope.launch {
-            _notifications.value = remoteDataSource.fetchNotifications()
+            remoteDataSource.observeNotifications().collect { updatedList ->
+                _notifications.value = updatedList
+            }
         }
     }
 

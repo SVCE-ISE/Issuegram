@@ -13,6 +13,7 @@
     <ID>CyclomaticComplexMethod:FeedScreenV6.kt$@Composable fun FeedScreenV6( modifier: Modifier = Modifier, viewModel: FeedViewModel? = null, onIssueClick: (String) -&gt; Unit = {}, onAlertsClick: () -&gt; Unit = {}, onProfileClick: () -&gt; Unit = {}, onOpenMapLocation: ((Double, Double) -&gt; Unit)? = null, bottomBarPadding: Dp = 0.dp, isDetailExpanded: Boolean = false, onDetailExpandedChange: (Boolean) -&gt; Unit = {} )</ID>
     <ID>CyclomaticComplexMethod:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$override suspend fun postIssue(issue: Issue): Issue</ID>
     <ID>CyclomaticComplexMethod:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$private fun mapDocumentToIssue(docId: String, data: Map&lt;String, Any?&gt;): Issue?</ID>
+    <ID>CyclomaticComplexMethod:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$override fun observeNotifications(): kotlinx.coroutines.flow.Flow&lt;List&lt;Notification&gt;&gt;</ID>
     <ID>CyclomaticComplexMethod:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$override suspend fun fetchNotifications(): List&lt;Notification&gt;</ID>
     <ID>CyclomaticComplexMethod:FormatLocation.kt$fun formatLocationAddress(locationName: String?, area: String?, latitude: Double? = null, longitude: Double? = null): FormattedAddress</ID>
     <ID>CyclomaticComplexMethod:FormatLocation.kt$fun resolveReporterDisplayName( authorName: String?, authorUsername: String?, authorId: String?, currentFirebaseUser: FirebaseUser? = null ): String</ID>
@@ -91,6 +92,7 @@
     <ID>LongParameterList:ProfileScreen.kt$( modifier: Modifier = Modifier, count: Int, label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, iconTint: Color, iconBg: Color )</ID>
     <ID>LongParameterList:ProfileScreen.kt$( modifier: Modifier = Modifier, viewModel: ProfileViewModel? = null, currentUser: UserProfileDto? = null, allIssues: List&lt;CivicIssueDto&gt; = emptyList(), onUpdateAvatar: (Uri) -&gt; Unit = {}, onUpdateName: (String, () -&gt; Unit) -&gt; Unit = { _, _ -&gt; }, onRemoveAvatar: () -&gt; Unit = {}, profileBusy: Boolean = false, onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, onCreate: () -&gt; Unit = {}, errorMessage: String? = null, isModerator: Boolean = false, moderationFlags: List&lt;IssueFlagDto&gt; = emptyList(), onReviewFlag: (Long, String) -&gt; Unit = { _, _ -&gt; }, onSignOut: () -&gt; Unit = {} )</ID>
     <ID>LongParameterList:Theme.kt$( darkTheme: Boolean = isSystemInDarkTheme(), motionScheme: MotionScheme = MotionScheme.expressive(), dynamicColor: Boolean = false, amoledBlack: Boolean = false, typography: Typography = ExpressiveTypography, content: @Composable () -&gt; Unit )</ID>
+    <ID>LoopWithTooManyJumpStatements:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$for</ID>
     <ID>MagicNumber:AdminManagementBottomSheet.kt$0xFF1D9BF0</ID>
     <ID>MagicNumber:AlertsViewModel.kt$AlertsViewModel$5000</ID>
     <ID>MagicNumber:CategoryAvatar.kt$0.5f</ID>
@@ -346,6 +348,8 @@
     <ID>MaxLineLength:FeedScreenV6.kt$val captionText = issue.description?.takeIf { it.isNotBlank() } ?: issue.locationName</ID>
     <ID>MaxLineLength:FeedScreenV6.kt$val detailDescription = currentIssue?.description?.takeIf { it.isNotBlank() } ?: currentIssue?.title.orEmpty()</ID>
     <ID>MaxLineLength:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$override suspend</ID>
+    <ID>MaxLineLength:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$issueTitle = data["issueTitle"] as? String ?: (data["title"] as? String ?: "Notification")</ID>
+    <ID>MaxLineLength:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$override</ID>
     <ID>MaxLineLength:FormatLocation.kt$first.length &lt;= 6 || first.all { it.isDigit() || it.isLetter() &amp;&amp; it.isLowerCase() || it == '/' || it == '-' || it == '#' }</ID>
     <ID>MaxLineLength:FormatLocation.kt$fun</ID>
     <ID>MaxLineLength:FormatLocation.kt$if</ID>

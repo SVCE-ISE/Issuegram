@@ -62,6 +62,20 @@ class MainActivity : ComponentActivity() {
         } catch (e: Exception) {
             Log.w("MainActivity", "Failed to initialize Google Maps LATEST renderer", e)
         }
+
+        // Initialize system notification channel and request permission if on Android 13+
+        com.svce.issuegram.util.SystemNotificationHelper.createNotificationChannel(this)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                registerForActivityResult(
+                    androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+                ) { /* best-effort granted or denied */ }.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
         setContent {
             // Calm utility product: no bounce on routine actions.
             // Dynamic colour on Android 12+; brand palette below that.

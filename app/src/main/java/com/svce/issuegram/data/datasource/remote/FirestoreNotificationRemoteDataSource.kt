@@ -10,6 +10,7 @@ import com.svce.issuegram.data.model.IssueStatus
 import com.svce.issuegram.domain.model.AlertKind
 import com.svce.issuegram.domain.model.Notification
 import java.time.Instant
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.tasks.await
 
 class FirestoreNotificationRemoteDataSource(
@@ -130,6 +131,67 @@ class FirestoreNotificationRemoteDataSource(
             milestoneNotifications
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    override fun observeNotifications(): kotlinx.coroutines.flow.Flow<List<Notification>> = kotlinx.coroutines.flow.callbackFlow {
+        // Emit initial static fetch immediately
+        trySend(fetchNotifications())
+
+        val listenerRegistration = firestore.collection("notifications")
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(50)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val currentUserId = runCatching { Firebase.auth.currentUser?.uid }.getOrNull()
+                    val list = mutableListOf<Notification>()
+                    for (doc in snapshot.documents) {
+                        val data = doc.data ?: continue
+                        val notifUserId = data["userId"] as? String ?: ""
+                        // Deliver if global broadcast or intended for current user
+                        if (notifUserId.isNotBlank() && currentUserId != null && notifUserId != currentUserId) {
+                            continue
+                        }
+
+                        val id = doc.id
+                        val time = runCatching {
+                            Instant.parse(data["createdAt"] as? String)
+                        }.getOrNull() ?: Instant.now()
+
+                        val status = (data["status"] as? String)?.let { s ->
+                            IssueStatus.entries.firstOrNull { it.name.equals(s, ignoreCase = true) }
+                        } ?: IssueStatus.Open
+
+                        val kind = (data["kind"] as? String)?.let { k ->
+                            AlertKind.entries.firstOrNull { it.name.equals(k, ignoreCase = true) }
+                        } ?: AlertKind.Status
+
+                        val isRead = (data["isRead"] as? Boolean == true) || readIds.contains(id)
+
+                        list.add(
+                            Notification(
+                                id = id,
+                                ticketId = data["ticketId"] as? String ?: "",
+                                issueTitle = data["issueTitle"] as? String ?: (data["title"] as? String ?: "Notification"),
+                                kind = kind,
+                                status = status,
+                                message = data["message"] as? String ?: "",
+                                createdAt = time,
+                                isUnread = !isRead
+                            )
+                        )
+                    }
+                    if (list.isNotEmpty()) {
+                        trySend(list)
+                    }
+                }
+            }
+
+        awaitClose {
+            listenerRegistration.remove()
         }
     }
 

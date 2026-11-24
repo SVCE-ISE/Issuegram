@@ -159,6 +159,22 @@ class IssueRepositoryImpl(
 
     override suspend fun updateStatus(ticketId: String, status: com.svce.issuegram.data.model.IssueStatus): Result<Unit> {
         val updatedIssue = localDataSource.updateStatus(ticketId, status)
+
+        // Immediately trigger native system notification for the status change
+        try {
+            val issueTitle = updatedIssue?.title ?: "Civic Issue"
+            val activeMilestone = updatedIssue?.milestones?.lastOrNull { it.isCompleted }?.title
+            com.svce.issuegram.util.SystemNotificationHelper.showStatusUpdateNotification(
+                context = com.svce.issuegram.IssuegramApplication.instance,
+                ticketId = ticketId,
+                issueTitle = issueTitle,
+                status = status,
+                milestoneTitle = activeMilestone
+            )
+        } catch (_: Exception) {
+            // Best effort system notification
+        }
+
         return try {
             val milestones = updatedIssue?.milestones ?: emptyList()
             remoteDataSource.updateStatus(ticketId, status, milestones)
