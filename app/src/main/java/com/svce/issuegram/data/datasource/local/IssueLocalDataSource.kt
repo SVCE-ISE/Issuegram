@@ -44,7 +44,18 @@ class IssueLocalDataSource {
     suspend fun updateStatus(ticketId: String, status: com.svce.issuegram.data.model.IssueStatus) = mutex.withLock {
         _issuesFlow.value = _issuesFlow.value.map {
             if (it.ticketId.equals(ticketId, ignoreCase = true) || it.ticketId.endsWith(ticketId, ignoreCase = true)) {
-                it.copy(status = status)
+                val updatedMilestones = it.milestones.map { m ->
+                    val stepMatches = when (status) {
+                        com.svce.issuegram.data.model.IssueStatus.Open -> m.stepOrder <= 1
+                        com.svce.issuegram.data.model.IssueStatus.Acknowledged -> m.stepOrder <= 2
+                        com.svce.issuegram.data.model.IssueStatus.Assigned -> m.stepOrder <= 2
+                        com.svce.issuegram.data.model.IssueStatus.InProgress -> m.stepOrder <= 3
+                        com.svce.issuegram.data.model.IssueStatus.Resolved -> m.stepOrder <= 4
+                        com.svce.issuegram.data.model.IssueStatus.Reopened -> true
+                    }
+                    m.copy(isCompleted = stepMatches)
+                }
+                it.copy(status = status, milestones = updatedMilestones)
             } else {
                 it
             }

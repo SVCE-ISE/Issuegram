@@ -24,7 +24,7 @@ fun Issue.timeline(): List<TimelineEvent> {
     if (milestones.isNotEmpty()) {
         val completedMilestones = milestones.filter { it.isCompleted }
         val milestonesToUse = if (completedMilestones.isNotEmpty()) completedMilestones else listOf(milestones.first())
-        return milestonesToUse.map { m ->
+        val mappedEvents = milestonesToUse.map { m ->
             val eventStatus = when {
                 m.title.contains("resolved", ignoreCase = true) -> IssueStatus.Resolved
                 m.title.contains("progress", ignoreCase = true) || m.stepOrder >= 4 -> IssueStatus.InProgress
@@ -34,6 +34,18 @@ fun Issue.timeline(): List<TimelineEvent> {
             }
             TimelineEvent(eventStatus, m.timestamp)
         }
+        // If the current issue status is further advanced than the milestone titles indicate, ensure timeline reflects current status
+        if (mappedEvents.none { it.status == status } && status != IssueStatus.Open) {
+            val steps = if (status == IssueStatus.Reopened) {
+                progression
+            } else {
+                progression.take((progression.indexOfFirst { it.first == status }.takeIf { it >= 0 } ?: 0) + 1)
+            }
+            return steps.map { (eventStatus, hours) ->
+                TimelineEvent(eventStatus, createdAt.plus(hours, ChronoUnit.HOURS))
+            }
+        }
+        return mappedEvents
     }
     val steps = if (status == IssueStatus.Reopened) {
         progression

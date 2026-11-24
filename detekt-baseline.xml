@@ -21,6 +21,7 @@
     <ID>CyclomaticComplexMethod:MainActivity.kt$MainActivity$override fun onCreate(savedInstanceState: Bundle?)</ID>
     <ID>CyclomaticComplexMethod:PixelCameraScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PixelCameraScreen( modifier: Modifier = Modifier, isPosting: Boolean = false, pickedLatitude: Double? = null, pickedLongitude: Double? = null, onRequestPickLocationOnMap: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp, onPostIssue: ( title: String, description: String, category: String, locationName: String, subLocation: String, latitude: Double, longitude: Double, capturedFile: File?, pickedUri: Uri? ) -&gt; Unit = { _, _, _, _, _, _, _, _, _ -&gt; } )</ID>
     <ID>CyclomaticComplexMethod:ProfileScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProfileScreen( modifier: Modifier = Modifier, viewModel: ProfileViewModel? = null, currentUser: UserProfileDto? = null, allIssues: List&lt;CivicIssueDto&gt; = emptyList(), onUpdateAvatar: (Uri) -&gt; Unit = {}, onUpdateName: (String, () -&gt; Unit) -&gt; Unit = { _, _ -&gt; }, onRemoveAvatar: () -&gt; Unit = {}, profileBusy: Boolean = false, onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, onCreate: () -&gt; Unit = {}, errorMessage: String? = null, isModerator: Boolean = false, moderationFlags: List&lt;IssueFlagDto&gt; = emptyList(), onReviewFlag: (Long, String) -&gt; Unit = { _, _ -&gt; }, onSignOut: () -&gt; Unit = {} )</ID>
+    <ID>CyclomaticComplexMethod:Timeline.kt$fun Issue.timeline(): List&lt;TimelineEvent&gt;</ID>
     <ID>EmptyFunctionBlock:HomeFeedOperationsUnitTest.kt$HomeFeedOperationsUnitTest.FakeHomeFeedAuthRepository${}</ID>
     <ID>EmptyFunctionBlock:IssuePerformanceUnitTest.kt$IssuePerformanceUnitTest.DelayedRemoteDataSource${}</ID>
     <ID>EmptyFunctionBlock:PhotoCaptureAndFeedIntegrationTest.kt$PhotoCaptureAndFeedIntegrationTest.FakePhotoIssueRemoteDataSource${}</ID>
@@ -207,6 +208,8 @@
     <ID>MagicNumber:IssueDetailScreen.kt$300</ID>
     <ID>MagicNumber:IssueDetailScreen.kt$9f</ID>
     <ID>MagicNumber:IssueDetailViewModel.kt$IssueDetailViewModel$5000</ID>
+    <ID>MagicNumber:IssueLocalDataSource.kt$IssueLocalDataSource$3</ID>
+    <ID>MagicNumber:IssueLocalDataSource.kt$IssueLocalDataSource$4</ID>
     <ID>MagicNumber:IssueRepositoryImpl.kt$IssueRepositoryImpl$2482</ID>
     <ID>MagicNumber:IssuegramApplication.kt$IssuegramApplication$0.02</ID>
     <ID>MagicNumber:IssuegramApplication.kt$IssuegramApplication$0.25</ID>
@@ -420,6 +423,7 @@
     <ID>MaxLineLength:StatusBadge.kt$IssueStatus.Assigned -&gt; StatusTone(scheme.tertiaryContainer, scheme.onTertiaryContainer, Icons.Outlined.PersonAdd)</ID>
     <ID>MaxLineLength:StatusBadge.kt$IssueStatus.Open -&gt; StatusTone(scheme.surfaceContainerHighest, scheme.onSurfaceVariant, Icons.Outlined.RadioButtonUnchecked)</ID>
     <ID>MaxLineLength:StatusBadge.kt$IssueStatus.Resolved -&gt; StatusTone(extended.positiveContainer, extended.onPositiveContainer, Icons.Outlined.CheckCircle)</ID>
+    <ID>MaxLineLength:Timeline.kt$// If the current issue status is further advanced than the milestone titles indicate, ensure timeline reflects current status</ID>
     <ID>MaxLineLength:Type.kt$ExpressiveTextStyles$TextStyle(fontFamily = GoogleSans, fontSize = 11.sp, lineHeight = 14.sp, fontWeight = FontWeight(500), letterSpacing = (0.3).sp)</ID>
     <ID>MaxLineLength:Type.kt$ExpressiveTextStyles$TextStyle(fontFamily = GoogleSans, fontSize = 11.sp, lineHeight = 16.sp, fontWeight = FontWeight(700), letterSpacing = (1.2).sp)</ID>
     <ID>MaxLineLength:Type.kt$ExpressiveTextStyles$TextStyle(fontFamily = GoogleSans, fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight(500), letterSpacing = (0).sp)</ID>
@@ -427,6 +431,7 @@
     <ID>NestedBlockDepth:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$override suspend fun fetchNotifications(): List&lt;Notification&gt;</ID>
     <ID>ReturnCount:DeviceLocation.kt$fun getLastKnownLocation(context: Context): Location?</ID>
     <ID>ReturnCount:FormatLocation.kt$fun resolveReporterDisplayName( authorName: String?, authorUsername: String?, authorId: String?, currentFirebaseUser: FirebaseUser? = null ): String</ID>
+    <ID>ReturnCount:Timeline.kt$fun Issue.timeline(): List&lt;TimelineEvent&gt;</ID>
     <ID>SwallowedException:ExpressiveMotion.kt$e: CancellationException</ID>
     <ID>SwallowedException:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$e: Exception</ID>
     <ID>SwallowedException:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$e: Exception</ID>
