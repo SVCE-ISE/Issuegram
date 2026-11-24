@@ -11,7 +11,7 @@ object IssueStore {
 
     private var nextTicketNumber = 2482
 
-    val issues = mutableStateListOf<Issue>().apply { addAll(MockIssues.all) }
+    val issues = mutableStateListOf<Issue>()
 
     fun add(
         title: String,
@@ -19,6 +19,10 @@ object IssueStore {
         category: IssueCategory,
         locationName: String,
         photoUri: String?,
+        latitude: Double = 12.9716,
+        longitude: Double = 77.5946,
+        authorName: String = "You",
+        authorUsername: String? = null,
     ): Issue {
         val issue = Issue(
             ticketId = "IG-${nextTicketNumber++}",
@@ -26,9 +30,12 @@ object IssueStore {
             description = description?.trim()?.ifBlank { null },
             category = category,
             status = IssueStatus.Open,
-            area = locationName.trim(),
+            area = if (locationName.contains(",")) locationName.substringAfter(",").trim() else locationName.trim(),
             locationName = locationName.trim(),
-            authorName = "You",
+            authorName = authorName,
+            authorUsername = authorUsername,
+            latitude = latitude,
+            longitude = longitude,
             createdAt = Instant.now(),
             likes = 0,
             photoUri = photoUri,

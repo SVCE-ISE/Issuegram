@@ -24,10 +24,22 @@ private val progression = listOf(
 )
 
 fun Issue.timeline(): List<TimelineEvent> {
+    if (milestones.isNotEmpty()) {
+        return milestones.map { m ->
+            val eventStatus = when {
+                m.title.contains("resolved", ignoreCase = true) -> IssueStatus.Resolved
+                m.title.contains("progress", ignoreCase = true) || m.stepOrder >= 4 -> IssueStatus.InProgress
+                m.title.contains("assigned", ignoreCase = true) || m.stepOrder == 3 -> IssueStatus.Assigned
+                m.title.contains("acknowledged", ignoreCase = true) || m.stepOrder == 2 -> IssueStatus.Acknowledged
+                else -> IssueStatus.Open
+            }
+            TimelineEvent(eventStatus, m.timestamp)
+        }
+    }
     val steps = if (status == IssueStatus.Reopened) {
         progression
     } else {
-        progression.take(progression.indexOfFirst { it.first == status } + 1)
+        progression.take((progression.indexOfFirst { it.first == status }.takeIf { it >= 0 } ?: 0) + 1)
     }
     return steps.map { (eventStatus, hours) ->
         TimelineEvent(eventStatus, createdAt.plus(hours, ChronoUnit.HOURS))

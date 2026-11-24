@@ -1,5 +1,9 @@
 package com.svce.issuegram.ui.map
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
@@ -34,6 +38,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,11 +47,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -59,6 +67,8 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.svce.issuegram.R
+import com.svce.issuegram.data.location.currentDeviceLocation
+import com.svce.issuegram.data.location.getLastKnownLocation
 import com.svce.issuegram.data.model.CivicIssueDto
 import com.svce.issuegram.domain.displayTime
 import kotlinx.coroutines.launch
@@ -75,93 +85,6 @@ data class CivicIssuePin(
     val timestamp: String,
 )
 
-private val DefaultMockCivicIssues = listOf(
-    CivicIssueDto(
-        id = 2481,
-        ticketCode = "IG-2481",
-        authorId = "priya",
-        authorUsername = "Priya S.",
-        title = "Overflowing drain near the bus stop",
-        caption = "Water has been standing for three days and is spilling onto the footpath. Mosquitoes are breeding around it.",
-        category = "Drainage",
-        locationName = "2nd Avenue bus stop, Anna Nagar",
-        latitude = 13.0850,
-        longitude = 80.2101,
-        status = "IN_PROGRESS",
-        createdAt = "2 days ago",
-    ),
-    CivicIssueDto(
-        id = 2479,
-        ticketCode = "IG-2479",
-        authorId = "karthik",
-        authorUsername = "Karthik R.",
-        title = "Streetlight not working on lane 4",
-        caption = "The whole stretch is dark after 7 PM. Hard to walk after the shops close.",
-        category = "Streetlight",
-        locationName = "Lane 4, near the park gate, Anna Nagar",
-        latitude = 13.0835,
-        longitude = 80.2120,
-        status = "ASSIGNED",
-        createdAt = "3 days ago",
-    ),
-    CivicIssueDto(
-        id = 2476,
-        ticketCode = "IG-2476",
-        authorId = "divya",
-        authorUsername = "Divya M.",
-        title = "Deep pothole swallowing two-wheelers",
-        caption = "Deep crater in the middle of the road causing traffic slowdowns and accidents.",
-        category = "Pothole",
-        locationName = "Usman Road junction, T. Nagar",
-        latitude = 13.0418,
-        longitude = 80.2341,
-        status = "REPORTED",
-        createdAt = "4 days ago",
-    ),
-    CivicIssueDto(
-        id = 2472,
-        ticketCode = "IG-2472",
-        authorId = "arjun",
-        authorUsername = "Arjun P.",
-        title = "Garbage not collected for a week",
-        caption = "The bin at the corner is overflowing and dogs are scattering waste on the street.",
-        category = "Garbage",
-        locationName = "Ranganathan Street corner, T. Nagar",
-        latitude = 13.0405,
-        longitude = 80.2325,
-        status = "RESOLVED",
-        createdAt = "5 days ago",
-    ),
-    CivicIssueDto(
-        id = 2468,
-        ticketCode = "IG-2468",
-        authorId = "sneha",
-        authorUsername = "Sneha K.",
-        title = "Broken water pipeline leaking clean water",
-        caption = "Clean drinking water leaking continuously onto the road for over 24 hours.",
-        category = "Water",
-        locationName = "Race Course Road, Guindy",
-        latitude = 13.0067,
-        longitude = 80.2025,
-        status = "RESOLVED",
-        createdAt = "1 week ago",
-    ),
-    CivicIssueDto(
-        id = 2465,
-        ticketCode = "IG-2465",
-        authorId = "vijay",
-        authorUsername = "Vijay N.",
-        title = "Damaged footpath pavers tripping pedestrians",
-        caption = "Several concrete slabs are displaced or missing near the college gate.",
-        category = "Road",
-        locationName = "SVCE Campus Main Gate, Sriperumbudur",
-        latitude = 12.9866,
-        longitude = 79.9718,
-        status = "IN_PROGRESS",
-        createdAt = "1 week ago",
-    )
-)
-
 @Composable
 fun CivicMapScreen(
     modifier: Modifier = Modifier,
@@ -169,33 +92,111 @@ fun CivicMapScreen(
     onOpenIssue: (CivicIssueDto) -> Unit = {},
     isPickingLocation: Boolean = false,
     initialPickLocation: LatLng? = null,
+    initialCenter: LatLng? = null,
     onLocationPicked: (Double, Double) -> Unit = { _, _ -> },
     onCancelPickLocation: () -> Unit = {},
     bottomBarPadding: Dp = 0.dp,
 ) {
-    val displayIssues = remember(issues) {
-        if (issues.isNotEmpty()) issues else DefaultMockCivicIssues
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    var hasLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        )
     }
 
-    val defaultCenter = remember(displayIssues) {
-        if (displayIssues.isNotEmpty()) {
+    var userLocation by remember { mutableStateOf<LatLng?>(null) }
+    var pickedLatLng by remember(initialPickLocation, isPickingLocation) {
+        mutableStateOf(initialPickLocation)
+    }
+
+    val displayIssues = issues
+
+    val defaultCenter = remember(displayIssues, initialCenter) {
+        if (initialCenter != null) {
+            initialCenter
+        } else if (displayIssues.isNotEmpty()) {
             LatLng(displayIssues.first().latitude, displayIssues.first().longitude)
         } else {
-            LatLng(13.0827, 80.2707)
+            // Check if device location is available, otherwise default to Chennai/Bangalore metro
+            val lastKnown = if (hasLocationPermission) getLastKnownLocation(context) else null
+            if (lastKnown != null) {
+                LatLng(lastKnown.latitude, lastKnown.longitude)
+            } else {
+                LatLng(13.0827, 80.2707)
+            }
         }
     }
 
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(
-            initialPickLocation ?: defaultCenter,
-            if (initialPickLocation != null) 14f else 12.5f
-        )
+        val initialLastKnown = if (hasLocationPermission) getLastKnownLocation(context) else null
+        val startCenter = initialPickLocation ?: initialCenter ?: initialLastKnown?.let { LatLng(it.latitude, it.longitude) } ?: defaultCenter
+        val startZoom = if (initialPickLocation != null || initialCenter != null || initialLastKnown != null) 15f else 12.5f
+        position = CameraPosition.fromLatLngZoom(startCenter, startZoom)
     }
 
-    val coroutineScope = rememberCoroutineScope()
+    fun updateUserLocation(targetZoom: Float = 15.5f, animate: Boolean = true, updatePickedIfEmpty: Boolean = false) {
+        if (!hasLocationPermission) return
+        coroutineScope.launch {
+            val lastKnown = getLastKnownLocation(context)
+            if (lastKnown != null) {
+                val lastLatLng = LatLng(lastKnown.latitude, lastKnown.longitude)
+                userLocation = lastLatLng
+                if (updatePickedIfEmpty && isPickingLocation && pickedLatLng == null) {
+                    pickedLatLng = lastLatLng
+                }
+                if (animate) {
+                    cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(lastLatLng, targetZoom), 500)
+                }
+            }
+            val fresh = runCatching { currentDeviceLocation(context) }.getOrNull()
+            if (fresh != null) {
+                val freshLatLng = LatLng(fresh.latitude, fresh.longitude)
+                userLocation = freshLatLng
+                if (updatePickedIfEmpty && isPickingLocation && pickedLatLng == null) {
+                    pickedLatLng = freshLatLng
+                }
+                if (animate && (lastKnown == null || freshLatLng.latitude != lastKnown.latitude || freshLatLng.longitude != lastKnown.longitude)) {
+                    cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(freshLatLng, targetZoom), 500)
+                }
+            }
+        }
+    }
 
-    var pickedLatLng by remember(initialPickLocation, isPickingLocation) {
-        mutableStateOf(initialPickLocation)
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        hasLocationPermission = granted
+        if (granted) {
+            updateUserLocation(targetZoom = 15.5f, animate = true, updatePickedIfEmpty = isPickingLocation)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (hasLocationPermission) {
+            if (initialCenter == null && initialPickLocation == null) {
+                updateUserLocation(targetZoom = 15f, animate = true, updatePickedIfEmpty = isPickingLocation)
+            }
+        } else {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
+    LaunchedEffect(initialCenter) {
+        if (initialCenter != null) {
+            cameraPositionState.animate(
+                CameraUpdateFactory.newLatLngZoom(initialCenter, 16f)
+            )
+        }
     }
 
     var isSatelliteView by remember { mutableStateOf(false) }
@@ -211,8 +212,8 @@ fun CivicMapScreen(
         }
     }
     var initiallyCentered by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-    androidx.compose.runtime.LaunchedEffect(displayIssues.firstOrNull()?.id) {
-        if (!initiallyCentered && displayIssues.isNotEmpty()) {
+    LaunchedEffect(displayIssues.firstOrNull()?.id) {
+        if (!initiallyCentered && displayIssues.isNotEmpty() && initialCenter == null && initialPickLocation == null && !hasLocationPermission && userLocation == null) {
             val first = displayIssues.first()
             cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(LatLng(first.latitude, first.longitude), 13f))
             initiallyCentered = true
@@ -232,8 +233,9 @@ fun CivicMapScreen(
         }
     }
 
-    val mapProperties = remember(isSatelliteView) {
+    val mapProperties = remember(isSatelliteView, hasLocationPermission) {
         MapProperties(
+            isMyLocationEnabled = hasLocationPermission,
             mapType = if (isSatelliteView) MapType.HYBRID else MapType.NORMAL,
             isBuildingEnabled = false,
             isIndoorEnabled = false,
@@ -268,7 +270,7 @@ fun CivicMapScreen(
                 Marker(
                     state = rememberUpdatedMarkerState(position = pickedLatLng!!),
                     title = "Selected Location",
-                    snippet = String.format(java.util.Locale.US, "%.5f, %.5f", pickedLatLng!!.latitude, pickedLatLng!!.longitude),
+                    snippet = String.format(java.util.Locale.US, "%.6f, %.6f", pickedLatLng!!.latitude, pickedLatLng!!.longitude),
                     icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
                 )
             }
@@ -277,12 +279,19 @@ fun CivicMapScreen(
                     androidx.compose.runtime.key(issue.id) {
                         Marker(
                             state = rememberUpdatedMarkerState(position = issue.position),
-                            title = "${issue.id} - ${issue.title}",
+                            title = "${issue.ticketCode.ifBlank { "#" + issue.id }} - ${issue.title}",
                             snippet = issue.locationName,
                             icon = if (issue.isResolved) {
                                 BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
                             } else {
-                                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)
+                                val isHighOrCritical = issue.status.equals("CRITICAL", ignoreCase = true) ||
+                                        issue.category.contains("Emergency", ignoreCase = true) ||
+                                        issue.category.contains("Power", ignoreCase = true)
+                                if (isHighOrCritical) {
+                                    BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+                                } else {
+                                    BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)
+                                }
                             },
                             onClick = {
                                 selectedPinId.value = issue.id
@@ -323,7 +332,7 @@ fun CivicMapScreen(
                         modifier = Modifier.size(22.dp)
                     )
                     Text(
-                        text = "Tap on the map to pick issue location",
+                        text = stringResource(R.string.map_tap_to_pick),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -467,7 +476,7 @@ fun CivicMapScreen(
             }
         }
 
-        // Recenter / Focus to Target floating button (Bottom-Right, above bottom navigation bar and card)
+        // My Location floating button (Bottom-Right, above bottom navigation bar and card)
         val isCardVisible = !isPickingLocation && selectedPinId.value != null
         val recenterBottomPadding by animateDpAsState(
             targetValue = if (isCardVisible) bottomBarPadding + 195.dp else bottomBarPadding + 16.dp,
@@ -476,12 +485,14 @@ fun CivicMapScreen(
 
         Surface(
             onClick = {
-                coroutineScope.launch {
-                    val targetPin = filteredIssues.firstOrNull { it.id == selectedPinId.value }
-                    val target = targetPin?.position ?: defaultCenter
-                    cameraPositionState.animate(
-                        CameraUpdateFactory.newLatLngZoom(target, if (targetPin == null) 13.5f else 16.5f),
-                        500
+                if (hasLocationPermission) {
+                    updateUserLocation(targetZoom = 16f, animate = true, updatePickedIfEmpty = isPickingLocation)
+                } else {
+                    locationPermissionLauncher.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        )
                     )
                 }
             },
@@ -497,9 +508,9 @@ fun CivicMapScreen(
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.Rounded.MyLocation,
-                    contentDescription = "Recenter",
+                    contentDescription = "My Location",
                     modifier = Modifier.size(22.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = if (hasLocationPermission) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -533,8 +544,8 @@ fun CivicMapScreen(
                 ) {
                     Text(
                         text = if (pickedLatLng != null)
-                            String.format(java.util.Locale.US, "Selected: %.5f, %.5f", pickedLatLng!!.latitude, pickedLatLng!!.longitude)
-                        else "Tap anywhere on the map to place a pin",
+                            stringResource(R.string.map_selected_coords, pickedLatLng!!.latitude, pickedLatLng!!.longitude)
+                        else stringResource(R.string.map_tap_anywhere),
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium,
                         color = if (pickedLatLng != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
@@ -547,7 +558,7 @@ fun CivicMapScreen(
                             onClick = onCancelPickLocation,
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.btn_cancel))
                         }
                         androidx.compose.material3.Button(
                             onClick = {
@@ -556,7 +567,7 @@ fun CivicMapScreen(
                             enabled = pickedLatLng != null,
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Use this location")
+                            Text(stringResource(R.string.map_use_this_location))
                         }
                     }
                 }

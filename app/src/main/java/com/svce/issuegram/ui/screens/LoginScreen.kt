@@ -113,7 +113,7 @@ fun LoginScreen(
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "Report civic issues. Track real fixes.",
+                        text = stringResource(R.string.login_tagline),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 13.sp,
                         textAlign = TextAlign.Center,
@@ -179,13 +179,17 @@ fun LoginScreen(
                     onClick = onGoogleSignIn,
                     interactionSource = interaction,
                     enabled = !isSigningIn,
-                    shape = RoundedCornerShape(26.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shadowElevation = if (pressed || isSigningIn) 0.dp else 8.dp,
+                    shape = RoundedCornerShape(28.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    shadowElevation = if (pressed || isSigningIn) 0.dp else 4.dp,
+                    border = androidx.compose.foundation.BorderStroke(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp)
+                        .height(54.dp)
                         .graphicsLayer {
                             scaleX = buttonScale
                             scaleY = buttonScale
@@ -198,29 +202,30 @@ fun LoginScreen(
                     ) {
                         if (isSigningIn) {
                             CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                strokeWidth = 2.dp,
-                                modifier = Modifier.size(22.dp),
+                                color = MaterialTheme.colorScheme.primary,
+                                strokeWidth = 2.5.dp,
+                                modifier = Modifier.size(24.dp),
                             )
                         } else {
                             Box(
                                 modifier = Modifier
-                                    .size(26.dp)
+                                    .size(30.dp)
                                     .background(Color.White, CircleShape),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Image(
                                     painter = painterResource(R.drawable.ic_google_g),
                                     contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
+                                    modifier = Modifier.size(20.dp),
                                 )
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(14.dp))
                             Text(
-                                text = "Continue with Google",
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                fontSize = 15.sp,
+                                text = stringResource(R.string.login_google_sign_in),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 16.sp,
                                 fontWeight = FontWeight.SemiBold,
+                                letterSpacing = 0.2.sp
                             )
                         }
                     }
@@ -234,7 +239,7 @@ fun LoginScreen(
                 enter = fadeIn(tween(durationMillis = 600, delayMillis = 520, easing = FastOutSlowInEasing)),
             ) {
                 Text(
-                    text = "Your reports are public. Your identity stays anonymous.",
+                    text = stringResource(R.string.login_anonymous_disclaimer),
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     fontSize = 11.sp,
                     lineHeight = 15.sp,

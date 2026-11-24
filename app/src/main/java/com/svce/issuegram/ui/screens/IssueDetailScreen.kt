@@ -31,6 +31,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.outlined.ThumbUp
+import com.svce.issuegram.domain.formatLocationAddress
+import com.svce.issuegram.domain.resolveReporterDisplayName
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,6 +44,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,11 +66,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.CircularProgressIndicator
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberUpdatedMarkerState
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.svce.issuegram.R
 import com.svce.issuegram.data.IssueStore
-import com.svce.issuegram.data.MockIssues
 import com.svce.issuegram.data.TimelineEvent
 import com.svce.issuegram.data.timeline
 import com.svce.issuegram.ui.components.Eyebrow
@@ -101,17 +119,35 @@ private val GoogleSansLightFamily = FontFamily(
 )
 
 @Composable
-fun IssueDetailScreen(ticketId: String, onBack: () -> Unit) {
+fun IssueDetailScreen(
+    ticketId: String,
+    onBack: () -> Unit,
+    viewModel: IssueDetailViewModel? = null,
+    onOpenFullMap: ((LatLng) -> Unit)? = null,
+) {
     BackHandler { onBack() }
 
+    LaunchedEffect(ticketId) {
+        viewModel?.loadIssue(ticketId)
+    }
+
+    val uiState by viewModel?.uiState?.collectAsState() ?: remember { mutableStateOf(null) }
     val context = LocalContext.current
-    val issue = remember(ticketId) {
+    val issue = uiState?.issue ?: remember(ticketId) {
         IssueStore.issues.firstOrNull { it.ticketId.equals(ticketId, ignoreCase = true) }
             ?: IssueStore.issues.firstOrNull { it.ticketId.endsWith(ticketId, ignoreCase = true) }
-            ?: MockIssues.all.firstOrNull { it.ticketId.equals(ticketId, ignoreCase = true) }
-            ?: MockIssues.all.firstOrNull { it.ticketId.endsWith(ticketId, ignoreCase = true) }
-            ?: IssueStore.issues.firstOrNull()
-            ?: MockIssues.all.first()
+    }
+
+    if (issue == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        }
+        return
     }
 
     val detailScrollState = rememberScrollState()
@@ -150,12 +186,12 @@ fun IssueDetailScreen(ticketId: String, onBack: () -> Unit) {
                         contentDescription = issue.title,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
-                        placeholder = painterResource(R.drawable.feed_cat_photo),
-                        error = painterResource(R.drawable.feed_cat_photo),
+                        placeholder = painterResource(R.drawable.image_placeholder),
+                        error = painterResource(R.drawable.image_placeholder),
                     )
                 } else {
                     Image(
-                        painter = painterResource(R.drawable.feed_cat_photo),
+                        painter = painterResource(R.drawable.image_placeholder),
                         contentDescription = issue.title,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
@@ -210,7 +246,7 @@ fun IssueDetailScreen(ticketId: String, onBack: () -> Unit) {
                 // 1. Detailed Summary / Story Description on Top
                 Text(
                     text = issue.description?.takeIf { it.isNotBlank() }
-                        ?: "No additional details provided for this issue report.",
+                        ?: stringResource(R.string.detail_no_additional_details),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                     lineHeight = 26.sp,
@@ -232,20 +268,54 @@ fun IssueDetailScreen(ticketId: String, onBack: () -> Unit) {
                     }
                 }
 
-                // Location Map Preview (strict 16:9 aspect ratio placeholder)
+                // Location Map Preview (strict 16:9 aspect ratio preview with live GoogleMap)
+                val issueLocation = remember(issue.latitude, issue.longitude) {
+                    LatLng(issue.latitude, issue.longitude)
+                }
+                val cameraPositionState = rememberCameraPositionState {
+                    position = CameraPosition.fromLatLngZoom(issueLocation, 15f)
+                }
+                LaunchedEffect(issueLocation) {
+                    cameraPositionState.position = CameraPosition.fromLatLngZoom(issueLocation, 15f)
+                }
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(16f / 9f),
+                        .aspectRatio(16f / 9f)
+                        .clip(RoundedCornerShape(16.dp)),
                     shape = RoundedCornerShape(16.dp),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 ) {
-                    Image(
-                        painter = painterResource(R.drawable.detail_map_placeholder),
-                        contentDescription = "Location Map",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                    )
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        GoogleMap(
+                            modifier = Modifier.fillMaxSize(),
+                            cameraPositionState = cameraPositionState,
+                            uiSettings = MapUiSettings(
+                                zoomControlsEnabled = false,
+                                scrollGesturesEnabled = false,
+                                zoomGesturesEnabled = false,
+                                rotationGesturesEnabled = false,
+                                tiltGesturesEnabled = false,
+                                mapToolbarEnabled = false,
+                                myLocationButtonEnabled = false,
+                            ),
+                        ) {
+                            Marker(
+                                state = rememberUpdatedMarkerState(position = issueLocation),
+                                title = issue.title,
+                                snippet = issue.locationName,
+                            )
+                        }
+                        if (onOpenFullMap != null) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clickable {
+                                        onOpenFullMap.invoke(issueLocation)
+                                    }
+                            )
+                        }
+                    }
                 }
 
                 // Address Card (two lines)
@@ -277,18 +347,28 @@ fun IssueDetailScreen(ticketId: String, onBack: () -> Unit) {
                         Spacer(Modifier.width(Spacing.space3))
 
                         Column(modifier = Modifier.weight(1f)) {
+                            val formatted = remember(issue.locationName, issue.area, issue.latitude, issue.longitude) {
+                                formatLocationAddress(
+                                    locationName = issue.locationName,
+                                    area = issue.area,
+                                    latitude = issue.latitude,
+                                    longitude = issue.longitude,
+                                )
+                            }
                             Text(
-                                text = issue.locationName.ifBlank { "Location reported" },
+                                text = formatted.primary,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
-                            Spacer(Modifier.height(2.dp))
-                            Text(
-                                text = issue.area.ifBlank { "Anna Nagar East, Chennai" },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            if (!formatted.secondary.isNullOrBlank()) {
+                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    text = formatted.secondary,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     }
                 }
@@ -316,8 +396,14 @@ fun IssueDetailScreen(ticketId: String, onBack: () -> Unit) {
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(16.dp),
                             )
+                            val reporterName = resolveReporterDisplayName(
+                                authorName = issue.authorName,
+                                authorUsername = issue.authorUsername,
+                                authorId = issue.authorId,
+                                currentFirebaseUser = com.google.firebase.Firebase.auth.currentUser,
+                            )
                             Text(
-                                text = issue.authorName,
+                                text = reporterName,
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Medium,
@@ -356,7 +442,7 @@ fun IssueDetailScreen(ticketId: String, onBack: () -> Unit) {
             }
         }
 
-        // PINNED TOP BAR: Back button and Share button stay fixed at the top while scrolling
+        // PINNED TOP BAR: Back button and Actions (Like & Share) stay fixed at the top while scrolling
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -382,19 +468,41 @@ fun IssueDetailScreen(ticketId: String, onBack: () -> Unit) {
                 }
             }
 
-            Surface(
-                onClick = { shareIssue(context, issue.ticketId, issue.title) },
-                shape = CircleShape,
-                color = Color.Black.copy(alpha = 0.55f),
-                modifier = Modifier.size(40.dp),
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Outlined.Share,
-                        contentDescription = "Share",
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp),
-                    )
+                val isLiked = uiState?.isLiked ?: false
+                Surface(
+                    onClick = { viewModel?.toggleLike(issue.ticketId) },
+                    shape = CircleShape,
+                    color = Color.Black.copy(alpha = 0.55f),
+                    modifier = Modifier.size(40.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = if (isLiked) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
+                            contentDescription = stringResource(if (isLiked) R.string.detail_btn_unlike else R.string.detail_btn_like),
+                            tint = if (isLiked) MaterialTheme.colorScheme.primary else Color.White,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
+
+                Surface(
+                    onClick = { shareIssue(context, issue.ticketId, issue.title) },
+                    shape = CircleShape,
+                    color = Color.Black.copy(alpha = 0.55f),
+                    modifier = Modifier.size(40.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Outlined.Share,
+                            contentDescription = "Share",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
                 }
             }
         }

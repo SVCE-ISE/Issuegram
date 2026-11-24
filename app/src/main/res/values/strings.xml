@@ -164,4 +164,69 @@
     <string name="profile_group_about">About</string>
     <string name="profile_version">Version</string>
     <string name="profile_signed_in_as">Signed in as %1$s</string>
+
+    <!-- Authentication & Login -->
+    <string name="login_tagline">Report civic issues. Track real fixes.</string>
+    <string name="login_google_sign_in">Sign in with Google</string>
+    <string name="login_anonymous_disclaimer">Your reports are public. Your identity stays anonymous.</string>
+
+    <!-- Map Screen -->
+    <string name="map_tap_to_pick">Tap on the map to pick issue location</string>
+    <string name="map_selected_location">Selected Location</string>
+    <string name="map_selected_coords">Selected: %1$.6f, %2$.6f</string>
+    <string name="map_tap_anywhere">Tap anywhere on the map to place a pin</string>
+    <string name="map_use_this_location">Use this location</string>
+    <string name="map_filter_all">All (%1$d)</string>
+    <string name="map_filter_active">Active (%1$d)</string>
+    <string name="map_filter_resolved">Resolved (%1$d)</string>
+    <string name="map_reported_prefix">Reported: %1$s • Category: %2$s</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_save">Save</string>
+
+    <!-- Profile Screen -->
+    <string name="profile_reported_count">reported</string>
+    <string name="profile_solved_count">solved</string>
+    <string name="profile_posted_issues_title">Posted Issues</string>
+    <string name="profile_swipe_hint">Swipe right to edit • Swipe left to delete</string>
+    <string name="profile_empty_posted">You haven\'t posted any civic reports yet</string>
+    <string name="profile_edit_dialog_title">Edit report</string>
+    <string name="profile_edit_ticket_prefix">Ticket: %1$s</string>
+    <string name="profile_edit_title_label">Title</string>
+    <string name="profile_edit_caption_label">Description</string>
+    <string name="profile_edit_location_label">Location</string>
+    <string name="profile_your_name_title">Your name</string>
+    <string name="profile_name_label">Name</string>
+    <string name="profile_name_length_error">Name must be between 2 and 36 characters</string>
+    <string name="profile_remove_photo">Remove profile photo</string>
+    <string name="profile_sign_out">Sign Out</string>
+    <string name="profile_action_edit">Edit</string>
+    <string name="profile_action_delete">Delete</string>
+    <string name="profile_moderation_title">Moderation Queue</string>
+    <string name="profile_moderation_pending">%1$d pending</string>
+    <string name="profile_moderation_empty">No pending community flags.</string>
+    <string name="profile_mod_keep">Keep Post</string>
+    <string name="profile_mod_actioned">Actioned</string>
+    <string name="profile_mod_dismiss">Dismiss</string>
+
+    <!-- Camera & Compose Report -->
+    <string name="camera_photo_retake">Retake</string>
+    <string name="camera_photo_use">Use Photo</string>
+    <string name="camera_btn_post">Post Report</string>
+    <string name="camera_shutter_desc">Take Photo</string>
+    <string name="camera_gallery_desc">Open Gallery</string>
+    <string name="camera_flip_desc">Switch Camera</string>
+    <string name="camera_flash_desc">Toggle Flash</string>
+    <string name="camera_permission_required">Camera permission is required to capture civic issues directly.</string>
+    <string name="camera_grant_permission">Grant Permission</string>
+    <string name="camera_or_pick_gallery">or pick from gallery</string>
+    <string name="camera_review_photo_title">Review Photo</string>
+    <string name="camera_location_detecting">Detecting GPS location…</string>
+    <string name="camera_pick_location_map">Pick on Map</string>
+    <string name="camera_location_picker_title">Select Issue Location</string>
+    <string name="camera_location_picker_confirm">Confirm Location</string>
+
+    <!-- Detail Screen -->
+    <string name="detail_no_additional_details">No additional details provided for this issue report.</string>
+    <string name="detail_btn_like">Like</string>
+    <string name="detail_btn_unlike">Unlike</string>
 </resources>

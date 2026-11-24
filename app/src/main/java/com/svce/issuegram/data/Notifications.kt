@@ -75,12 +75,3 @@ object MockAlerts {
         ),
     )
 }
-
-/** Dummy signed-in citizen until Firebase Auth is wired. */
-object ProfileMock {
-    const val name = "Priya S."
-    const val email = "priya.s@example.com"
-    const val following = 8
-    const val likesGiven = 34
-    val initials: String = name.split(" ").mapNotNull { it.firstOrNull()?.uppercaseChar() }.joinToString("")
-}

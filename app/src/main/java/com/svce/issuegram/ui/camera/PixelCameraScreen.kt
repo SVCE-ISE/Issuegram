@@ -248,8 +248,26 @@ fun PixelCameraScreen(
         }
     }
     LaunchedEffect(issueTitle, issueText, selectedCategory, currentLocationText, subLocationText, detectedLat, detectedLon, capturedPhotoPath, pickedGalleryPath) {
-        draftStore.save(ReportDraft(issueTitle, issueText, selectedCategory, currentLocationText, subLocationText,
-            detectedLat, detectedLon, capturedPhotoPath, pickedGalleryPath))
+        if (capturedPhotoPath != null || pickedGalleryPath != null || issueTitle.isNotBlank() || issueText.isNotBlank()) {
+            draftStore.save(ReportDraft(issueTitle, issueText, selectedCategory, currentLocationText, subLocationText,
+                detectedLat, detectedLon, capturedPhotoPath, pickedGalleryPath))
+        } else {
+            draftStore.clear()
+        }
+    }
+    fun resetCameraScreenState() {
+        capturedPhotoFile?.takeIf { it.parentFile?.name == "drafts" }?.delete()
+        capturedPhotoPath = null
+        pickedGalleryPath = null
+        issueTitle = ""
+        issueText = ""
+        selectedCategory = "Road"
+        currentLocationText = ""
+        subLocationText = ""
+        detectedLat = null
+        detectedLon = null
+        draftStore.clear()
+        isPhotoCaptured = false
     }
     androidx.activity.compose.BackHandler(isPhotoCaptured && !isPosting) { isPhotoCaptured = false }
     LaunchedEffect(isPhotoCaptured) { if (isPhotoCaptured) cameraProvider?.unbindAll() }
@@ -258,10 +276,8 @@ fun PixelCameraScreen(
         title = { Text("Discard this draft?", fontFamily = GoogleSans, fontWeight = FontWeight.Bold) },
         text = { Text("Remove this report's saved photo, title, description and location from this device?", fontFamily = GoogleSans) },
         confirmButton = { androidx.compose.material3.TextButton(onClick = {
-            capturedPhotoFile?.takeIf { it.parentFile?.name == "drafts" }?.delete()
-            capturedPhotoPath = null; pickedGalleryPath = null; issueTitle = ""; issueText = ""; selectedCategory = "Road"
-            currentLocationText = ""; subLocationText = ""; detectedLat = null; detectedLon = null
-            draftStore.clear(); isPhotoCaptured = false; confirmingDraftDiscard = false
+            resetCameraScreenState()
+            confirmingDraftDiscard = false
         }) { Text("Discard draft", fontFamily = GoogleSans) } },
         dismissButton = { androidx.compose.material3.TextButton(onClick = { confirmingDraftDiscard = false }) { Text("Keep draft", fontFamily = GoogleSans) } },
     )
@@ -625,8 +641,9 @@ fun PixelCameraScreen(
                     }
                 }
 
+                val effectiveDescription = issueText.trim().ifBlank { issueTitle.trim() }
                 val isPostEnabled = issueTitle.trim().length in 3..100 &&
-                    issueText.trim().length in 5..500 &&
+                    effectiveDescription.length in 5..500 &&
                     !isPosting &&
                     (capturedPhotoFile?.exists() == true || pickedGalleryUri != null)
 
@@ -691,6 +708,9 @@ fun PixelCameraScreen(
                                 OutlinedButton(
                                     onClick = {
                                         if (!isPosting) {
+                                            capturedPhotoFile?.takeIf { it.parentFile?.name == "drafts" }?.delete()
+                                            capturedPhotoPath = null
+                                            pickedGalleryPath = null
                                             isPhotoCaptured = false
                                         }
                                     },
@@ -704,16 +724,38 @@ fun PixelCameraScreen(
                                 }
                                 Button(
                                     onClick = {
+                                        val title = issueTitle.trim()
+                                        val desc = effectiveDescription
+                                        val cat = selectedCategory
+                                        val locName = currentLocationText.ifBlank { "Location on map" }
+                                        val subLoc = subLocationText
+                                        val lat = detectedLat ?: 12.9716
+                                        val lon = detectedLon ?: 77.5946
+                                        val photoFile = capturedPhotoFile
+                                        val galleryUri = pickedGalleryUri
+
+                                        // Persist photo to permanent app storage before clearing draft state so it is not deleted
+                                        val permanentPhotoFile = if (photoFile != null && photoFile.exists()) {
+                                            runCatching {
+                                                val permanentDir = File(context.filesDir, "issue_photos").apply { mkdirs() }
+                                                val target = File(permanentDir, "issue_${System.currentTimeMillis()}.jpg")
+                                                photoFile.copyTo(target, overwrite = true)
+                                                target
+                                            }.getOrNull() ?: photoFile
+                                        } else null
+
+                                        resetCameraScreenState()
+
                                         onPostIssue(
-                                            issueTitle.trim(),
-                                            issueText.trim(),
-                                            selectedCategory,
-                                            currentLocationText.ifBlank { "Location on map" },
-                                            subLocationText,
-                                            detectedLat ?: 12.9716,
-                                            detectedLon ?: 77.5946,
-                                            capturedPhotoFile,
-                                            pickedGalleryUri,
+                                            title,
+                                            desc,
+                                            cat,
+                                            locName,
+                                            subLoc,
+                                            lat,
+                                            lon,
+                                            permanentPhotoFile ?: photoFile,
+                                            galleryUri,
                                         )
                                     },
                                     enabled = isPostEnabled,

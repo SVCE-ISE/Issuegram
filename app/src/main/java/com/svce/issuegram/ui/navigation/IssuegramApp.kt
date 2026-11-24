@@ -26,11 +26,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -39,16 +43,28 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import android.net.Uri
+import androidx.compose.runtime.collectAsState
+import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.svce.issuegram.IssuegramApplication
 import com.svce.issuegram.data.IssueStore
+import com.svce.issuegram.data.mapper.IssueMapper
 import com.svce.issuegram.data.model.IssueCategory
+import com.svce.issuegram.di.ViewModelFactory
 import com.svce.issuegram.R
 import com.svce.issuegram.ui.camera.PixelCameraScreen
+import com.svce.issuegram.ui.feed.FeedViewModel
 import com.svce.issuegram.ui.map.CivicMapScreen
 import com.svce.issuegram.ui.screens.AlertsScreen
+import com.svce.issuegram.ui.screens.AlertsViewModel
 import com.svce.issuegram.ui.screens.FeedScreenV6
 import com.svce.issuegram.ui.screens.IssueDetailScreen
+import com.svce.issuegram.ui.screens.IssueDetailViewModel
 import com.svce.issuegram.ui.screens.MyIssuesScreen
 import com.svce.issuegram.ui.profile.ProfileScreen
+import com.svce.issuegram.ui.profile.ProfileViewModel
+import kotlinx.coroutines.launch
 
 private enum class TopLevelDestination(
     val route: String,
@@ -70,6 +86,15 @@ fun IssuegramApp() {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     var isV4DetailExpanded by rememberSaveable { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val appContainer = remember(context) {
+        (context.applicationContext as IssuegramApplication).appContainer
+    }
+    val viewModelFactory = remember(appContainer) {
+        ViewModelFactory(appContainer)
+    }
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -110,16 +135,19 @@ fun IssuegramApp() {
         },
     ) { innerPadding ->
         val contentPadding = PaddingValues(0.dp)
+        var mapInitialCenter by remember { mutableStateOf<LatLng?>(null) }
         NavHost(
             navController = navController,
             startDestination = TopLevelDestination.Feed.route,
             modifier = Modifier.padding(contentPadding),
         ) {
             composable(TopLevelDestination.Feed.route) {
+                val feedViewModel: FeedViewModel = viewModel(factory = viewModelFactory)
                 val onIssueClick: (String) -> Unit = { ticketId ->
                     navController.navigate("issue/$ticketId")
                 }
                 FeedScreenV6(
+                    viewModel = feedViewModel,
                     onIssueClick = onIssueClick,
                     onAlertsClick = {
                         navController.navigate(TopLevelDestination.Notifications.route) {
@@ -139,6 +167,10 @@ fun IssuegramApp() {
                             restoreState = true
                         }
                     },
+                    onOpenMapLocation = { lat, lon ->
+                        mapInitialCenter = LatLng(lat, lon)
+                        navController.navigate(TopLevelDestination.Map.route)
+                    },
                     bottomBarPadding = innerPadding.calculateBottomPadding(),
                     isDetailExpanded = isV4DetailExpanded,
                     onDetailExpandedChange = { isV4DetailExpanded = it },
@@ -152,10 +184,16 @@ fun IssuegramApp() {
                 )
             }
             composable(TopLevelDestination.Map.route) {
+                val feedIssues by appContainer.getFeedIssuesUseCase().collectAsState(initial = emptyList())
+                val civicIssues = remember(feedIssues) {
+                    feedIssues.map { IssueMapper.toCivicDto(it) }
+                }
                 CivicMapScreen(
+                    issues = civicIssues,
+                    initialCenter = mapInitialCenter,
                     bottomBarPadding = innerPadding.calculateBottomPadding(),
                     onOpenIssue = { issue ->
-                        navController.navigate("issue/IG-${issue.id}")
+                        navController.navigate("issue/${issue.ticketCode.removePrefix("#")}")
                     },
                 )
             }
@@ -165,17 +203,34 @@ fun IssuegramApp() {
                     onRequestPickLocationOnMap = {
                         navController.navigate(TopLevelDestination.Map.route)
                     },
-                    onPostIssue = { title, description, category, locationName, _, _, _, capturedFile, pickedUri ->
+                    onPostIssue = { title, description, category, locationName, subLocation, lat, lon, capturedFile, pickedUri ->
                         val photoUri = pickedUri?.toString() ?: capturedFile?.let { Uri.fromFile(it).toString() }
-                        val cat = when (category.lowercase()) {
-                            "pothole" -> IssueCategory.Pothole
-                            "streetlight" -> IssueCategory.Streetlight
-                            "garbage" -> IssueCategory.Garbage
-                            "water" -> IssueCategory.Water
-                            "drainage" -> IssueCategory.Drainage
-                            "road" -> IssueCategory.Road
-                            "safety" -> IssueCategory.Safety
+                        val cat = when {
+                            category.contains("pothole", ignoreCase = true) -> IssueCategory.Pothole
+                            category.contains("streetlight", ignoreCase = true) || category.contains("light", ignoreCase = true) -> IssueCategory.Streetlight
+                            category.contains("garbage", ignoreCase = true) -> IssueCategory.Garbage
+                            category.contains("water", ignoreCase = true) -> IssueCategory.Water
+                            category.contains("drain", ignoreCase = true) -> IssueCategory.Drainage
+                            category.contains("road", ignoreCase = true) -> IssueCategory.Road
+                            category.contains("safety", ignoreCase = true) -> IssueCategory.Safety
                             else -> IssueCategory.Other
+                        }
+                        val currentUser = Firebase.auth.currentUser
+                        val authorName = currentUser?.displayName?.takeIf { it.isNotBlank() } ?: "Praveen Zalaki"
+                        val authorUsername = currentUser?.displayName?.takeIf { it.isNotBlank() } ?: authorName
+
+                        coroutineScope.launch {
+                            appContainer.createIssueUseCase(
+                                title = title,
+                                description = description,
+                                category = cat,
+                                locationName = locationName,
+                                photoUri = photoUri,
+                                latitude = lat,
+                                longitude = lon,
+                                authorName = authorName,
+                                authorUsername = authorUsername,
+                            )
                         }
                         IssueStore.add(
                             title = title,
@@ -183,6 +238,10 @@ fun IssuegramApp() {
                             category = cat,
                             locationName = locationName,
                             photoUri = photoUri,
+                            latitude = lat,
+                            longitude = lon,
+                            authorName = authorName,
+                            authorUsername = authorUsername,
                         )
                         navController.navigate(TopLevelDestination.Feed.route) {
                             popUpTo(TopLevelDestination.Feed.route) { inclusive = false }
@@ -191,7 +250,9 @@ fun IssuegramApp() {
                 )
             }
             composable(TopLevelDestination.Notifications.route) {
+                val alertsViewModel: AlertsViewModel = viewModel(factory = viewModelFactory)
                 AlertsScreen(
+                    viewModel = alertsViewModel,
                     bottomBarPadding = innerPadding.calculateBottomPadding(),
                     onBack = { navController.popBackStack() },
                     onIssueClick = { ticketId ->
@@ -200,9 +261,14 @@ fun IssuegramApp() {
                 )
             }
             composable(TopLevelDestination.Profile.route) {
+                val profileViewModel: ProfileViewModel = viewModel(factory = viewModelFactory)
                 ProfileScreen(
+                    viewModel = profileViewModel,
                     onOpenIssue = { issue ->
                         navController.navigate("issue/${issue.ticketCode}")
+                    },
+                    onSignOut = {
+                        profileViewModel.signOut()
                     },
                 )
             }
@@ -210,9 +276,19 @@ fun IssuegramApp() {
                 route = "issue/{ticketId}",
                 arguments = listOf(navArgument("ticketId") { type = NavType.StringType }),
             ) { backStackEntry ->
+                val ticketId = backStackEntry.arguments?.getString("ticketId").orEmpty()
+                val detailViewModel: IssueDetailViewModel = viewModel(
+                    key = ticketId,
+                    factory = viewModelFactory,
+                )
                 IssueDetailScreen(
-                    ticketId = backStackEntry.arguments?.getString("ticketId").orEmpty(),
+                    ticketId = ticketId,
+                    viewModel = detailViewModel,
                     onBack = { navController.popBackStack() },
+                    onOpenFullMap = { location ->
+                        mapInitialCenter = location
+                        navController.navigate(TopLevelDestination.Map.route)
+                    },
                 )
             }
         }

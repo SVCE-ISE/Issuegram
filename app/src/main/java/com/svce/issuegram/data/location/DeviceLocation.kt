@@ -19,13 +19,36 @@ import java.util.Locale
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+fun getLastKnownLocation(context: Context): Location? {
+    val permitted = listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+        .any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
+    if (!permitted) return null
+    val manager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return null
+    val providers = listOf(
+        "fused",
+        LocationManager.GPS_PROVIDER,
+        LocationManager.NETWORK_PROVIDER,
+        LocationManager.PASSIVE_PROVIDER
+    )
+    return providers
+        .filter { runCatching { manager.isProviderEnabled(it) }.getOrDefault(false) }
+        .mapNotNull { runCatching { manager.getLastKnownLocation(it) }.getOrNull() }
+        .maxByOrNull { it.time }
+}
+
 suspend fun currentDeviceLocation(context: Context): Location = withTimeout(20_000) {
     val permitted = listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
         .any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
     check(permitted) { "Allow location access, or choose the location on the map." }
     val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     check(LocationManagerCompat.isLocationEnabled(manager)) { "Turn on location, or choose the location on the map." }
-    val provider = listOf(LocationManager.NETWORK_PROVIDER, LocationManager.GPS_PROVIDER).firstOrNull { manager.isProviderEnabled(it) }
+    val providers = listOf(
+        "fused",
+        LocationManager.NETWORK_PROVIDER,
+        LocationManager.GPS_PROVIDER
+    ).filter { runCatching { manager.isProviderEnabled(it) }.getOrDefault(false) }
+
+    val provider = providers.firstOrNull()
         ?: error("Location is unavailable. Choose the location on the map.")
     suspendCancellableCoroutine { continuation ->
         val cancellation = CancellationSignal()
@@ -33,12 +56,28 @@ suspend fun currentDeviceLocation(context: Context): Location = withTimeout(20_0
         try {
             LocationManagerCompat.getCurrentLocation(manager, provider, cancellation, ContextCompat.getMainExecutor(context)) { location ->
                 if (continuation.isActive) {
-                    if (location != null && SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos <= 120_000_000_000L)
+                    if (location != null) {
                         continuation.resume(location)
-                    else continuation.resumeWithException(IllegalStateException("Couldn't get a recent location. Choose it on the map."))
+                    } else {
+                        val lastKnown = getLastKnownLocation(context)
+                        if (lastKnown != null) {
+                            continuation.resume(lastKnown)
+                        } else {
+                            continuation.resumeWithException(IllegalStateException("Couldn't get a recent location. Choose it on the map."))
+                        }
+                    }
                 }
             }
-        } catch (e: Exception) { if (continuation.isActive) continuation.resumeWithException(e) }
+        } catch (e: Exception) {
+            if (continuation.isActive) {
+                val lastKnown = getLastKnownLocation(context)
+                if (lastKnown != null) {
+                    continuation.resume(lastKnown)
+                } else {
+                    continuation.resumeWithException(e)
+                }
+            }
+        }
     }
 }
 

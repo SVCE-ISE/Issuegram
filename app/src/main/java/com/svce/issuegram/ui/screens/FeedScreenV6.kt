@@ -9,10 +9,13 @@ package com.svce.issuegram.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -42,6 +45,9 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Refresh
+import com.svce.issuegram.domain.formatLocationAddress
+import com.svce.issuegram.domain.resolveReporterDisplayName
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material.icons.outlined.Share
@@ -50,6 +56,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
@@ -59,16 +67,25 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import com.svce.issuegram.ui.components.EmptyState
+import com.svce.issuegram.ui.feed.FeedViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import coil.request.ImageRequest
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -85,11 +102,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.LaunchedEffect
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.svce.issuegram.R
 import com.svce.issuegram.data.IssueStore
-import com.svce.issuegram.data.MockAlerts
-import com.svce.issuegram.data.MockIssues
-import com.svce.issuegram.data.ProfileMock
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import coil.compose.AsyncImage
@@ -130,14 +153,17 @@ private val GoogleSansLightFamily = FontFamily(
 @Composable
 fun FeedScreenV6(
     modifier: Modifier = Modifier,
+    viewModel: FeedViewModel? = null,
     onIssueClick: (String) -> Unit = {},
     onAlertsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
+    onOpenMapLocation: ((Double, Double) -> Unit)? = null,
     bottomBarPadding: Dp = 0.dp,
     isDetailExpanded: Boolean = false,
     onDetailExpandedChange: (Boolean) -> Unit = {},
 ) {
-    val hasUnread = remember { MockAlerts.all.any { it.unread } }
+    val uiState by viewModel?.uiState?.collectAsState() ?: remember { mutableStateOf(null) }
+    val hasUnread = uiState?.hasUnreadNotifications ?: false
     val haptic = rememberHaptics()
     var isLiked by rememberSaveable { mutableStateOf(false) }
 
@@ -152,10 +178,12 @@ fun FeedScreenV6(
             auth.removeAuthStateListener(listener)
         }
     }
-    val userPhotoUrl = firebaseUser?.photoUrl?.toString()
-    val userInitials = remember(firebaseUser) {
-        firebaseUser?.displayName?.split(" ")?.mapNotNull { it.firstOrNull()?.uppercaseChar() }?.joinToString("")?.takeIf { it.isNotBlank() }
-            ?: ProfileMock.initials
+    val userPhotoUrl = uiState?.currentUser?.avatarUrl ?: firebaseUser?.photoUrl?.toString()
+    val userInitials = remember(uiState?.currentUser, firebaseUser) {
+        uiState?.currentUser?.displayName?.split(" ")?.mapNotNull { it.firstOrNull()?.uppercaseChar() }?.joinToString("")?.takeIf { it.isNotBlank() }
+            ?: firebaseUser?.displayName?.split(" ")?.mapNotNull { it.firstOrNull()?.uppercaseChar() }?.joinToString("")?.takeIf { it.isNotBlank() }
+            ?: firebaseUser?.email?.firstOrNull()?.uppercaseChar()?.toString()
+            ?: "CR"
     }
 
     // Intercept hardware / gesture back button to close detailed view smoothly
@@ -165,6 +193,14 @@ fun FeedScreenV6(
     }
 
     val feedScrollState = rememberScrollState()
+    val context = LocalContext.current
+    val issues = uiState?.issues.orEmpty()
+    val isRefreshing = uiState?.isRefreshing == true
+    val pullToRefreshState = rememberPullToRefreshState()
+    var selectedTicketId by rememberSaveable { mutableStateOf<String?>(null) }
+    val detailIssue = remember(issues, selectedTicketId) {
+        issues.find { it.ticketId == selectedTicketId } ?: issues.firstOrNull()
+    }
 
     // Fast & responsive MotionScheme specs:
     // - defaultSpatialSpec for fast, snappy hero shared element transition (~380ms)
@@ -188,216 +224,317 @@ fun FeedScreenV6(
         ) { expanded ->
             if (!expanded) {
                 // =============================================================
-                // HOME FEED: Card with photo + title
+                // HOME FEED: Card with photo + title & Contained Refresh Indicator
                 // =============================================================
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(feedScrollState)
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(bottom = bottomBarPadding + Spacing.space6),
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = {
+                        haptic(ExpressiveHaptic.Tap)
+                        viewModel?.refresh()
+                    },
+                    modifier = Modifier.fillMaxSize(),
+                    state = pullToRefreshState,
+                    indicator = {}
                 ) {
-                    // --- TOP APP BAR ---
-                    Box(
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .statusBarsPadding()
-                            .padding(horizontal = Spacing.space4, vertical = Spacing.space2),
+                            .fillMaxSize()
+                            .verticalScroll(feedScrollState)
+                            .background(MaterialTheme.colorScheme.surface)
+                            .padding(bottom = bottomBarPadding + Spacing.space6),
                     ) {
-                        // Top Left: Alerts
-                        Surface(
-                            onClick = onAlertsClick,
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        // --- TOP APP BAR ---
+                        Box(
                             modifier = Modifier
-                                .size(40.dp)
-                                .align(Alignment.CenterStart),
+                                .fillMaxWidth()
+                                .statusBarsPadding()
+                                .padding(horizontal = Spacing.space4, vertical = Spacing.space2),
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Outlined.NotificationsNone,
-                                    contentDescription = stringResource(R.string.tab_notifications),
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.size(22.dp),
-                                )
-                                if (hasUnread) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(9.dp)
-                                            .align(Alignment.TopEnd)
-                                            .offset(x = (-8).dp, y = 8.dp)
-                                            .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.error),
-                                    )
-                                }
-                            }
-                        }
-
-                        // Top Middle: Issuegram Wordmark
-                        Image(
-                            painter = painterResource(R.drawable.issuegram),
-                            contentDescription = stringResource(R.string.app_name),
-                            modifier = Modifier
-                                .height(28.dp)
-                                .align(Alignment.Center),
-                            contentScale = ContentScale.Fit,
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
-                        )
-
-                        // Top Right: Profile
-                        Surface(
-                            onClick = onProfileClick,
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            modifier = Modifier
-                                .size(40.dp)
-                                .align(Alignment.CenterEnd),
-                        ) {
-                            if (!userPhotoUrl.isNullOrBlank()) {
-                                AsyncImage(
-                                    model = userPhotoUrl,
-                                    contentDescription = "Profile",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize(),
-                                )
-                            } else {
+                            // Top Left: Alerts
+                            Surface(
+                                onClick = onAlertsClick,
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .align(Alignment.CenterStart),
+                            ) {
                                 Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.NotificationsNone,
+                                        contentDescription = stringResource(R.string.tab_notifications),
+                                        tint = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.size(22.dp),
+                                    )
+                                    if (hasUnread) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(9.dp)
+                                                .align(Alignment.TopEnd)
+                                                .offset(x = (-8).dp, y = 8.dp)
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.error),
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Top Middle: Issuegram Wordmark
+                            Image(
+                                painter = painterResource(R.drawable.issuegram),
+                                contentDescription = stringResource(R.string.app_name),
+                                modifier = Modifier
+                                    .height(28.dp)
+                                    .align(Alignment.Center),
+                                contentScale = ContentScale.Fit,
+                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+                            )
+
+                            // Top Right: Profile
+                            Surface(
+                                onClick = onProfileClick,
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .align(Alignment.CenterEnd),
+                            ) {
+                                if (!userPhotoUrl.isNullOrBlank()) {
+                                    AsyncImage(
+                                        model = userPhotoUrl,
+                                        contentDescription = "Profile",
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                } else {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            text = userInitials,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // Contained Refresh Status Banner / Pill (visible while refreshing)
+                        AnimatedVisibility(
+                            visible = isRefreshing,
+                            enter = fadeIn() + expandVertically(),
+                            exit = fadeOut() + shrinkVertically(),
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                                shadowElevation = 3.dp,
+                                modifier = Modifier.padding(top = Spacing.space2),
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = Spacing.space3, vertical = Spacing.space2),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.space2),
+                                ) {
+                                    ContainedLoadingIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        indicatorColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    )
                                     Text(
-                                        text = userInitials,
-                                        style = MaterialTheme.typography.titleSmall,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        text = "Refreshing feed...",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = FontWeight.Medium,
                                     )
                                 }
                             }
                         }
-                    }
 
-                    Spacer(Modifier.height(Spacing.space3))
+                        Spacer(Modifier.height(Spacing.space3))
 
-                    // --- FEED PHOTO CARD ---
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                        ),
-                    ) {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            // Photo: Shared Element connected to detailed photo
+                        if (uiState?.isLoading == true && issues.isEmpty()) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(340.dp)
-                                    .sharedElement(
-                                        sharedContentState = rememberSharedContentState(key = "issue_cat_photo"),
-                                        animatedVisibilityScope = this@AnimatedContent,
-                                        boundsTransform = sharedBoundsTransform,
-                                    )
-                                    .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
+                                    .weight(1f, fill = true),
+                                contentAlignment = Alignment.Center,
                             ) {
-                                Image(
-                                    painter = painterResource(R.drawable.feed_cat_photo),
-                                    contentDescription = "Card Photo",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop,
+                                CircularProgressIndicator(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    strokeWidth = 3.dp,
                                 )
                             }
-
-                            // Content below photo
-                            Column(
+                        } else if (issues.isEmpty()) {
+                            Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(Spacing.space4),
+                                    .weight(1f, fill = true)
+                                    .padding(vertical = Spacing.space6),
+                                contentAlignment = Alignment.Center,
                             ) {
-                                // 2 lines Google Sans Light headline: Shared Element connected to detailed title
-                                Text(
-                                    text = "Community cat sheltered near the 4th Avenue park entrance",
-                                    fontFamily = GoogleSansLightFamily,
-                                    fontWeight = FontWeight.Light,
-                                    fontSize = 21.sp,
-                                    lineHeight = 27.sp,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.sharedElement(
-                                        sharedContentState = rememberSharedContentState(key = "issue_cat_title"),
-                                        animatedVisibilityScope = this@AnimatedContent,
-                                        boundsTransform = sharedBoundsTransform,
-                                    ),
-                                )
-
-                                Spacer(Modifier.height(Spacing.space2))
-
-                                // Summary text below the headline (max 1 line)
-                                Text(
-                                    text = "Spotted resting safely yesterday evening. Neighbors provided fresh water and food while awaiting checkup.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-
-                                Spacer(Modifier.height(Spacing.space4))
-
-                                // Bottom Action Row: Soft Teal "View report" button on left, Expressive Like button on right
-                                Row(
+                                EmptyState(
+                                    icon = Icons.Outlined.BookmarkBorder,
+                                    title = stringResource(R.string.my_issues_empty_title),
+                                    body = "Civic issues reported in your community will appear here.",
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Button(
-                                        onClick = {
-                                            haptic(ExpressiveHaptic.Tap)
-                                            onDetailExpandedChange(true)
-                                        },
-                                        shape = CircleShape,
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = Color(0xFFBDEEEA),
-                                            contentColor = Color(0xFF00201F),
-                                        ),
-                                        contentPadding = PaddingValues(
-                                            horizontal = Spacing.space4,
-                                            vertical = Spacing.space2,
-                                        ),
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(R.drawable.ic_book_text),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(18.dp),
-                                        )
-                                        Spacer(Modifier.width(Spacing.space2))
-                                        Text(
-                                            text = "View report",
-                                            style = MaterialTheme.typography.labelLarge,
-                                        )
-                                    }
+                                )
+                            }
+                        } else {
+                        issues.forEach { issue ->
+                            key(issue.ticketId) {
+                                val issuePhoto = issue.photoUri
+                                val hasPhoto = !issuePhoto.isNullOrBlank()
 
-                                    Surface(
-                                        onClick = {
-                                            haptic(ExpressiveHaptic.Tap)
-                                            isLiked = !isLiked
-                                        },
-                                        shape = MaterialShapes.Cookie9Sided.toShape(),
-                                        color = if (isLiked) {
-                                            MaterialTheme.colorScheme.primary
-                                        } else {
-                                            MaterialTheme.colorScheme.primaryContainer
-                                        },
-                                        contentColor = if (isLiked) {
-                                            MaterialTheme.colorScheme.onPrimary
-                                        } else {
-                                            MaterialTheme.colorScheme.onPrimaryContainer
-                                        },
-                                        modifier = Modifier.size(48.dp),
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(
-                                                imageVector = if (isLiked) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
-                                                contentDescription = "Like",
-                                                modifier = Modifier.size(22.dp),
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                    ),
+                                    onClick = {
+                                        selectedTicketId = issue.ticketId
+                                        onDetailExpandedChange(true)
+                                    },
+                                ) {
+                                    Column(modifier = Modifier.fillMaxWidth()) {
+                                        // Photo: Shared Element connected to detailed photo
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(340.dp)
+                                                .sharedElement(
+                                                    sharedContentState = rememberSharedContentState(key = "issue_photo_${issue.ticketId}"),
+                                                    animatedVisibilityScope = this@AnimatedContent,
+                                                    boundsTransform = sharedBoundsTransform,
+                                                )
+                                                .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
+                                        ) {
+                                            if (hasPhoto) {
+                                                AsyncImage(
+                                                    model = ImageRequest.Builder(context)
+                                                        .data(issuePhoto)
+                                                        .crossfade(true)
+                                                        .build(),
+                                                    contentDescription = issue.title,
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    contentScale = ContentScale.Crop,
+                                                    placeholder = painterResource(R.drawable.image_placeholder),
+                                                    error = painterResource(R.drawable.image_placeholder),
+                                                )
+                                            } else {
+                                                Image(
+                                                    painter = painterResource(R.drawable.image_placeholder),
+                                                    contentDescription = "Card Photo",
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    contentScale = ContentScale.Crop,
+                                                )
+                                            }
+                                        }
+
+                                        // Content below photo
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(Spacing.space4),
+                                        ) {
+                                            Text(
+                                                text = issue.title,
+                                                fontFamily = GoogleSansLightFamily,
+                                                fontWeight = FontWeight.Light,
+                                                fontSize = 21.sp,
+                                                lineHeight = 27.sp,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                modifier = Modifier.sharedElement(
+                                                    sharedContentState = rememberSharedContentState(key = "issue_title_${issue.ticketId}"),
+                                                    animatedVisibilityScope = this@AnimatedContent,
+                                                    boundsTransform = sharedBoundsTransform,
+                                                ),
                                             )
+
+                                            val captionText = issue.description?.takeIf { it.isNotBlank() } ?: issue.locationName
+                                            if (captionText.isNotBlank()) {
+                                                Spacer(Modifier.height(Spacing.space2))
+                                                Text(
+                                                    text = captionText,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                )
+                                            }
+
+                                            Spacer(Modifier.height(Spacing.space4))
+
+                                            // Bottom Action Row
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                Button(
+                                                    onClick = {
+                                                        haptic(ExpressiveHaptic.Tap)
+                                                        selectedTicketId = issue.ticketId
+                                                        onDetailExpandedChange(true)
+                                                    },
+                                                    shape = CircleShape,
+                                                    colors = ButtonDefaults.buttonColors(
+                                                        containerColor = Color(0xFFBDEEEA),
+                                                        contentColor = Color(0xFF00201F),
+                                                    ),
+                                                    contentPadding = PaddingValues(
+                                                        horizontal = Spacing.space4,
+                                                        vertical = Spacing.space2,
+                                                    ),
+                                                ) {
+                                                    Icon(
+                                                        painter = painterResource(R.drawable.ic_book_text),
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(18.dp),
+                                                    )
+                                                    Spacer(Modifier.width(Spacing.space2))
+                                                    Text(
+                                                        text = "View report",
+                                                        style = MaterialTheme.typography.labelLarge,
+                                                    )
+                                                }
+
+                                                var isPostLiked by rememberSaveable(issue.ticketId) { mutableStateOf(false) }
+
+                                                Surface(
+                                                    onClick = {
+                                                        haptic(ExpressiveHaptic.Tap)
+                                                        isPostLiked = !isPostLiked
+                                                        viewModel?.toggleLike(issue.ticketId)
+                                                    },
+                                                    shape = MaterialShapes.Cookie9Sided.toShape(),
+                                                    color = if (isPostLiked) {
+                                                        MaterialTheme.colorScheme.primary
+                                                    } else {
+                                                        MaterialTheme.colorScheme.primaryContainer
+                                                    },
+                                                    contentColor = if (isPostLiked) {
+                                                        MaterialTheme.colorScheme.onPrimary
+                                                    } else {
+                                                        MaterialTheme.colorScheme.onPrimaryContainer
+                                                    },
+                                                    modifier = Modifier.size(48.dp),
+                                                ) {
+                                                    Box(contentAlignment = Alignment.Center) {
+                                                        Icon(
+                                                            imageVector = if (isPostLiked) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
+                                                            contentDescription = "Like",
+                                                            modifier = Modifier.size(22.dp),
+                                                        )
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -407,11 +544,13 @@ fun FeedScreenV6(
 
                     Spacer(Modifier.height(Spacing.space8))
                 }
-            } else {
+            }
+        } else {
                 // =============================================================
                 // DETAILED SCREEN: Shared photo (edge-to-edge behind status bar) + title landed on photo
                 // =============================================================
                 val detailScrollState = rememberScrollState()
+                val currentIssue = detailIssue ?: issues.firstOrNull()
 
                 Box(
                     modifier = Modifier
@@ -424,23 +563,38 @@ fun FeedScreenV6(
                             .fillMaxSize()
                             .verticalScroll(detailScrollState),
                     ) {
+                        val currentTicketKey = currentIssue?.ticketId ?: ""
                         // PHOTO CONTAINER: Shared Element (flies edge-to-edge behind status bar, 440dp height)
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(440.dp)
                                 .sharedElement(
-                                    sharedContentState = rememberSharedContentState(key = "issue_cat_photo"),
+                                    sharedContentState = rememberSharedContentState(key = "issue_photo_$currentTicketKey"),
                                     animatedVisibilityScope = this@AnimatedContent,
                                     boundsTransform = sharedBoundsTransform,
                                 ),
                         ) {
-                            Image(
-                                painter = painterResource(R.drawable.feed_cat_photo),
-                                contentDescription = "Detailed Photo",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop,
-                            )
+                            if (!currentIssue?.photoUri.isNullOrBlank()) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context)
+                                        .data(currentIssue?.photoUri)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = currentIssue?.title.orEmpty(),
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop,
+                                    placeholder = painterResource(R.drawable.image_placeholder),
+                                    error = painterResource(R.drawable.image_placeholder),
+                                )
+                            } else {
+                                Image(
+                                    painter = painterResource(R.drawable.image_placeholder),
+                                    contentDescription = "Detailed Photo",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop,
+                                )
+                            }
 
                             // Bottom gradient scrim for title landing on photo
                             Box(
@@ -467,7 +621,7 @@ fun FeedScreenV6(
                                     .padding(horizontal = Spacing.space4, vertical = Spacing.space4),
                             ) {
                                 Text(
-                                    text = "Community cat sheltered near the 4th Avenue park entrance",
+                                    text = currentIssue?.title.orEmpty(),
                                     fontFamily = GoogleSansLightFamily,
                                     fontWeight = FontWeight.Light,
                                     fontSize = 23.sp,
@@ -476,7 +630,7 @@ fun FeedScreenV6(
                                     overflow = TextOverflow.Ellipsis,
                                     color = Color.White,
                                     modifier = Modifier.sharedElement(
-                                        sharedContentState = rememberSharedContentState(key = "issue_cat_title"),
+                                        sharedContentState = rememberSharedContentState(key = "issue_title_$currentTicketKey"),
                                         animatedVisibilityScope = this@AnimatedContent,
                                         boundsTransform = sharedBoundsTransform,
                                     ),
@@ -493,49 +647,83 @@ fun FeedScreenV6(
                             verticalArrangement = Arrangement.spacedBy(Spacing.space4),
                         ) {
                             // 1. Detailed Summary / Story Description on Top
-                            Text(
-                                text = "The community cat was found curled up near the pedestrian gate during yesterday's evening rain. Community members provided a dry box, blanket, fresh water, and food. A local volunteer vet has been contacted to verify vaccination and microchip status tomorrow morning. Updates will be posted here as the situation progresses.",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                lineHeight = 26.sp,
-                            )
-
-                            val currentIssue = remember {
-                                IssueStore.issues.firstOrNull { it.ticketId == "IG-2481" }
-                                    ?: MockIssues.all.first()
+                            val detailDescription = currentIssue?.description?.takeIf { it.isNotBlank() } ?: currentIssue?.title.orEmpty()
+                            if (detailDescription.isNotBlank()) {
+                                Text(
+                                    text = detailDescription,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    lineHeight = 26.sp,
+                                )
                             }
 
                             // Entire status section enclosed in an outer outlined container
-                            Surface(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                color = MaterialTheme.colorScheme.surfaceContainerLow,
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(Spacing.space4),
-                                    verticalArrangement = Arrangement.spacedBy(Spacing.space3),
+                            if (currentIssue != null) {
+                                Surface(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                                 ) {
-                                    Eyebrow(stringResource(R.string.detail_status_eyebrow))
+                                    Column(
+                                        modifier = Modifier.padding(Spacing.space4),
+                                        verticalArrangement = Arrangement.spacedBy(Spacing.space3),
+                                    ) {
+                                        Eyebrow(stringResource(R.string.detail_status_eyebrow))
 
-                                    Timeline(events = currentIssue.timeline())
+                                        Timeline(events = currentIssue.timeline())
+                                    }
                                 }
-                            }
 
-                            // Location Map Preview (strict 16:9 aspect ratio placeholder for future real map)
-                            Surface(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .aspectRatio(16f / 9f),
-                                shape = RoundedCornerShape(16.dp),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                            ) {
-                                Image(
-                                    painter = painterResource(R.drawable.detail_map_placeholder),
-                                    contentDescription = "Location Map",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop,
-                                )
+                                // Location Map Preview (strict 16:9 aspect ratio live GoogleMap preview)
+                                val issueLocation = remember(currentIssue.latitude, currentIssue.longitude) {
+                                    LatLng(currentIssue.latitude, currentIssue.longitude)
+                                }
+                                val cameraPositionState = rememberCameraPositionState {
+                                    position = CameraPosition.fromLatLngZoom(issueLocation, 15f)
+                                }
+                                LaunchedEffect(issueLocation) {
+                                    cameraPositionState.position = CameraPosition.fromLatLngZoom(issueLocation, 15f)
+                                }
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .aspectRatio(16f / 9f)
+                                        .clip(RoundedCornerShape(16.dp)),
+                                    shape = RoundedCornerShape(16.dp),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                ) {
+                                    Box(modifier = Modifier.fillMaxSize()) {
+                                        GoogleMap(
+                                            modifier = Modifier.fillMaxSize(),
+                                            cameraPositionState = cameraPositionState,
+                                            uiSettings = MapUiSettings(
+                                                zoomControlsEnabled = false,
+                                                scrollGesturesEnabled = false,
+                                                zoomGesturesEnabled = false,
+                                                rotationGesturesEnabled = false,
+                                                tiltGesturesEnabled = false,
+                                                mapToolbarEnabled = false,
+                                                myLocationButtonEnabled = false,
+                                            ),
+                                        ) {
+                                            Marker(
+                                                state = rememberUpdatedMarkerState(position = issueLocation),
+                                                title = currentIssue.title,
+                                                snippet = currentIssue.locationName,
+                                            )
+                                        }
+                                        if (onOpenMapLocation != null) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .clickable {
+                                                        onOpenMapLocation.invoke(currentIssue.latitude, currentIssue.longitude)
+                                                    }
+                                            )
+                                        }
+                                    }
+                                }
                             }
 
                             // Address Card (two lines)
@@ -567,18 +755,28 @@ fun FeedScreenV6(
                                     Spacer(Modifier.width(Spacing.space3))
 
                                     Column(modifier = Modifier.weight(1f)) {
+                                        val formatted = remember(currentIssue?.locationName, currentIssue?.area, currentIssue?.latitude, currentIssue?.longitude) {
+                                            formatLocationAddress(
+                                                locationName = currentIssue?.locationName,
+                                                area = currentIssue?.area,
+                                                latitude = currentIssue?.latitude,
+                                                longitude = currentIssue?.longitude,
+                                            )
+                                        }
                                         Text(
-                                            text = "4th Avenue, Near Tower Park Entrance",
+                                            text = formatted.primary,
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.SemiBold,
                                             color = MaterialTheme.colorScheme.onSurface,
                                         )
-                                        Spacer(Modifier.height(2.dp))
-                                        Text(
-                                            text = "Anna Nagar East, Chennai, Tamil Nadu 600040",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
+                                        if (!formatted.secondary.isNullOrBlank()) {
+                                            Spacer(Modifier.height(2.dp))
+                                            Text(
+                                                text = formatted.secondary,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -589,7 +787,7 @@ fun FeedScreenV6(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                // Bottom Left: Praveen with Person icon
+                                // Bottom Left: Reporter with Person icon
                                 Surface(
                                     shape = CircleShape,
                                     color = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -606,8 +804,14 @@ fun FeedScreenV6(
                                             tint = MaterialTheme.colorScheme.primary,
                                             modifier = Modifier.size(16.dp),
                                         )
+                                        val reporterName = resolveReporterDisplayName(
+                                            authorName = currentIssue?.authorName,
+                                            authorUsername = currentIssue?.authorUsername,
+                                            authorId = currentIssue?.authorId,
+                                            currentFirebaseUser = firebaseUser ?: Firebase.auth.currentUser,
+                                        )
                                         Text(
-                                            text = "Praveen",
+                                            text = reporterName,
                                             style = MaterialTheme.typography.labelLarge,
                                             color = MaterialTheme.colorScheme.onSurface,
                                             fontWeight = FontWeight.Medium,
@@ -633,7 +837,11 @@ fun FeedScreenV6(
                                             modifier = Modifier.size(16.dp),
                                         )
                                         Text(
-                                            text = "Nov 18, 2026",
+                                            text = currentIssue?.createdAt?.let {
+                                                java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")
+                                                    .withZone(java.time.ZoneId.systemDefault())
+                                                    .format(it)
+                                            } ?: "",
                                             style = MaterialTheme.typography.labelLarge,
                                             color = MaterialTheme.colorScheme.onSurface,
                                             fontWeight = FontWeight.Medium,

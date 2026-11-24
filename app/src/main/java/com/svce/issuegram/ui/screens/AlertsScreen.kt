@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -77,12 +78,17 @@ fun AlertsScreen(
     bottomBarPadding: Dp = 0.dp,
     onBack: (() -> Unit)? = null,
     onIssueClick: (String) -> Unit,
+    viewModel: AlertsViewModel? = null,
 ) {
     if (onBack != null) {
         BackHandler { onBack() }
     }
 
-    var alerts by remember { mutableStateOf(MockAlerts.all) }
+    val uiState by viewModel?.uiState?.collectAsState() ?: remember { mutableStateOf(null) }
+    var localAlerts by remember { mutableStateOf<List<AppNotification>>(emptyList()) }
+    val alerts = remember(uiState, localAlerts) {
+        uiState?.notifications?.map { com.svce.issuegram.data.mapper.NotificationMapper.toData(it) } ?: localAlerts
+    }
     val groups = listOf(
         BUCKET_TODAY to alerts.filter { bucketOf(it.at) == BUCKET_TODAY },
         BUCKET_YESTERDAY to alerts.filter { bucketOf(it.at) == BUCKET_YESTERDAY },
@@ -108,7 +114,7 @@ fun AlertsScreen(
         contentPadding = PaddingValues(
             start = Spacing.space4,
             end = Spacing.space4,
-            top = Spacing.space4,
+            top = Spacing.space5,
             bottom = bottomBarPadding + Spacing.space6,
         ),
         verticalArrangement = Arrangement.spacedBy(Spacing.space3),
@@ -129,7 +135,13 @@ fun AlertsScreen(
                 }
                 if (alerts.any { it.unread }) {
                     TextButton(
-                        onClick = { alerts = alerts.map { it.copy(unread = false) } },
+                        onClick = {
+                            if (viewModel != null) {
+                                viewModel.markAllAsRead()
+                            } else {
+                                localAlerts = localAlerts.map { it.copy(unread = false) }
+                            }
+                        },
                     ) {
                         Text(stringResource(R.string.alerts_mark_all_read))
                     }
