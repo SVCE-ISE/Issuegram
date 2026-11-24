@@ -48,6 +48,12 @@ class ProfileViewModel(
         initialValue = null
     )
 
+    val allIssues: StateFlow<List<Issue>> = issueRepository.getFeedIssues().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val userPostedIssues: StateFlow<List<Issue>> = currentUser.flatMapLatest { user ->
         if (user != null) {

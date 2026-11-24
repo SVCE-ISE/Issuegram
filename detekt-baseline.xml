@@ -49,6 +49,7 @@
     <ID>FunctionNaming:LoginScreen.kt$@Composable fun LoginScreen(modifier: Modifier = Modifier, isSigningIn: Boolean = false, onGoogleSignIn: () -&gt; Unit = {})</ID>
     <ID>FunctionNaming:MyIssuesScreen.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun MyIssuesScreen(modifier: Modifier = Modifier, issues: List&lt;Issue&gt; = emptyList(), onIssueClick: (String) -&gt; Unit)</ID>
     <ID>FunctionNaming:PixelCameraScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PixelCameraScreen( modifier: Modifier = Modifier, isPosting: Boolean = false, pickedLatitude: Double? = null, pickedLongitude: Double? = null, onRequestPickLocationOnMap: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp, onPostIssue: ( title: String, description: String, category: String, locationName: String, subLocation: String, latitude: Double, longitude: Double, capturedFile: File?, pickedUri: Uri? ) -&gt; Unit = { _, _, _, _, _, _, _, _, _ -&gt; } )</ID>
+    <ID>FunctionNaming:ProfileScreen.kt$@Composable private fun AdminStatusMetricCard( modifier: Modifier = Modifier, count: Int, label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, iconTint: Color, iconBg: Color )</ID>
     <ID>FunctionNaming:ProfileScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProfileScreen( modifier: Modifier = Modifier, viewModel: ProfileViewModel? = null, currentUser: UserProfileDto? = null, allIssues: List&lt;CivicIssueDto&gt; = emptyList(), onUpdateAvatar: (Uri) -&gt; Unit = {}, onUpdateName: (String, () -&gt; Unit) -&gt; Unit = { _, _ -&gt; }, onRemoveAvatar: () -&gt; Unit = {}, profileBusy: Boolean = false, onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, onCreate: () -&gt; Unit = {}, errorMessage: String? = null, isModerator: Boolean = false, moderationFlags: List&lt;IssueFlagDto&gt; = emptyList(), onReviewFlag: (Long, String) -&gt; Unit = { _, _ -&gt; }, onSignOut: () -&gt; Unit = {} )</ID>
     <ID>FunctionNaming:StatusBadge.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun StatusBadge(status: IssueStatus, modifier: Modifier = Modifier)</ID>
     <ID>FunctionNaming:Theme.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun IssuegramTheme( darkTheme: Boolean = isSystemInDarkTheme(), motionScheme: MotionScheme = MotionScheme.expressive(), dynamicColor: Boolean = false, amoledBlack: Boolean = false, typography: Typography = ExpressiveTypography, content: @Composable () -&gt; Unit )</ID>
@@ -82,6 +83,7 @@
     <ID>LongParameterList:GroupedList.kt$( index: Int, count: Int, modifier: Modifier = Modifier, onClick: (() -&gt; Unit)? = null, containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow, content: @Composable RowScope.() -&gt; Unit )</ID>
     <ID>LongParameterList:IssueRepository.kt$IssueRepository$( title: String, description: String?, category: IssueCategory, locationName: String, photoUri: String?, latitude: Double = 12.9716, longitude: Double = 77.5946, authorName: String = "Praveen Zalaki", authorUsername: String? = null )</ID>
     <ID>LongParameterList:PixelCameraScreen.kt$( modifier: Modifier = Modifier, isPosting: Boolean = false, pickedLatitude: Double? = null, pickedLongitude: Double? = null, onRequestPickLocationOnMap: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp, onPostIssue: ( title: String, description: String, category: String, locationName: String, subLocation: String, latitude: Double, longitude: Double, capturedFile: File?, pickedUri: Uri? ) -&gt; Unit = { _, _, _, _, _, _, _, _, _ -&gt; } )</ID>
+    <ID>LongParameterList:ProfileScreen.kt$( modifier: Modifier = Modifier, count: Int, label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, iconTint: Color, iconBg: Color )</ID>
     <ID>LongParameterList:ProfileScreen.kt$( modifier: Modifier = Modifier, viewModel: ProfileViewModel? = null, currentUser: UserProfileDto? = null, allIssues: List&lt;CivicIssueDto&gt; = emptyList(), onUpdateAvatar: (Uri) -&gt; Unit = {}, onUpdateName: (String, () -&gt; Unit) -&gt; Unit = { _, _ -&gt; }, onRemoveAvatar: () -&gt; Unit = {}, profileBusy: Boolean = false, onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, onCreate: () -&gt; Unit = {}, errorMessage: String? = null, isModerator: Boolean = false, moderationFlags: List&lt;IssueFlagDto&gt; = emptyList(), onReviewFlag: (Long, String) -&gt; Unit = { _, _ -&gt; }, onSignOut: () -&gt; Unit = {} )</ID>
     <ID>LongParameterList:Theme.kt$( darkTheme: Boolean = isSystemInDarkTheme(), motionScheme: MotionScheme = MotionScheme.expressive(), dynamicColor: Boolean = false, amoledBlack: Boolean = false, typography: Typography = ExpressiveTypography, content: @Composable () -&gt; Unit )</ID>
     <ID>MagicNumber:AdminManagementBottomSheet.kt$0xFF1D9BF0</ID>
@@ -240,9 +242,12 @@
     <ID>MagicNumber:ProfileScreen.kt$0xFF1D9BF0</ID>
     <ID>MagicNumber:ProfileScreen.kt$0xFF30363D</ID>
     <ID>MagicNumber:ProfileScreen.kt$0xFF35254A</ID>
+    <ID>MagicNumber:ProfileScreen.kt$0xFF42A5F5</ID>
     <ID>MagicNumber:ProfileScreen.kt$0xFF4CAF50</ID>
+    <ID>MagicNumber:ProfileScreen.kt$0xFF66BB6A</ID>
     <ID>MagicNumber:ProfileScreen.kt$0xFF67B7F7</ID>
     <ID>MagicNumber:ProfileScreen.kt$0xFFB39DDB</ID>
+    <ID>MagicNumber:ProfileScreen.kt$0xFFEF5350</ID>
     <ID>MagicNumber:ProfileScreen.kt$0xFFFFA726</ID>
     <ID>MagicNumber:ProfileScreen.kt$100</ID>
     <ID>MagicNumber:ProfileScreen.kt$160</ID>
@@ -399,9 +404,11 @@
     <ID>MaxLineLength:ProfileOperationsUnitTest.kt$ProfileOperationsUnitTest.&lt;no name provided&gt;$override fun getIssueById(ticketId: String): Flow&lt;Issue?&gt;</ID>
     <ID>MaxLineLength:ProfileOperationsUnitTest.kt$ProfileOperationsUnitTest.&lt;no name provided&gt;$override suspend</ID>
     <ID>MaxLineLength:ProfileOperationsUnitTest.kt$ProfileOperationsUnitTest.&lt;no name provided&gt;$val modified = it.copy(title = title, description = description, locationName = locationName ?: it.locationName)</ID>
+    <ID>MaxLineLength:ProfileScreen.kt$SwipeToDismissBoxValue.StartToEnd -&gt; MaterialTheme.colorScheme.onPrimaryContainer</ID>
     <ID>MaxLineLength:ProfileScreen.kt$color = if (issue.isResolved) Color(0xFF4CAF50) else Color(0xFFFFA726)</ID>
     <ID>MaxLineLength:ProfileScreen.kt$style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)</ID>
     <ID>MaxLineLength:ProfileScreen.kt$text = "Are you sure you want to permanently delete \"${target.title}\"? This action cannot be undone."</ID>
+    <ID>MaxLineLength:ProfileScreen.kt$tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)</ID>
     <ID>MaxLineLength:ProfileViewModel.kt$ProfileViewModel$fun</ID>
     <ID>MaxLineLength:ReportDraftStore.kt$ReportDraftStore$fun read(): ReportDraft</ID>
     <ID>MaxLineLength:ReportRules.kt$ReportRules$val categories = listOf("Public Works", "Power &amp; Lighting", "Water &amp; Sanitation", "Smart City / IT", "Roads &amp; Transit")</ID>

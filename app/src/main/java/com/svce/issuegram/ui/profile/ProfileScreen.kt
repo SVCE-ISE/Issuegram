@@ -26,9 +26,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.AssignmentTurnedIn
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -102,6 +106,7 @@ fun ProfileScreen(
 
     val vmUser by viewModel?.currentUser?.collectAsState() ?: remember { mutableStateOf(null) }
     val vmIssues by viewModel?.userPostedIssues?.collectAsState() ?: remember { mutableStateOf(emptyList()) }
+    val vmAllIssues by viewModel?.allIssues?.collectAsState() ?: remember { mutableStateOf(emptyList()) }
     val vmBusy by viewModel?.isBusy?.collectAsState() ?: remember { mutableStateOf(false) }
     val vmError by viewModel?.errorMessage?.collectAsState() ?: remember { mutableStateOf(null) }
 
@@ -551,419 +556,508 @@ fun ProfileScreen(
 
         if (effectiveBusy) androidx.compose.material3.LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
-        // 3. Compact Horizontal Alignment of the Two Items Below
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            // Item 1 (Left): Reported Issues
-            Card(
-                shape = RoundedCornerShape(
-                    topStart = 16.dp,
-                    bottomStart = 16.dp,
-                    topEnd = 4.dp,
-                    bottomEnd = 4.dp
-                ),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    // Circular Icon Badge (Deep Teal)
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .background(Color(0xFF0E3D4F), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_report_alert),
-                            contentDescription = "Reported",
-                            tint = Color(0xFF67B7F7),
-                            modifier = Modifier.size(18.dp)
-                        )
+        if (isAdminEffective) {
+            // ADMIN VIEW: 4 status data buttons showing Open, Acknowledged, Assigned, Resolved
+            val openCount = remember(allIssues, vmAllIssues) {
+                if (allIssues.isNotEmpty()) {
+                    allIssues.count { it.status.equals("OPEN", ignoreCase = true) }
+                } else {
+                    vmAllIssues.count { it.status == com.svce.issuegram.data.model.IssueStatus.Open }
+                }
+            }
+            val acknowledgedCount = remember(allIssues, vmAllIssues) {
+                if (allIssues.isNotEmpty()) {
+                    allIssues.count { it.status.equals("ACKNOWLEDGED", ignoreCase = true) }
+                } else {
+                    vmAllIssues.count { it.status == com.svce.issuegram.data.model.IssueStatus.Acknowledged }
+                }
+            }
+            val assignedCount = remember(allIssues, vmAllIssues) {
+                if (allIssues.isNotEmpty()) {
+                    allIssues.count {
+                        it.status.equals("ASSIGNED", ignoreCase = true) ||
+                            it.status.equals("IN_PROGRESS", ignoreCase = true)
                     }
-
-                    // Text Column: Number above, label below
-                    Column(
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "$reportedCount",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            ),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = stringResource(R.string.profile_reported_count),
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 11.sp
-                            ),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                } else {
+                    vmAllIssues.count {
+                        it.status == com.svce.issuegram.data.model.IssueStatus.Assigned ||
+                            it.status == com.svce.issuegram.data.model.IssueStatus.InProgress
                     }
                 }
             }
-
-            // Item 2 (Right): Solved Issues
-            Card(
-                shape = RoundedCornerShape(
-                    topStart = 4.dp,
-                    bottomStart = 4.dp,
-                    topEnd = 16.dp,
-                    bottomEnd = 16.dp
-                ),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    // Circular Icon Badge (Deep Purple)
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .background(Color(0xFF35254A), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_check),
-                            contentDescription = "Solved",
-                            tint = Color(0xFFB39DDB),
-                            modifier = Modifier.size(18.dp)
-                        )
+            val resolvedCount = remember(allIssues, vmAllIssues) {
+                if (allIssues.isNotEmpty()) {
+                    allIssues.count {
+                        it.status.equals("RESOLVED", ignoreCase = true) || it.isResolved
                     }
-
-                    // Text Column: Number above, label below
-                    Column(
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "$solvedCount",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            ),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = stringResource(R.string.profile_solved_count),
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 11.sp
-                            ),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                } else {
+                    vmAllIssues.count { it.status == com.svce.issuegram.data.model.IssueStatus.Resolved }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // 4. List Items Section: All Posted Issues by User (Segmented Compact List)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = stringResource(R.string.profile_posted_issues_title),
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                ),
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = "${userPostedIssues.size}",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp
-                    ),
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                )
-            }
-        }
-
-        if (userPostedIssues.isNotEmpty()) {
-            Text(
-                text = stringResource(R.string.profile_swipe_hint),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(6.dp))
-
-        // Segmented List Item Stack
-        if (userPostedIssues.isEmpty()) {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surfaceContainer,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 32.dp, horizontal = 16.dp),
-                    contentAlignment = Alignment.Center
+                // Row 1: Open & Acknowledged
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = stringResource(R.string.profile_empty_posted),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    AdminStatusMetricCard(
+                        modifier = Modifier.weight(1f),
+                        count = openCount,
+                        label = stringResource(R.string.status_open),
+                        icon = Icons.Outlined.ErrorOutline,
+                        iconTint = Color(0xFFEF5350),
+                        iconBg = Color(0xFFEF5350).copy(alpha = 0.15f)
+                    )
+                    AdminStatusMetricCard(
+                        modifier = Modifier.weight(1f),
+                        count = acknowledgedCount,
+                        label = stringResource(R.string.status_acknowledged),
+                        icon = Icons.Outlined.Schedule,
+                        iconTint = Color(0xFFFFA726),
+                        iconBg = Color(0xFFFFA726).copy(alpha = 0.15f)
+                    )
+                }
+
+                // Row 2: Assigned & Resolved
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    AdminStatusMetricCard(
+                        modifier = Modifier.weight(1f),
+                        count = assignedCount,
+                        label = stringResource(R.string.status_assigned),
+                        icon = Icons.Outlined.AssignmentTurnedIn,
+                        iconTint = Color(0xFF42A5F5),
+                        iconBg = Color(0xFF42A5F5).copy(alpha = 0.15f)
+                    )
+                    AdminStatusMetricCard(
+                        modifier = Modifier.weight(1f),
+                        count = resolvedCount,
+                        label = stringResource(R.string.status_resolved),
+                        icon = Icons.Outlined.CheckCircle,
+                        iconTint = Color(0xFF66BB6A),
+                        iconBg = Color(0xFF66BB6A).copy(alpha = 0.15f)
                     )
                 }
             }
         } else {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+            // NORMAL USER VIEW: Reported & Solved metrics + Posted Issues List
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                userPostedIssues.forEachIndexed { index, issue ->
-                    key(issue.ticketCode) {
-                        val itemShape = when {
-                            userPostedIssues.size == 1 -> RoundedCornerShape(16.dp)
-                            index == 0 -> IssuegramShapeDefaults.topListItemShape
-                            index == userPostedIssues.size - 1 -> IssuegramShapeDefaults.bottomListItemShape
-                            else -> IssuegramShapeDefaults.middleListItemShape
+                // Item 1 (Left): Reported Issues
+                Card(
+                    shape = RoundedCornerShape(
+                        topStart = 16.dp,
+                        bottomStart = 16.dp,
+                        topEnd = 4.dp,
+                        bottomEnd = 4.dp
+                    ),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(Color(0xFF0E3D4F), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_report_alert),
+                                contentDescription = "Reported",
+                                tint = Color(0xFF67B7F7),
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
 
-                        val dismissState = rememberSwipeToDismissBoxState(
-                            confirmValueChange = { value ->
-                                when (value) {
-                                    SwipeToDismissBoxValue.StartToEnd -> {
-                                        issueToEdit = issue
-                                        false
-                                    }
-                                    SwipeToDismissBoxValue.EndToStart -> {
-                                        issueToDelete = issue
-                                        false
-                                    }
-                                    SwipeToDismissBoxValue.Settled -> false
-                                }
-                            }
+                        Column(
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "$reportedCount",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = stringResource(R.string.profile_reported_count),
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontSize = 11.sp
+                                ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                // Item 2 (Right): Solved Issues
+                Card(
+                    shape = RoundedCornerShape(
+                        topStart = 4.dp,
+                        bottomStart = 4.dp,
+                        topEnd = 16.dp,
+                        bottomEnd = 16.dp
+                    ),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(Color(0xFF35254A), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_check),
+                                contentDescription = "Solved",
+                                tint = Color(0xFFB39DDB),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        Column(
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "$solvedCount",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = stringResource(R.string.profile_solved_count),
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontSize = 11.sp
+                                ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // 4. List Items Section: All Posted Issues by User (Segmented Compact List)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = stringResource(R.string.profile_posted_issues_title),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh
+                ) {
+                    Text(
+                        text = "${userPostedIssues.size}",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
+                        ),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
+            }
+
+            if (userPostedIssues.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.profile_swipe_hint),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Segmented List Item Stack
+            if (userPostedIssues.isEmpty()) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp, horizontal = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.profile_empty_posted),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+                }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    userPostedIssues.forEachIndexed { index, issue ->
+                        key(issue.ticketCode) {
+                            val itemShape = when {
+                                userPostedIssues.size == 1 -> RoundedCornerShape(16.dp)
+                                index == 0 -> IssuegramShapeDefaults.topListItemShape
+                                index == userPostedIssues.size - 1 -> IssuegramShapeDefaults.bottomListItemShape
+                                else -> IssuegramShapeDefaults.middleListItemShape
+                            }
 
-                        val timestampLabel = com.svce.issuegram.domain.displayTime(issue.createdAt)
-                        val thumbRef = issue.mediaUrls.firstOrNull()
-
-                        SwipeToDismissBox(
-                            state = dismissState,
-                            enableDismissFromStartToEnd = true,
-                            enableDismissFromEndToStart = true,
-                            backgroundContent = {
-                                val direction = dismissState.dismissDirection
-                                val color = when (direction) {
-                                    SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.primaryContainer
-                                    SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
-                                    SwipeToDismissBoxValue.Settled -> Color.Transparent
-                                }
-                                val alignment = when (direction) {
-                                    SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
-                                    SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
-                                    SwipeToDismissBoxValue.Settled -> Alignment.Center
-                                }
-                                val tint = when (direction) {
-                                    SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.onPrimaryContainer
-                                    SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.onErrorContainer
-                                    SwipeToDismissBoxValue.Settled -> Color.Transparent
-                                }
-
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .clip(itemShape)
-                                        .background(color)
-                                        .padding(horizontal = 20.dp),
-                                    contentAlignment = alignment
-                                ) {
-                                    when (direction) {
+                            val dismissState = rememberSwipeToDismissBoxState(
+                                confirmValueChange = { value ->
+                                    when (value) {
                                         SwipeToDismissBoxValue.StartToEnd -> {
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Outlined.Edit,
-                                                    contentDescription = "Edit",
-                                                    tint = tint,
-                                                    modifier = Modifier.size(20.dp)
-                                                )
-                                                Text(
-                                                    text = "Edit",
-                                                    color = tint,
-                                                    fontWeight = FontWeight.Bold,
-                                                    style = MaterialTheme.typography.labelLarge
-                                                )
-                                            }
+                                            issueToEdit = issue
+                                            false
                                         }
                                         SwipeToDismissBoxValue.EndToStart -> {
+                                            issueToDelete = issue
+                                            false
+                                        }
+                                        SwipeToDismissBoxValue.Settled -> false
+                                    }
+                                }
+                            )
+
+                            val timestampLabel = com.svce.issuegram.domain.displayTime(issue.createdAt)
+                            val thumbRef = issue.mediaUrls.firstOrNull()
+
+                            SwipeToDismissBox(
+                                state = dismissState,
+                                enableDismissFromStartToEnd = true,
+                                enableDismissFromEndToStart = true,
+                                backgroundContent = {
+                                    val direction = dismissState.dismissDirection
+                                    val color = when (direction) {
+                                        SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.primaryContainer
+                                        SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
+                                        SwipeToDismissBoxValue.Settled -> Color.Transparent
+                                    }
+                                    val alignment = when (direction) {
+                                        SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                                        SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                                        SwipeToDismissBoxValue.Settled -> Alignment.Center
+                                    }
+                                    val tint = when (direction) {
+                                        SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.onPrimaryContainer
+                                        SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.onErrorContainer
+                                        SwipeToDismissBoxValue.Settled -> Color.Transparent
+                                    }
+
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(itemShape)
+                                            .background(color)
+                                            .padding(horizontal = 20.dp),
+                                        contentAlignment = alignment
+                                    ) {
+                                        when (direction) {
+                                            SwipeToDismissBoxValue.StartToEnd -> {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Outlined.Edit,
+                                                        contentDescription = "Edit",
+                                                        tint = tint,
+                                                        modifier = Modifier.size(20.dp)
+                                                    )
+                                                    Text(
+                                                        text = "Edit",
+                                                        color = tint,
+                                                        fontWeight = FontWeight.Bold,
+                                                        style = MaterialTheme.typography.labelLarge
+                                                    )
+                                                }
+                                            }
+                                            SwipeToDismissBoxValue.EndToStart -> {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "Delete",
+                                                        color = tint,
+                                                        fontWeight = FontWeight.Bold,
+                                                        style = MaterialTheme.typography.labelLarge
+                                                    )
+                                                    Icon(
+                                                        imageVector = Icons.Outlined.Delete,
+                                                        contentDescription = "Delete",
+                                                        tint = tint,
+                                                        modifier = Modifier.size(20.dp)
+                                                    )
+                                                }
+                                            }
+                                            else -> Unit
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.clip(itemShape)
+                            ) {
+                                Card(
+                                    onClick = { onOpenIssue(issue) },
+                                    shape = itemShape,
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                                    ),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        // Issue Image Thumbnail
+                                        Surface(
+                                            shape = RoundedCornerShape(10.dp),
+                                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                            modifier = Modifier.size(46.dp)
+                                        ) {
+                                            IssuegramMediaImage(
+                                                mediaRef = thumbRef,
+                                                contentDescription = issue.title,
+                                                contentScale = ContentScale.Crop,
+                                                fallbackDrawableRes = R.drawable.image_placeholder,
+                                                modifier = Modifier.fillMaxSize()
+                                            )
+                                        }
+
+                                        // Middle Info: ID + Title, Location & Timestamp
+                                        Column(
+                                            modifier = Modifier.weight(1f),
+                                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                                        ) {
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                                             ) {
                                                 Text(
-                                                    text = "Delete",
-                                                    color = tint,
-                                                    fontWeight = FontWeight.Bold,
-                                                    style = MaterialTheme.typography.labelLarge
+                                                    text = issue.ticketCode,
+                                                    style = MaterialTheme.typography.labelSmall.copy(
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 11.sp
+                                                    ),
+                                                    color = MaterialTheme.colorScheme.primary
                                                 )
+                                                Text(
+                                                    text = issue.title,
+                                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        fontSize = 13.sp
+                                                    ),
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
                                                 Icon(
-                                                    imageVector = Icons.Outlined.Delete,
-                                                    contentDescription = "Delete",
-                                                    tint = tint,
-                                                    modifier = Modifier.size(20.dp)
+                                                    painter = painterResource(R.drawable.ic_map_pin),
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                                    modifier = Modifier.size(11.dp)
+                                                )
+                                                Text(
+                                                    text = listOf(issue.locationName, timestampLabel).filter {
+                                                        it.isNotBlank()
+                                                    }.joinToString(" • "),
+                                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
                                                 )
                                             }
                                         }
-                                        else -> Unit
-                                    }
-                                }
-                            },
-                            modifier = Modifier.clip(itemShape)
-                        ) {
-                            Card(
-                                onClick = { onOpenIssue(issue) },
-                                shape = itemShape,
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceContainer
-                                ),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    // Issue Image Thumbnail
-                                    Surface(
-                                        shape = RoundedCornerShape(10.dp),
-                                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                        modifier = Modifier.size(46.dp)
-                                    ) {
-                                        IssuegramMediaImage(
-                                            mediaRef = thumbRef,
-                                            contentDescription = issue.title,
-                                            contentScale = ContentScale.Crop,
-                                            fallbackDrawableRes = R.drawable.image_placeholder,
-                                            modifier = Modifier.fillMaxSize()
-                                        )
-                                    }
 
-                                    // Middle Info: ID + Title, Location & Timestamp
-                                    Column(
-                                        modifier = Modifier.weight(1f),
-                                        verticalArrangement = Arrangement.spacedBy(2.dp)
-                                    ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        // Status Badge on Right
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = if (issue.isResolved) {
+                                                Color(
+                                                    0xFF4CAF50
+                                                ).copy(alpha = 0.15f)
+                                            } else {
+                                                Color(0xFFFFA726).copy(alpha = 0.15f)
+                                            }
                                         ) {
-                                            Text(
-                                                text = issue.ticketCode,
-                                                style = MaterialTheme.typography.labelSmall.copy(
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 11.sp
-                                                ),
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
-                                            Text(
-                                                text = issue.title,
-                                                style = MaterialTheme.typography.bodyMedium.copy(
-                                                    fontWeight = FontWeight.SemiBold,
-                                                    fontSize = 13.sp
-                                                ),
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
-
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(R.drawable.ic_map_pin),
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                                modifier = Modifier.size(11.dp)
-                                            )
-                                            Text(
-                                                text = listOf(issue.locationName, timestampLabel).filter {
-                                                    it.isNotBlank()
-                                                }.joinToString(" • "),
-                                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
-                                    }
-
-                                    // Status Badge on Right
-                                    Surface(
-                                        shape = CircleShape,
-                                        color = if (issue.isResolved) {
-                                            Color(
-                                                0xFF4CAF50
-                                            ).copy(alpha = 0.15f)
-                                        } else {
-                                            Color(0xFFFFA726).copy(alpha = 0.15f)
-                                        }
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(6.dp)
-                                                    .background(
-                                                        color = if (issue.isResolved) Color(0xFF4CAF50) else Color(0xFFFFA726),
-                                                        shape = CircleShape
-                                                    )
-                                            )
-                                            Text(
-                                                text = issue.status.replace('_', ' '),
-                                                style = MaterialTheme.typography.labelSmall.copy(
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 10.sp
-                                                ),
-                                                color = if (issue.isResolved) Color(0xFF4CAF50) else Color(0xFFFFA726)
-                                            )
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(6.dp)
+                                                        .background(
+                                                            color = if (issue.isResolved) Color(0xFF4CAF50) else Color(0xFFFFA726),
+                                                            shape = CircleShape
+                                                        )
+                                                )
+                                                Text(
+                                                    text = issue.status.replace('_', ' '),
+                                                    style = MaterialTheme.typography.labelSmall.copy(
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 10.sp
+                                                    ),
+                                                    color = if (issue.isResolved) Color(0xFF4CAF50) else Color(0xFFFFA726)
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -1095,5 +1189,66 @@ fun ProfileScreen(
             Text(stringResource(R.string.profile_sign_out), fontWeight = FontWeight.SemiBold)
         }
         Spacer(modifier = Modifier.height(96.dp))
+    }
+}
+
+@Composable
+private fun AdminStatusMetricCard(
+    modifier: Modifier = Modifier,
+    count: Int,
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconTint: Color,
+    iconBg: Color
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = modifier
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .background(iconBg, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = iconTint,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            Column(
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "$count",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontSize = 11.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
