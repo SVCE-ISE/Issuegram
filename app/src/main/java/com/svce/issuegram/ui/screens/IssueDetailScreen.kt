@@ -240,16 +240,6 @@ fun IssueDetailScreen(
                     .navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(Spacing.space4)
             ) {
-                // Admin Status Action Tab Bar (Exact Kimon Segmented Capsule UI)
-                if (isAdmin) {
-                    AdminStatusTabBar(
-                        currentStatus = issue.status,
-                        onStatusSelected = { newStatus ->
-                            viewModel?.updateStatus(issue.ticketId, newStatus)
-                        }
-                    )
-                }
-
                 // 1. Detailed Summary / Story Description on Top
                 Text(
                     text = issue.description?.takeIf { it.isNotBlank() }
@@ -271,8 +261,18 @@ fun IssueDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(Spacing.space3)
                     ) {
                         Eyebrow(stringResource(R.string.detail_status_eyebrow))
-                        Timeline(events = issue.timeline())
+                        Timeline(events = issue.timeline(), currentStatus = issue.status)
                     }
+                }
+
+                // Admin Status Action Tab Bar (Exact Kimon Segmented Capsule UI) placed below timeline box
+                if (isAdmin) {
+                    AdminStatusTabBar(
+                        currentStatus = issue.status,
+                        onStatusSelected = { newStatus ->
+                            viewModel?.updateStatus(issue.ticketId, newStatus)
+                        }
+                    )
                 }
 
                 // Location Map Preview (strict 16:9 aspect ratio preview with live GoogleMap)
@@ -517,11 +517,14 @@ fun IssueDetailScreen(
 }
 
 @Composable
-private fun Timeline(events: List<TimelineEvent>) {
+private fun Timeline(events: List<TimelineEvent>, currentStatus: com.svce.issuegram.data.model.IssueStatus) {
+    val activeIndex = events.indexOfFirst { it.status == currentStatus }.takeIf { it >= 0 } ?: (events.size - 1)
     Column(modifier = Modifier.fillMaxWidth()) {
         events.forEachIndexed { index, event ->
             val tone = event.status.badgeTone()
-            val isActive = index == events.lastIndex
+            val isCurrent = index == activeIndex
+            val isPast = index < activeIndex
+            val isFuture = index > activeIndex
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top
@@ -535,13 +538,15 @@ private fun Timeline(events: List<TimelineEvent>) {
                         modifier = Modifier
                             .size(24.dp)
                             .clip(CircleShape)
-                            .background(tone.container),
+                            .background(
+                                if (isFuture) MaterialTheme.colorScheme.surfaceContainerHighest else tone.container
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = tone.icon,
                             contentDescription = null,
-                            tint = tone.content,
+                            tint = if (isFuture) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else tone.content,
                             modifier = Modifier.size(13.dp)
                         )
                     }
@@ -550,7 +555,13 @@ private fun Timeline(events: List<TimelineEvent>) {
                             modifier = Modifier
                                 .width(1.5.dp)
                                 .height(16.dp)
-                                .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+                                .background(
+                                    if (index < activeIndex) {
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                                    } else {
+                                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                    }
+                                )
                         )
                     }
                 }
@@ -568,15 +579,23 @@ private fun Timeline(events: List<TimelineEvent>) {
                     // Status Pill Chip (compact)
                     Surface(
                         shape = CircleShape,
-                        color = if (isActive) Color(0xFFBDEEEA) else MaterialTheme.colorScheme.surfaceContainerHigh,
-                        contentColor = if (isActive) Color(0xFF00201F) else MaterialTheme.colorScheme.onSurface
+                        color = when {
+                            isCurrent -> Color(0xFFBDEEEA)
+                            isPast -> MaterialTheme.colorScheme.surfaceContainerHigh
+                            else -> MaterialTheme.colorScheme.surfaceContainerLow
+                        },
+                        contentColor = when {
+                            isCurrent -> Color(0xFF00201F)
+                            isPast -> MaterialTheme.colorScheme.onSurface
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        }
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            if (isActive) {
+                            if (isCurrent) {
                                 Box(
                                     modifier = Modifier
                                         .size(5.dp)
@@ -587,7 +606,7 @@ private fun Timeline(events: List<TimelineEvent>) {
                             Text(
                                 text = stringResource(event.status.labelRes),
                                 style = MaterialTheme.typography.labelMedium,
-                                fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Medium
+                                fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Medium
                             )
                         }
                     }
@@ -596,7 +615,7 @@ private fun Timeline(events: List<TimelineEvent>) {
                     Text(
                         text = formatEventTime(event.at),
                         style = ExpressiveTextStyles.dataSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (isFuture) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f) else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

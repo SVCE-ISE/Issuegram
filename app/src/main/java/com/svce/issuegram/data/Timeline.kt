@@ -26,37 +26,26 @@ private val progression = listOf(
 )
 
 fun Issue.timeline(): List<TimelineEvent> {
+    // Map existing completed milestone timestamps if present
+    val milestoneTimeByStatus = mutableMapOf<IssueStatus, Instant>()
     if (milestones.isNotEmpty()) {
-        val completedMilestones = milestones.filter { it.isCompleted }
-        if (completedMilestones.isNotEmpty()) {
-            val mappedEvents = completedMilestones.map { m ->
-                val eventStatus = when {
-                    m.title.contains("resolved", ignoreCase = true) || m.stepOrder >= 5 -> IssueStatus.Resolved
-                    m.title.contains("progress", ignoreCase = true) || m.stepOrder == 4 -> IssueStatus.InProgress
-                    m.title.contains("assigned", ignoreCase = true) || m.stepOrder == 3 -> IssueStatus.Assigned
-                    m.title.contains("acknowledged", ignoreCase = true) || m.stepOrder == 2 -> IssueStatus.Acknowledged
-                    else -> IssueStatus.Open
-                }
-                TimelineEvent(eventStatus, m.timestamp)
+        for (m in milestones) {
+            val eventStatus = when {
+                m.title.contains("resolved", ignoreCase = true) || m.stepOrder >= 5 -> IssueStatus.Resolved
+                m.title.contains("progress", ignoreCase = true) || m.stepOrder == 4 -> IssueStatus.InProgress
+                m.title.contains("assigned", ignoreCase = true) || m.stepOrder == 3 -> IssueStatus.Assigned
+                m.title.contains("acknowledged", ignoreCase = true) || m.stepOrder == 2 -> IssueStatus.Acknowledged
+                else -> IssueStatus.Open
             }
-
-            // If the current issue status is at or beyond a step not yet covered in mapped events, extend to match current status
-            val currentStatusIndex = progression.indexOfFirst { it.first == status }
-            val highestMappedIndex = mappedEvents.maxOfOrNull { event -> progression.indexOfFirst { it.first == event.status } } ?: -1
-            if (currentStatusIndex > highestMappedIndex) {
-                val steps = progression.take(currentStatusIndex + 1)
-                return steps.map { (eventStatus, hours) ->
-                    mappedEvents.firstOrNull { it.status == eventStatus }
-                        ?: TimelineEvent(eventStatus, createdAt.plus(hours, ChronoUnit.HOURS))
-                }
+            if (m.isCompleted) {
+                milestoneTimeByStatus[eventStatus] = m.timestamp
             }
-            return mappedEvents
         }
     }
 
-    val targetIndex = progression.indexOfFirst { it.first == status }.takeIf { it >= 0 } ?: 0
-    val steps = progression.take(targetIndex + 1)
-    return steps.map { (eventStatus, hours) ->
-        TimelineEvent(eventStatus, createdAt.plus(hours, ChronoUnit.HOURS))
+    // Always output all 5 progression steps: Open > Acknowledged > Assigned > InProgress > Resolved
+    return progression.map { (eventStatus, hours) ->
+        val time = milestoneTimeByStatus[eventStatus] ?: createdAt.plus(hours, ChronoUnit.HOURS)
+        TimelineEvent(eventStatus, time)
     }
 }

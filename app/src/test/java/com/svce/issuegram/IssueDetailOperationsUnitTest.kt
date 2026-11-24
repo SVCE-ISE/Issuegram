@@ -177,20 +177,24 @@ class IssueDetailOperationsUnitTest {
         val openIssue = createTestIssue("IG-1", "Open Issue", IssueStatus.Open, createdAt = baseTime)
         val timelineOpen = openIssue.timeline()
 
-        // Open status should produce 1 event (Open)
-        assertEquals(1, timelineOpen.size)
+        // Full 5 steps are always present in the civic timeline: Open > Acknowledged > Assigned > InProgress > Resolved
+        assertEquals(5, timelineOpen.size)
         assertEquals(IssueStatus.Open, timelineOpen[0].status)
+        assertEquals(IssueStatus.Acknowledged, timelineOpen[1].status)
+        assertEquals(IssueStatus.Assigned, timelineOpen[2].status)
+        assertEquals(IssueStatus.InProgress, timelineOpen[3].status)
+        assertEquals(IssueStatus.Resolved, timelineOpen[4].status)
         assertEquals(baseTime, timelineOpen[0].at)
 
         val inProgressIssue = createTestIssue("IG-2", "In Progress Issue", IssueStatus.InProgress, createdAt = baseTime)
         val timelineProgress = inProgressIssue.timeline()
 
-        // InProgress status should produce Open -> Acknowledged -> Assigned -> InProgress
-        assertEquals(4, timelineProgress.size)
+        assertEquals(5, timelineProgress.size)
         assertEquals(IssueStatus.Open, timelineProgress[0].status)
         assertEquals(IssueStatus.Acknowledged, timelineProgress[1].status)
         assertEquals(IssueStatus.Assigned, timelineProgress[2].status)
         assertEquals(IssueStatus.InProgress, timelineProgress[3].status)
+        assertEquals(IssueStatus.Resolved, timelineProgress[4].status)
     }
 
     @Test
@@ -198,8 +202,10 @@ class IssueDetailOperationsUnitTest {
         val baseTime = Instant.parse("2026-11-24T10:00:00Z")
         val customMilestones = listOf(
             IssueMilestone(1, 1, "Report Received", "Dispatcher", baseTime, true),
-            IssueMilestone(2, 2, "Assigned to Ward 12", "Officer", baseTime.plusSeconds(3600), true),
-            IssueMilestone(3, 3, "Repair in progress", "Field Crew", baseTime.plusSeconds(7200), true)
+            IssueMilestone(2, 2, "Acknowledged by Authority", "Officer", baseTime.plusSeconds(1800), true),
+            IssueMilestone(3, 3, "Assigned to Ward 12", "Officer", baseTime.plusSeconds(3600), true),
+            IssueMilestone(4, 4, "Repair in progress", "Field Crew", baseTime.plusSeconds(7200), true),
+            IssueMilestone(5, 5, "Resolved successfully", "Inspector", baseTime.plusSeconds(10800), true)
         )
 
         val issueWithMilestones = createTestIssue("IG-3", "With Milestones", IssueStatus.InProgress).copy(
@@ -207,10 +213,13 @@ class IssueDetailOperationsUnitTest {
         )
 
         val timeline = issueWithMilestones.timeline()
-        assertEquals(3, timeline.size)
+        assertEquals(5, timeline.size)
         assertEquals(IssueStatus.Open, timeline[0].status)
-        assertEquals(IssueStatus.Assigned, timeline[1].status)
-        assertEquals(IssueStatus.InProgress, timeline[2].status)
+        assertEquals(IssueStatus.Acknowledged, timeline[1].status)
+        assertEquals(IssueStatus.Assigned, timeline[2].status)
+        assertEquals(IssueStatus.InProgress, timeline[3].status)
+        assertEquals(IssueStatus.Resolved, timeline[4].status)
+        assertEquals(baseTime.plusSeconds(3600), timeline[2].at)
     }
 
     @Test

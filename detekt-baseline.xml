@@ -16,12 +16,12 @@
     <ID>CyclomaticComplexMethod:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$override suspend fun fetchNotifications(): List&lt;Notification&gt;</ID>
     <ID>CyclomaticComplexMethod:FormatLocation.kt$fun formatLocationAddress(locationName: String?, area: String?, latitude: Double? = null, longitude: Double? = null): FormattedAddress</ID>
     <ID>CyclomaticComplexMethod:FormatLocation.kt$fun resolveReporterDisplayName( authorName: String?, authorUsername: String?, authorId: String?, currentFirebaseUser: FirebaseUser? = null ): String</ID>
+    <ID>CyclomaticComplexMethod:IssueDetailScreen.kt$@Composable private fun Timeline(events: List&lt;TimelineEvent&gt;, currentStatus: com.svce.issuegram.data.model.IssueStatus)</ID>
     <ID>CyclomaticComplexMethod:IssueMapper.kt$IssueMapper$fun fromCivicDto(dto: CivicIssueDto): Issue</ID>
     <ID>CyclomaticComplexMethod:IssuegramApp.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun IssuegramApp()</ID>
     <ID>CyclomaticComplexMethod:MainActivity.kt$MainActivity$override fun onCreate(savedInstanceState: Bundle?)</ID>
     <ID>CyclomaticComplexMethod:PixelCameraScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PixelCameraScreen( modifier: Modifier = Modifier, isPosting: Boolean = false, pickedLatitude: Double? = null, pickedLongitude: Double? = null, onRequestPickLocationOnMap: () -&gt; Unit = {}, bottomBarPadding: Dp = 0.dp, onPostIssue: ( title: String, description: String, category: String, locationName: String, subLocation: String, latitude: Double, longitude: Double, capturedFile: File?, pickedUri: Uri? ) -&gt; Unit = { _, _, _, _, _, _, _, _, _ -&gt; } )</ID>
     <ID>CyclomaticComplexMethod:ProfileScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProfileScreen( modifier: Modifier = Modifier, viewModel: ProfileViewModel? = null, currentUser: UserProfileDto? = null, allIssues: List&lt;CivicIssueDto&gt; = emptyList(), onUpdateAvatar: (Uri) -&gt; Unit = {}, onUpdateName: (String, () -&gt; Unit) -&gt; Unit = { _, _ -&gt; }, onRemoveAvatar: () -&gt; Unit = {}, profileBusy: Boolean = false, onOpenIssue: (CivicIssueDto) -&gt; Unit = {}, onCreate: () -&gt; Unit = {}, errorMessage: String? = null, isModerator: Boolean = false, moderationFlags: List&lt;IssueFlagDto&gt; = emptyList(), onReviewFlag: (Long, String) -&gt; Unit = { _, _ -&gt; }, onSignOut: () -&gt; Unit = {} )</ID>
-    <ID>CyclomaticComplexMethod:Timeline.kt$fun Issue.timeline(): List&lt;TimelineEvent&gt;</ID>
     <ID>EmptyFunctionBlock:HomeFeedOperationsUnitTest.kt$HomeFeedOperationsUnitTest.FakeHomeFeedAuthRepository${}</ID>
     <ID>EmptyFunctionBlock:IssuePerformanceUnitTest.kt$IssuePerformanceUnitTest.DelayedRemoteDataSource${}</ID>
     <ID>EmptyFunctionBlock:PhotoCaptureAndFeedIntegrationTest.kt$PhotoCaptureAndFeedIntegrationTest.FakePhotoIssueRemoteDataSource${}</ID>
@@ -44,7 +44,7 @@
     <ID>FunctionNaming:IssueCard.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun IssueCard( issue: Issue, modifier: Modifier = Modifier, onToggleLike: (String) -&gt; Unit = {}, onClick: () -&gt; Unit )</ID>
     <ID>FunctionNaming:IssueDetailScreen.kt$@Composable fun IssueDetailScreen( ticketId: String, onBack: () -&gt; Unit, viewModel: IssueDetailViewModel? = null, onOpenFullMap: ((LatLng) -&gt; Unit)? = null )</ID>
     <ID>FunctionNaming:IssueDetailScreen.kt$@Composable private fun AdminStatusTabBar( currentStatus: com.svce.issuegram.data.model.IssueStatus, onStatusSelected: (com.svce.issuegram.data.model.IssueStatus) -&gt; Unit, modifier: Modifier = Modifier )</ID>
-    <ID>FunctionNaming:IssueDetailScreen.kt$@Composable private fun Timeline(events: List&lt;TimelineEvent&gt;)</ID>
+    <ID>FunctionNaming:IssueDetailScreen.kt$@Composable private fun Timeline(events: List&lt;TimelineEvent&gt;, currentStatus: com.svce.issuegram.data.model.IssueStatus)</ID>
     <ID>FunctionNaming:IssuegramApp.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun IssuegramApp()</ID>
     <ID>FunctionNaming:IssuegramMediaImage.kt$@Composable fun IssuegramMediaImage( mediaRef: String?, contentDescription: String?, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Crop, fallbackDrawableRes: Int = R.drawable.image_placeholder )</ID>
     <ID>FunctionNaming:LocationPickerDialog.kt$@Composable fun LocationPickerDialog(initialLatitude: Double?, initialLongitude: Double?, onDismiss: () -&gt; Unit, onSelected: (Double, Double) -&gt; Unit)</ID>
@@ -69,7 +69,7 @@
     <ID>LongMethod:IssueCard.kt$@OptIn(ExperimentalMaterial3ExpressiveApi::class) @Composable fun IssueCard( issue: Issue, modifier: Modifier = Modifier, onToggleLike: (String) -&gt; Unit = {}, onClick: () -&gt; Unit )</ID>
     <ID>LongMethod:IssueDetailScreen.kt$@Composable fun IssueDetailScreen( ticketId: String, onBack: () -&gt; Unit, viewModel: IssueDetailViewModel? = null, onOpenFullMap: ((LatLng) -&gt; Unit)? = null )</ID>
     <ID>LongMethod:IssueDetailScreen.kt$@Composable private fun AdminStatusTabBar( currentStatus: com.svce.issuegram.data.model.IssueStatus, onStatusSelected: (com.svce.issuegram.data.model.IssueStatus) -&gt; Unit, modifier: Modifier = Modifier )</ID>
-    <ID>LongMethod:IssueDetailScreen.kt$@Composable private fun Timeline(events: List&lt;TimelineEvent&gt;)</ID>
+    <ID>LongMethod:IssueDetailScreen.kt$@Composable private fun Timeline(events: List&lt;TimelineEvent&gt;, currentStatus: com.svce.issuegram.data.model.IssueStatus)</ID>
     <ID>LongMethod:IssueMapper.kt$IssueMapper$fun fromCivicDto(dto: CivicIssueDto): Issue</ID>
     <ID>LongMethod:IssuegramApp.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun IssuegramApp()</ID>
     <ID>LongMethod:LoginScreen.kt$@Composable fun LoginScreen(modifier: Modifier = Modifier, isSigningIn: Boolean = false, onGoogleSignIn: () -&gt; Unit = {})</ID>
@@ -358,7 +358,9 @@
     <ID>MaxLineLength:IssueCard.kt$tint = if (liked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant</ID>
     <ID>MaxLineLength:IssueDetailOperationsUnitTest.kt$IssueDetailOperationsUnitTest$private</ID>
     <ID>MaxLineLength:IssueDetailOperationsUnitTest.kt$IssueDetailOperationsUnitTest.&lt;no name provided&gt;$override suspend fun editIssue(ticketId: String, title: String, description: String?, locationName: String?): Result&lt;Issue&gt;</ID>
+    <ID>MaxLineLength:IssueDetailScreen.kt$color = if (isFuture) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f) else MaterialTheme.colorScheme.onSurfaceVariant</ID>
     <ID>MaxLineLength:IssueDetailScreen.kt$contentDescription = stringResource(if (isLiked) R.string.detail_btn_unlike else R.string.detail_btn_like)</ID>
+    <ID>MaxLineLength:IssueDetailScreen.kt$tint = if (isFuture) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else tone.content</ID>
     <ID>MaxLineLength:IssueMapper.kt$IssueMapper$catLower.contains("road") || catLower.contains("pothole") || catLower.contains("transit") -&gt; IssueCategory.Pothole</ID>
     <ID>MaxLineLength:IssueMapper.kt$IssueMapper$if (words.isNotEmpty()) words.joinToString(" ") { it.replaceFirstChar { c -&gt; c.uppercase() } } else candidate</ID>
     <ID>MaxLineLength:IssueMapper.kt$IssueMapper$val</ID>
@@ -426,8 +428,6 @@
     <ID>MaxLineLength:StatusBadge.kt$IssueStatus.Assigned -&gt; StatusTone(scheme.tertiaryContainer, scheme.onTertiaryContainer, Icons.Outlined.PersonAdd)</ID>
     <ID>MaxLineLength:StatusBadge.kt$IssueStatus.Open -&gt; StatusTone(scheme.surfaceContainerHighest, scheme.onSurfaceVariant, Icons.Outlined.RadioButtonUnchecked)</ID>
     <ID>MaxLineLength:StatusBadge.kt$IssueStatus.Resolved -&gt; StatusTone(extended.positiveContainer, extended.onPositiveContainer, Icons.Outlined.CheckCircle)</ID>
-    <ID>MaxLineLength:Timeline.kt$// If the current issue status is at or beyond a step not yet covered in mapped events, extend to match current status</ID>
-    <ID>MaxLineLength:Timeline.kt$val highestMappedIndex = mappedEvents.maxOfOrNull { event -&gt; progression.indexOfFirst { it.first == event.status } } ?: -1</ID>
     <ID>MaxLineLength:Type.kt$ExpressiveTextStyles$TextStyle(fontFamily = GoogleSans, fontSize = 11.sp, lineHeight = 14.sp, fontWeight = FontWeight(500), letterSpacing = (0.3).sp)</ID>
     <ID>MaxLineLength:Type.kt$ExpressiveTextStyles$TextStyle(fontFamily = GoogleSans, fontSize = 11.sp, lineHeight = 16.sp, fontWeight = FontWeight(700), letterSpacing = (1.2).sp)</ID>
     <ID>MaxLineLength:Type.kt$ExpressiveTextStyles$TextStyle(fontFamily = GoogleSans, fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight(500), letterSpacing = (0).sp)</ID>
@@ -435,7 +435,6 @@
     <ID>NestedBlockDepth:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$override suspend fun fetchNotifications(): List&lt;Notification&gt;</ID>
     <ID>ReturnCount:DeviceLocation.kt$fun getLastKnownLocation(context: Context): Location?</ID>
     <ID>ReturnCount:FormatLocation.kt$fun resolveReporterDisplayName( authorName: String?, authorUsername: String?, authorId: String?, currentFirebaseUser: FirebaseUser? = null ): String</ID>
-    <ID>ReturnCount:Timeline.kt$fun Issue.timeline(): List&lt;TimelineEvent&gt;</ID>
     <ID>SwallowedException:ExpressiveMotion.kt$e: CancellationException</ID>
     <ID>SwallowedException:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$e: Exception</ID>
     <ID>SwallowedException:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$e: Exception</ID>
