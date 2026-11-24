@@ -632,7 +632,7 @@ fun FeedScreenV6(
                                     fontWeight = FontWeight.Light,
                                     fontSize = 23.sp,
                                     lineHeight = 29.sp,
-                                    maxLines = 2,
+                                    maxLines = 3,
                                     overflow = TextOverflow.Ellipsis,
                                     color = Color.White,
                                     modifier = Modifier.sharedElement(
@@ -860,7 +860,7 @@ fun FeedScreenV6(
                         }
                     }
 
-                    // PINNED TOP BAR: Back button and 3-dots stay fixed at the top while scrolling
+                    // PINNED TOP BAR: Back button and Actions (Like & Share) stay fixed at the top while scrolling
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -889,19 +889,51 @@ fun FeedScreenV6(
                             }
                         }
 
-                        Surface(
-                            onClick = { haptic(ExpressiveHaptic.Tap) },
-                            shape = CircleShape,
-                            color = Color.Black.copy(alpha = 0.55f),
-                            modifier = Modifier.size(40.dp),
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Outlined.MoreVert,
-                                    contentDescription = "Options",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(20.dp),
-                                )
+                            var isDetailLiked by rememberSaveable(currentIssue?.ticketId) { mutableStateOf(false) }
+
+                            Surface(
+                                onClick = {
+                                    haptic(ExpressiveHaptic.Tap)
+                                    isDetailLiked = !isDetailLiked
+                                    currentIssue?.let { viewModel?.toggleLike(it.ticketId) }
+                                },
+                                shape = CircleShape,
+                                color = Color.Black.copy(alpha = 0.55f),
+                                modifier = Modifier.size(40.dp),
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = if (isDetailLiked) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
+                                        contentDescription = stringResource(if (isDetailLiked) R.string.detail_btn_unlike else R.string.detail_btn_like),
+                                        tint = if (isDetailLiked) MaterialTheme.colorScheme.primary else Color.White,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                onClick = {
+                                    haptic(ExpressiveHaptic.Tap)
+                                    currentIssue?.let {
+                                        com.svce.issuegram.ui.components.shareIssue(context, it.ticketId, it.title)
+                                    }
+                                },
+                                shape = CircleShape,
+                                color = Color.Black.copy(alpha = 0.55f),
+                                modifier = Modifier.size(40.dp),
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Share,
+                                        contentDescription = "Share",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
                             }
                         }
                     }
