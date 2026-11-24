@@ -191,6 +191,8 @@
     <ID>MagicNumber:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$3L</ID>
     <ID>MagicNumber:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$4</ID>
     <ID>MagicNumber:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$4L</ID>
+    <ID>MagicNumber:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$5</ID>
+    <ID>MagicNumber:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$5L</ID>
     <ID>MagicNumber:FirestoreIssueRemoteDataSource.kt$FirestoreIssueRemoteDataSource$9999</ID>
     <ID>MagicNumber:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$20</ID>
     <ID>MagicNumber:FirestoreNotificationRemoteDataSource.kt$FirestoreNotificationRemoteDataSource$50</ID>
@@ -210,6 +212,7 @@
     <ID>MagicNumber:IssueDetailViewModel.kt$IssueDetailViewModel$5000</ID>
     <ID>MagicNumber:IssueLocalDataSource.kt$IssueLocalDataSource$3</ID>
     <ID>MagicNumber:IssueLocalDataSource.kt$IssueLocalDataSource$4</ID>
+    <ID>MagicNumber:IssueLocalDataSource.kt$IssueLocalDataSource$5</ID>
     <ID>MagicNumber:IssueRepositoryImpl.kt$IssueRepositoryImpl$2482</ID>
     <ID>MagicNumber:IssuegramApplication.kt$IssuegramApplication$0.02</ID>
     <ID>MagicNumber:IssuegramApplication.kt$IssuegramApplication$0.25</ID>
@@ -271,13 +274,13 @@
     <ID>MagicNumber:TimeFormat.kt$24</ID>
     <ID>MagicNumber:TimeFormat.kt$30</ID>
     <ID>MagicNumber:TimeFormat.kt$60</ID>
-    <ID>MagicNumber:Timeline.kt$120L</ID>
-    <ID>MagicNumber:Timeline.kt$144L</ID>
-    <ID>MagicNumber:Timeline.kt$28L</ID>
+    <ID>MagicNumber:Timeline.kt$24L</ID>
     <ID>MagicNumber:Timeline.kt$3</ID>
-    <ID>MagicNumber:Timeline.kt$34L</ID>
     <ID>MagicNumber:Timeline.kt$4</ID>
+    <ID>MagicNumber:Timeline.kt$48L</ID>
+    <ID>MagicNumber:Timeline.kt$5</ID>
     <ID>MagicNumber:Timeline.kt$8L</ID>
+    <ID>MagicNumber:Timeline.kt$96L</ID>
     <ID>MagicNumber:Type.kt$11f</ID>
     <ID>MagicNumber:Type.kt$12f</ID>
     <ID>MagicNumber:Type.kt$144f</ID>
@@ -423,7 +426,8 @@
     <ID>MaxLineLength:StatusBadge.kt$IssueStatus.Assigned -&gt; StatusTone(scheme.tertiaryContainer, scheme.onTertiaryContainer, Icons.Outlined.PersonAdd)</ID>
     <ID>MaxLineLength:StatusBadge.kt$IssueStatus.Open -&gt; StatusTone(scheme.surfaceContainerHighest, scheme.onSurfaceVariant, Icons.Outlined.RadioButtonUnchecked)</ID>
     <ID>MaxLineLength:StatusBadge.kt$IssueStatus.Resolved -&gt; StatusTone(extended.positiveContainer, extended.onPositiveContainer, Icons.Outlined.CheckCircle)</ID>
-    <ID>MaxLineLength:Timeline.kt$// If the current issue status is further advanced than the milestone titles indicate, ensure timeline reflects current status</ID>
+    <ID>MaxLineLength:Timeline.kt$// If the current issue status is at or beyond a step not yet covered in mapped events, extend to match current status</ID>
+    <ID>MaxLineLength:Timeline.kt$val highestMappedIndex = mappedEvents.maxOfOrNull { event -&gt; progression.indexOfFirst { it.first == event.status } } ?: -1</ID>
     <ID>MaxLineLength:Type.kt$ExpressiveTextStyles$TextStyle(fontFamily = GoogleSans, fontSize = 11.sp, lineHeight = 14.sp, fontWeight = FontWeight(500), letterSpacing = (0.3).sp)</ID>
     <ID>MaxLineLength:Type.kt$ExpressiveTextStyles$TextStyle(fontFamily = GoogleSans, fontSize = 11.sp, lineHeight = 16.sp, fontWeight = FontWeight(700), letterSpacing = (1.2).sp)</ID>
     <ID>MaxLineLength:Type.kt$ExpressiveTextStyles$TextStyle(fontFamily = GoogleSans, fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight(500), letterSpacing = (0).sp)</ID>

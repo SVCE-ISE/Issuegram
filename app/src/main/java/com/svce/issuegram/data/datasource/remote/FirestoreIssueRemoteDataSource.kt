@@ -102,22 +102,30 @@ class FirestoreIssueRemoteDataSource(
             mapOf<String, Any>(
                 "id" to 2L,
                 "stepOrder" to 2,
-                "title" to "Assigned to Department",
-                "actor" to "Public Works",
+                "title" to "Acknowledged by Authority",
+                "actor" to "Civic Control",
                 "timestamp" to nowIso,
                 "isCompleted" to false
             ),
             mapOf<String, Any>(
                 "id" to 3L,
                 "stepOrder" to 3,
-                "title" to "Work In Progress",
-                "actor" to "Field Operations",
+                "title" to "Assigned to Department",
+                "actor" to "Public Works",
                 "timestamp" to nowIso,
                 "isCompleted" to false
             ),
             mapOf<String, Any>(
                 "id" to 4L,
                 "stepOrder" to 4,
+                "title" to "Work In Progress",
+                "actor" to "Field Operations",
+                "timestamp" to nowIso,
+                "isCompleted" to false
+            ),
+            mapOf<String, Any>(
+                "id" to 5L,
+                "stepOrder" to 5,
                 "title" to "Issue Resolved",
                 "actor" to "Civic Authority",
                 "timestamp" to nowIso,

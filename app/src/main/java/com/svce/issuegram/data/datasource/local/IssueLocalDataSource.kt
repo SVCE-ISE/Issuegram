@@ -48,9 +48,9 @@ class IssueLocalDataSource {
                     val stepMatches = when (status) {
                         com.svce.issuegram.data.model.IssueStatus.Open -> m.stepOrder <= 1
                         com.svce.issuegram.data.model.IssueStatus.Acknowledged -> m.stepOrder <= 2
-                        com.svce.issuegram.data.model.IssueStatus.Assigned -> m.stepOrder <= 2
-                        com.svce.issuegram.data.model.IssueStatus.InProgress -> m.stepOrder <= 3
-                        com.svce.issuegram.data.model.IssueStatus.Resolved -> m.stepOrder <= 4
+                        com.svce.issuegram.data.model.IssueStatus.Assigned -> m.stepOrder <= 3
+                        com.svce.issuegram.data.model.IssueStatus.InProgress -> m.stepOrder <= 4
+                        com.svce.issuegram.data.model.IssueStatus.Resolved -> m.stepOrder <= 5
                         com.svce.issuegram.data.model.IssueStatus.Reopened -> true
                     }
                     m.copy(isCompleted = stepMatches)
