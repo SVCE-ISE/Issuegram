@@ -8,6 +8,7 @@ import com.svce.issuegram.data.model.IssueCategory
 import com.svce.issuegram.data.model.IssueStatus
 import com.svce.issuegram.domain.repository.IssueRepository
 import java.time.Instant
+import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -22,18 +23,27 @@ class IssueRepositoryImpl(
     private val repositoryScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) : IssueRepository {
 
-    private var nextTicketNumber = 2482
-
     init {
-        // Initial fetch and cache synchronization
+        // Real-time feed synchronization across all users + fallback initial fetch
         repositoryScope.launch {
+            var receivedRealtime = false
             try {
-                val remote = remoteDataSource.fetchIssues()
-                if (remote.isNotEmpty()) {
+                remoteDataSource.observeIssues().collect { remote ->
+                    receivedRealtime = true
                     localDataSource.updateIssues(remote)
                 }
-            } catch (e: Exception) {
-                // Ignore network errors on startup
+            } catch (_: Exception) {
+                // Ignore listener errors
+            }
+            if (!receivedRealtime) {
+                try {
+                    val remote = remoteDataSource.fetchIssues()
+                    if (remote.isNotEmpty()) {
+                        localDataSource.updateIssues(remote)
+                    }
+                } catch (_: Exception) {
+                    // Ignore network errors on startup
+                }
             }
         }
     }
@@ -46,21 +56,13 @@ class IssueRepositoryImpl(
     }
 
     override fun getUserIssues(userId: String, authorName: String): Flow<List<Issue>> {
-        val currentFirebaseUser = com.google.firebase.Firebase.auth.currentUser
-        val firebaseName = currentFirebaseUser?.displayName
-        val emailPrefix = currentFirebaseUser?.email?.substringBefore('@')
         return localDataSource.issuesFlow.map { list ->
             list.filter { issue ->
-                issue.isMine ||
-                    issue.authorName.equals(authorName, ignoreCase = true) ||
-                    (firebaseName != null && issue.authorName.equals(firebaseName, ignoreCase = true)) ||
-                    (
-                        emailPrefix != null &&
-                            (
-                                issue.authorUsername?.equals(emailPrefix, ignoreCase = true) == true ||
-                                    issue.authorName.equals(emailPrefix, ignoreCase = true)
-                                )
-                        )
+                if (issue.reporterId.isNotBlank() && userId.isNotBlank()) {
+                    issue.reporterId == userId
+                } else {
+                    issue.isMine
+                }
             }
         }
     }
@@ -77,7 +79,7 @@ class IssueRepositoryImpl(
         authorUsername: String?
     ): Result<Issue> = try {
         val draft = Issue(
-            ticketId = "IG-${nextTicketNumber++}",
+            ticketId = "IG-${UUID.randomUUID().toString().take(6).uppercase()}",
             title = title.trim(),
             description = description?.trim()?.ifBlank { null },
             category = category,
@@ -121,12 +123,11 @@ class IssueRepositoryImpl(
     }
 
     override suspend fun deleteIssue(ticketId: String): Result<Unit> {
-        // Immediate optimistic local deletion
         localDataSource.deleteIssue(ticketId)
         return try {
             remoteDataSource.deleteIssue(ticketId)
             Result.success(Unit)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Result.success(Unit)
         }
     }
@@ -159,29 +160,8 @@ class IssueRepositoryImpl(
 
     override suspend fun updateStatus(ticketId: String, status: com.svce.issuegram.data.model.IssueStatus): Result<Unit> {
         val updatedIssue = localDataSource.updateStatus(ticketId, status)
-
-        // Immediately trigger native system notification for the status change
-        try {
-            val issueTitle = updatedIssue?.title ?: "Civic Issue"
-            val activeMilestone = updatedIssue?.milestones?.lastOrNull { it.isCompleted }?.title
-            com.svce.issuegram.util.SystemNotificationHelper.showStatusUpdateNotification(
-                context = com.svce.issuegram.IssuegramApplication.instance,
-                ticketId = ticketId,
-                issueTitle = issueTitle,
-                status = status,
-                milestoneTitle = activeMilestone
-            )
-        } catch (_: Exception) {
-            // Best effort system notification
-        }
-
-        return try {
-            val milestones = updatedIssue?.milestones ?: emptyList()
-            remoteDataSource.updateStatus(ticketId, status, milestones)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.success(Unit)
-        }
+        val milestones = updatedIssue?.milestones ?: emptyList()
+        return remoteDataSource.updateStatus(ticketId, status, milestones)
     }
 
     override suspend fun refreshIssues(): Result<Unit> = try {

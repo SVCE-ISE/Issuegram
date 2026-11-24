@@ -22,14 +22,14 @@ import com.svce.issuegram.R
  * are variable fonts, so each cut is pinned to the style's own optical size (`opsz`).
  */
 
-private val familyCache = HashMap<Pair<Int, Int>, FontFamily>()
+private val familyCache = HashMap<Triple<Int, Int, Int>, FontFamily>()
 
 /**
  * A variable font pinned to one optical size, with real cuts at each weight.
  * M3 type tokens set `opsz` equal to the font size, so small text gets the sturdier
  * text cut and large text the tighter display cut from one font file.
  */
-fun variableFontFamily(@FontRes resId: Int, opticalSize: Float, weights: IntArray = intArrayOf(400, 500, 600, 700, 800)): FontFamily = familyCache.getOrPut(resId to opticalSize.toInt()) {
+fun variableFontFamily(@FontRes resId: Int, opticalSize: Float, weights: IntArray = intArrayOf(400, 500, 600, 700, 800)): FontFamily = familyCache.getOrPut(Triple(resId, opticalSize.toInt(), weights.contentHashCode())) {
     FontFamily(
         weights.map { w ->
             Font(

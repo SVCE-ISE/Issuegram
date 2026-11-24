@@ -16,7 +16,7 @@ interface IssueRepository {
         photoUri: String?,
         latitude: Double = 12.9716,
         longitude: Double = 77.5946,
-        authorName: String = "Praveen Zalaki",
+        authorName: String = "Civic Reporter",
         authorUsername: String? = null
     ): Result<Issue>
     suspend fun toggleLike(ticketId: String): Result<Unit>

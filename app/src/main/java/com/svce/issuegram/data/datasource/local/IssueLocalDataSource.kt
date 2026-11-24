@@ -16,11 +16,13 @@ class IssueLocalDataSource {
     val issuesFlow: StateFlow<List<Issue>> = _issuesFlow.asStateFlow()
 
     suspend fun updateIssues(newIssues: List<Issue>) = mutex.withLock {
-        _issuesFlow.value = newIssues
+        _issuesFlow.value = newIssues.distinctBy { it.ticketId.uppercase() }
     }
 
     suspend fun addIssue(issue: Issue) = mutex.withLock {
-        val updated = mutableListOf(issue).apply { addAll(_issuesFlow.value) }
+        val updated = listOf(issue) + _issuesFlow.value.filterNot {
+            it.ticketId.equals(issue.ticketId, ignoreCase = true)
+        }
         _issuesFlow.value = updated
     }
 

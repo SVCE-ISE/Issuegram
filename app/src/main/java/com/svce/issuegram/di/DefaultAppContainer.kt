@@ -42,7 +42,20 @@ class DefaultAppContainer(private val context: Context = IssuegramApplication.in
     }
 
     override val notificationRepository: NotificationRepository by lazy {
-        NotificationRepositoryImpl(notificationRemoteDataSource)
+        NotificationRepositoryImpl(
+            remoteDataSource = notificationRemoteDataSource,
+            onNewUnreadNotification = { notif ->
+                runCatching {
+                    com.svce.issuegram.util.SystemNotificationHelper.showStatusUpdateNotification(
+                        context = context,
+                        ticketId = notif.ticketId,
+                        issueTitle = notif.issueTitle,
+                        status = notif.status ?: com.svce.issuegram.data.model.IssueStatus.Open,
+                        milestoneTitle = notif.message
+                    )
+                }
+            }
+        )
     }
 
     override val getFeedIssuesUseCase: GetFeedIssuesUseCase by lazy {

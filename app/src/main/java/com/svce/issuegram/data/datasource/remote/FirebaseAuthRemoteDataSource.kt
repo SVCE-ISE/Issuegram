@@ -12,17 +12,7 @@ import com.svce.issuegram.domain.model.User
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.suspendCancellableCoroutine
-
-private suspend fun <T> com.google.android.gms.tasks.Task<T>.await(): T = suspendCancellableCoroutine { cont ->
-    addOnCompleteListener { task ->
-        if (task.isSuccessful) {
-            cont.resume(task.result, onCancellation = null)
-        } else {
-            cont.resumeWith(Result.failure(task.exception ?: RuntimeException("Task failed")))
-        }
-    }
-}
+import kotlinx.coroutines.tasks.await
 
 class FirebaseAuthRemoteDataSource(
     private val auth: FirebaseAuth = Firebase.auth,
@@ -42,12 +32,14 @@ class FirebaseAuthRemoteDataSource(
                 currentIsAdmin = false
                 trySend(null)
             } else {
+                currentIsAdmin = false
                 firestoreListener = firestore.collection("users").document(user.uid)
-                    .addSnapshotListener { snapshot, _ ->
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) return@addSnapshotListener
                         currentIsAdmin = snapshot?.getBoolean("isAdmin") == true
                         trySend(UserMapper.toDomain(auth.currentUser, isAdmin = currentIsAdmin))
                     }
-                trySend(UserMapper.toDomain(user, isAdmin = currentIsAdmin))
+                trySend(UserMapper.toDomain(user, isAdmin = false))
             }
         }
         auth.addAuthStateListener(authListener)

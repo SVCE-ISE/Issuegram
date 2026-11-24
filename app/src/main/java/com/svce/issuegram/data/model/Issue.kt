@@ -55,5 +55,6 @@ data class Issue(
     val longitude: Double = 77.5946,
     val authorId: String? = null,
     val authorUsername: String? = null,
-    val milestones: List<IssueMilestone> = emptyList()
+    val milestones: List<IssueMilestone> = emptyList(),
+    val reporterId: String = ""
 )

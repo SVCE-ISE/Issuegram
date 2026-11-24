@@ -150,7 +150,15 @@ fun IssueDetailScreen(
                 .background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            if (uiState?.isLoading == true) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            } else {
+                Text(
+                    text = "Issue not found",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
         return
     }
@@ -175,11 +183,14 @@ fun IssueDetailScreen(
                     .height(440.dp)
             ) {
                 if (!issue.photoUri.isNullOrBlank()) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(context)
+                    val photoRequest = remember(context, issue.photoUri) {
+                        ImageRequest.Builder(context)
                             .data(issue.photoUri)
                             .crossfade(true)
-                            .build(),
+                            .build()
+                    }
+                    AsyncImage(
+                        model = photoRequest,
                         contentDescription = issue.title,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,

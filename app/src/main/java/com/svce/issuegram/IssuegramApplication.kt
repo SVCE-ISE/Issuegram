@@ -39,6 +39,17 @@ class IssuegramApplication :
             )
         }
 
+        runCatching {
+            val settings = com.google.firebase.firestore.FirebaseFirestoreSettings.Builder()
+                .setLocalCacheSettings(
+                    com.google.firebase.firestore.PersistentCacheSettings.newBuilder()
+                        .setSizeBytes(100L * 1024 * 1024)
+                        .build()
+                )
+                .build()
+            com.google.firebase.firestore.FirebaseFirestore.getInstance().firestoreSettings = settings
+        }
+
         appContainer = DefaultAppContainer(this)
     }
 

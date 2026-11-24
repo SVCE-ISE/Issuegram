@@ -25,34 +25,28 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-
-private val ADMIN_BUTTON_COLOR = Color(0xFF1D9BF0)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminManagementBottomSheet(
+    viewModel: AdminViewModel,
     onDismissRequest: () -> Unit,
     sheetState: SheetState,
     modifier: Modifier = Modifier
 ) {
     var adminTargetUid by remember { mutableStateOf("") }
+    val isBusy by viewModel.isBusy.collectAsState()
     val sheetContext = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -106,24 +100,17 @@ fun AdminManagementBottomSheet(
                 FilledTonalButton(
                     onClick = {
                         val uid = adminTargetUid.trim()
-                        if (uid.isBlank()) {
-                            Toast.makeText(sheetContext, "Please enter a valid UID", Toast.LENGTH_SHORT).show()
-                            return@FilledTonalButton
-                        }
-                        coroutineScope.launch {
-                            runCatching {
-                                FirebaseFirestore.getInstance().collection("users").document(uid)
-                                    .set(mapOf("isAdmin" to false), SetOptions.merge())
-                                    .await()
-                            }.onSuccess {
+                        viewModel.setAdminStatus(uid, isAdmin = false) { result ->
+                            result.onSuccess {
                                 Toast.makeText(sheetContext, "Demoted UID $uid", Toast.LENGTH_SHORT).show()
                                 adminTargetUid = ""
                                 onDismissRequest()
                             }.onFailure { err ->
-                                Toast.makeText(sheetContext, "Failed: ${err.localizedMessage}", Toast.LENGTH_LONG).show()
+                                Toast.makeText(sheetContext, err.localizedMessage ?: "Failed", Toast.LENGTH_LONG).show()
                             }
                         }
                     },
+                    enabled = !isBusy,
                     colors = ButtonDefaults.filledTonalButtonColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer,
                         contentColor = MaterialTheme.colorScheme.onErrorContainer
@@ -143,24 +130,17 @@ fun AdminManagementBottomSheet(
                 Button(
                     onClick = {
                         val uid = adminTargetUid.trim()
-                        if (uid.isBlank()) {
-                            Toast.makeText(sheetContext, "Please enter a valid UID", Toast.LENGTH_SHORT).show()
-                            return@Button
-                        }
-                        coroutineScope.launch {
-                            runCatching {
-                                FirebaseFirestore.getInstance().collection("users").document(uid)
-                                    .set(mapOf("isAdmin" to true), SetOptions.merge())
-                                    .await()
-                            }.onSuccess {
+                        viewModel.setAdminStatus(uid, isAdmin = true) { result ->
+                            result.onSuccess {
                                 Toast.makeText(sheetContext, "Promoted UID $uid to Admin!", Toast.LENGTH_SHORT).show()
                                 adminTargetUid = ""
                                 onDismissRequest()
                             }.onFailure { err ->
-                                Toast.makeText(sheetContext, "Failed: ${err.localizedMessage}", Toast.LENGTH_LONG).show()
+                                Toast.makeText(sheetContext, err.localizedMessage ?: "Failed", Toast.LENGTH_LONG).show()
                             }
                         }
                     },
+                    enabled = !isBusy,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary

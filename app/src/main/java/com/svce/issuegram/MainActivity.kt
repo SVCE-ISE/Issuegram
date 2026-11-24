@@ -48,9 +48,22 @@ private suspend fun <T> com.google.android.gms.tasks.Task<T>.awaitResult(): T = 
 }
 
 class MainActivity : ComponentActivity() {
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* best-effort granted or denied */ }
+
+    private var deepLinkTicketId by mutableStateOf<String?>(null)
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        deepLinkTicketId = intent.getStringExtra("ticketId")?.takeIf { it.isNotBlank() }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        deepLinkTicketId = intent?.getStringExtra("ticketId")?.takeIf { it.isNotBlank() }
 
         // Initialize Google Maps SDK with Activity Context to prevent visual service WindowManager warnings
         try {
@@ -71,9 +84,7 @@ class MainActivity : ComponentActivity() {
                     android.Manifest.permission.POST_NOTIFICATIONS
                 ) != android.content.pm.PackageManager.PERMISSION_GRANTED
             ) {
-                registerForActivityResult(
-                    androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
-                ) { /* best-effort granted or denied */ }.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
             }
         }
         setContent {
@@ -218,7 +229,10 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 } else {
-                    IssuegramApp()
+                    IssuegramApp(
+                        initialTicketId = deepLinkTicketId,
+                        onDeepLinkConsumed = { deepLinkTicketId = null }
+                    )
                 }
             }
         }

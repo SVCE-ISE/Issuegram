@@ -18,7 +18,7 @@ object IssuegramShapeDefaults {
                 topStart = shapes.large.topStart,
                 topEnd = shapes.large.topEnd,
                 bottomStart = shapes.extraSmall.bottomStart,
-                bottomEnd = shapes.extraSmall.bottomStart
+                bottomEnd = shapes.extraSmall.bottomEnd
             )
 
     val middleListItemShape: RoundedCornerShape

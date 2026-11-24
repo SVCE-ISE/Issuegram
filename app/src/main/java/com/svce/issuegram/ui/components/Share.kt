@@ -10,5 +10,9 @@ fun shareIssue(context: Context, ticketId: String, title: String) {
         type = "text/plain"
         putExtra(Intent.EXTRA_TEXT, text)
     }
-    context.startActivity(Intent.createChooser(send, null))
+    val chooser = Intent.createChooser(send, null)
+    if (context !is android.app.Activity) {
+        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    runCatching { context.startActivity(chooser) }
 }

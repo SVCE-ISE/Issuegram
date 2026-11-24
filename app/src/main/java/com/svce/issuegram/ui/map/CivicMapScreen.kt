@@ -284,23 +284,23 @@ fun CivicMapScreen(
                 )
             }
             if (!isPickingLocation) {
+                val greenMarker = remember { BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN) }
+                val redMarker = remember { BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED) }
+                val orangeMarker = remember { BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE) }
+
                 filteredIssues.forEach { issue ->
                     androidx.compose.runtime.key(issue.id) {
+                        val isHighOrCritical = issue.status.equals("CRITICAL", ignoreCase = true) ||
+                            issue.category.contains("Emergency", ignoreCase = true) ||
+                            issue.category.contains("Power", ignoreCase = true)
                         Marker(
                             state = rememberUpdatedMarkerState(position = issue.position),
                             title = "${issue.ticketCode.ifBlank { "#" + issue.id }} - ${issue.title}",
                             snippet = issue.locationName,
-                            icon = if (issue.isResolved) {
-                                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
-                            } else {
-                                val isHighOrCritical = issue.status.equals("CRITICAL", ignoreCase = true) ||
-                                    issue.category.contains("Emergency", ignoreCase = true) ||
-                                    issue.category.contains("Power", ignoreCase = true)
-                                if (isHighOrCritical) {
-                                    BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
-                                } else {
-                                    BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)
-                                }
+                            icon = when {
+                                issue.isResolved -> greenMarker
+                                isHighOrCritical -> redMarker
+                                else -> orangeMarker
                             },
                             onClick = {
                                 selectedPinId.value = issue.id
@@ -507,7 +507,7 @@ fun CivicMapScreen(
         }
 
         // My Location floating button (Bottom-Right, above bottom navigation bar and card)
-        val isCardVisible = !isPickingLocation && selectedPinId.value != null
+        val isCardVisible = !isPickingLocation && filteredIssues.any { it.id == selectedPinId.value }
         val recenterBottomPadding by animateDpAsState(
             targetValue = if (isCardVisible) bottomBarPadding + 195.dp else bottomBarPadding + 16.dp,
             label = "recenterBottomPadding"

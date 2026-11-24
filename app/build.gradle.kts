@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -49,6 +51,12 @@ tasks.withType<io.gitlab.arturbosch.detekt.DetektCreateBaselineTask>().configure
 
 android {
     namespace = "com.svce.issuegram"
+    val localProperties = Properties().apply {
+        val file = rootProject.file("local.properties")
+        if (file.exists()) {
+            file.inputStream().use { load(it) }
+        }
+    }
     compileSdk {
         version = release(37)
     }
@@ -61,6 +69,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY", "")
     }
 
     splits {
@@ -80,7 +89,19 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            val storePath = System.getenv("RELEASE_STORE_FILE")
+                ?: localProperties.getProperty("RELEASE_STORE_FILE")
+            if (!storePath.isNullOrBlank() && file(storePath).exists()) {
+                signingConfig = signingConfigs.create("release") {
+                    storeFile = file(storePath)
+                    storePassword = System.getenv("RELEASE_STORE_PASSWORD")
+                        ?: localProperties.getProperty("RELEASE_STORE_PASSWORD", "")
+                    keyAlias = System.getenv("RELEASE_KEY_ALIAS")
+                        ?: localProperties.getProperty("RELEASE_KEY_ALIAS", "")
+                    keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+                        ?: localProperties.getProperty("RELEASE_KEY_PASSWORD", "")
+                }
+            }
         }
         debug {
             isMinifyEnabled = false
@@ -121,11 +142,12 @@ dependencies {
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.play.services.auth)
     implementation(libs.googleid)
-    implementation(libs.okhttp)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.lottie.compose)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)

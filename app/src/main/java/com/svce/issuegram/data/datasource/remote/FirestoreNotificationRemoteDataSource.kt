@@ -35,7 +35,6 @@ class FirestoreNotificationRemoteDataSource(
             if (currentUserId != null) {
                 val notifSnapshot = firestore.collection("notifications")
                     .whereEqualTo("userId", currentUserId)
-                    .orderBy("createdAt", Query.Direction.DESCENDING)
                     .limit(50)
                     .get()
                     .await()
@@ -55,7 +54,7 @@ class FirestoreNotificationRemoteDataSource(
                         AlertKind.entries.firstOrNull { it.name.equals(k, ignoreCase = true) }
                     } ?: AlertKind.Status
 
-                    val isRead = (data["isRead"] as? Boolean == true) || readIds.contains(id)
+                    val isRead = (data["isRead"] as? Boolean == true) || synchronized(readIds) { readIds.contains(id) }
 
                     explicitNotifications.add(
                         Notification(
@@ -73,7 +72,7 @@ class FirestoreNotificationRemoteDataSource(
             }
 
             if (explicitNotifications.isNotEmpty()) {
-                return explicitNotifications
+                return explicitNotifications.sortedByDescending { it.createdAt }
             }
 
             // 2. Fallback: Generate notifications from milestones in the user's or public issues
@@ -107,7 +106,7 @@ class FirestoreNotificationRemoteDataSource(
 
                     val mStatus = if (mTitle.contains("resolved", ignoreCase = true)) {
                         IssueStatus.Resolved
-                    } else if (m["stepOrder"] == 1) {
+                    } else if ((m["stepOrder"] as? Number)?.toInt() == 1) {
                         IssueStatus.Open
                     } else {
                         issueStatus
@@ -135,27 +134,24 @@ class FirestoreNotificationRemoteDataSource(
     }
 
     override fun observeNotifications(): kotlinx.coroutines.flow.Flow<List<Notification>> = kotlinx.coroutines.flow.callbackFlow {
-        // Emit initial static fetch immediately
-        trySend(fetchNotifications())
+        val currentUserId = runCatching { Firebase.auth.currentUser?.uid }.getOrNull()
+        if (currentUserId == null) {
+            trySend(emptyList())
+            awaitClose { }
+            return@callbackFlow
+        }
 
         val listenerRegistration = firestore.collection("notifications")
-            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .whereEqualTo("userId", currentUserId)
             .limit(50)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     return@addSnapshotListener
                 }
                 if (snapshot != null) {
-                    val currentUserId = runCatching { Firebase.auth.currentUser?.uid }.getOrNull()
                     val list = mutableListOf<Notification>()
                     for (doc in snapshot.documents) {
                         val data = doc.data ?: continue
-                        val notifUserId = data["userId"] as? String ?: ""
-                        // Deliver if global broadcast or intended for current user
-                        if (notifUserId.isNotBlank() && currentUserId != null && notifUserId != currentUserId) {
-                            continue
-                        }
-
                         val id = doc.id
                         val time = runCatching {
                             Instant.parse(data["createdAt"] as? String)
@@ -169,7 +165,7 @@ class FirestoreNotificationRemoteDataSource(
                             AlertKind.entries.firstOrNull { it.name.equals(k, ignoreCase = true) }
                         } ?: AlertKind.Status
 
-                        val isRead = (data["isRead"] as? Boolean == true) || readIds.contains(id)
+                        val isRead = (data["isRead"] as? Boolean == true) || synchronized(readIds) { readIds.contains(id) }
 
                         list.add(
                             Notification(
@@ -184,9 +180,7 @@ class FirestoreNotificationRemoteDataSource(
                             )
                         )
                     }
-                    if (list.isNotEmpty()) {
-                        trySend(list)
-                    }
+                    trySend(list.sortedByDescending { it.createdAt })
                 }
             }
 
@@ -198,8 +192,11 @@ class FirestoreNotificationRemoteDataSource(
     override suspend fun markAllAsRead() {
         val currentList = fetchNotifications()
         val newReadIds = currentList.map { it.id }.toSet()
-        readIds.addAll(newReadIds)
-        prefs.edit().putStringSet("read_ids", readIds).apply()
+        val snapshotSet = synchronized(readIds) {
+            readIds.addAll(newReadIds)
+            HashSet(readIds)
+        }
+        prefs.edit().putStringSet("read_ids", snapshotSet).apply()
 
         // Also mark server documents as read if user is logged in
         val currentUserId = runCatching { Firebase.auth.currentUser?.uid }.getOrNull()
@@ -210,8 +207,12 @@ class FirestoreNotificationRemoteDataSource(
                     .whereEqualTo("isRead", false)
                     .get()
                     .await()
-                for (doc in unreadDocs.documents) {
-                    doc.reference.update("isRead", true)
+                if (!unreadDocs.isEmpty) {
+                    val batch = firestore.batch()
+                    for (doc in unreadDocs.documents) {
+                        batch.update(doc.reference, "isRead", true)
+                    }
+                    batch.commit().await()
                 }
             } catch (_: Exception) {
                 // Best effort

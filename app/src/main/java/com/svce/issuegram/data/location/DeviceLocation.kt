@@ -39,7 +39,8 @@ suspend fun currentDeviceLocation(context: Context): Location = withTimeout(20_0
     val permitted = listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
         .any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
     check(permitted) { "Allow location access, or choose the location on the map." }
-    val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    val manager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+        ?: error("Location service unavailable.")
     check(LocationManagerCompat.isLocationEnabled(manager)) { "Turn on location, or choose the location on the map." }
     val providers = listOf(
         "fused",

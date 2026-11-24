@@ -87,11 +87,25 @@ fun AlertsScreen(
     val alerts = remember(uiState) {
         uiState?.notifications?.map { com.svce.issuegram.data.mapper.NotificationMapper.toData(it) }.orEmpty()
     }
-    val groups = listOf(
-        BUCKET_TODAY to alerts.filter { bucketOf(it.at) == BUCKET_TODAY },
-        BUCKET_YESTERDAY to alerts.filter { bucketOf(it.at) == BUCKET_YESTERDAY },
-        BUCKET_EARLIER to alerts.filter { bucketOf(it.at) == BUCKET_EARLIER }
-    )
+    val groups = remember(alerts) {
+        listOf(
+            BUCKET_TODAY to alerts.filter { bucketOf(it.at) == BUCKET_TODAY },
+            BUCKET_YESTERDAY to alerts.filter { bucketOf(it.at) == BUCKET_YESTERDAY },
+            BUCKET_EARLIER to alerts.filter { bucketOf(it.at) == BUCKET_EARLIER }
+        )
+    }
+
+    if (uiState?.isLoading == true && alerts.isEmpty()) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .statusBarsPadding(),
+            contentAlignment = Alignment.Center
+        ) {
+            androidx.compose.material3.CircularProgressIndicator()
+        }
+        return
+    }
 
     if (alerts.isEmpty()) {
         EmptyState(

@@ -16,7 +16,12 @@ import com.svce.issuegram.data.model.IssueStatus
 import java.io.File
 import java.time.Instant
 import java.util.UUID
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class FirestoreIssueRemoteDataSource(
     private val context: Context,
@@ -26,17 +31,32 @@ class FirestoreIssueRemoteDataSource(
 
     private val issuesCollection = firestore.collection("issues")
 
-    override suspend fun fetchIssues(): List<Issue> = try {
+    override fun observeIssues(): Flow<List<Issue>> = callbackFlow {
+        val registration = issuesCollection
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(50)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                if (snapshot != null) {
+                    val issues = snapshot.documents.mapNotNull { doc ->
+                        mapDocumentToIssue(doc.id, doc.data ?: emptyMap())
+                    }
+                    trySend(issues)
+                }
+            }
+        awaitClose { registration.remove() }
+    }
+
+    override suspend fun fetchIssues(): List<Issue> {
         val snapshot = issuesCollection
             .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(50)
             .get()
             .await()
 
-        snapshot.documents.mapNotNull { doc ->
+        return snapshot.documents.mapNotNull { doc ->
             mapDocumentToIssue(doc.id, doc.data ?: emptyMap())
         }
-    } catch (e: Exception) {
-        emptyList()
     }
 
     override suspend fun fetchIssueById(ticketId: String): Issue? = try {
@@ -161,34 +181,31 @@ class FirestoreIssueRemoteDataSource(
             ticketId = ticketId,
             photoUri = remotePhotoUrl,
             isMine = true,
-            authorName = authorDisplayName
+            authorName = authorDisplayName,
+            reporterId = currentUserId
         )
     }
 
     override suspend fun toggleLike(ticketId: String) {
-        try {
-            val cleanTicketId = ticketId.removePrefix("#")
-            val currentUserId = Firebase.auth.currentUser?.uid ?: return
-            val docRef = issuesCollection.document(cleanTicketId)
+        val cleanTicketId = ticketId.removePrefix("#")
+        val currentUserId = Firebase.auth.currentUser?.uid ?: return
+        val docRef = issuesCollection.document(cleanTicketId)
 
-            firestore.runTransaction { transaction ->
-                val snapshot = transaction.get(docRef)
-                if (snapshot.exists()) {
-                    @Suppress("UNCHECKED_CAST")
-                    val confirmedUsers = (snapshot.get("confirmedUserIds") as? List<String>) ?: emptyList()
-                    val hasLiked = confirmedUsers.contains(currentUserId)
-                    if (hasLiked) {
-                        transaction.update(docRef, "likes", FieldValue.increment(-1))
-                        transaction.update(docRef, "confirmedUserIds", FieldValue.arrayRemove(currentUserId))
-                    } else {
-                        transaction.update(docRef, "likes", FieldValue.increment(1))
-                        transaction.update(docRef, "confirmedUserIds", FieldValue.arrayUnion(currentUserId))
-                    }
+        firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(docRef)
+            if (snapshot.exists()) {
+                @Suppress("UNCHECKED_CAST")
+                val confirmedUsers = (snapshot.get("confirmedUserIds") as? List<String>) ?: emptyList()
+                val hasLiked = confirmedUsers.contains(currentUserId)
+                if (hasLiked) {
+                    transaction.update(docRef, "likes", FieldValue.increment(-1))
+                    transaction.update(docRef, "confirmedUserIds", FieldValue.arrayRemove(currentUserId))
+                } else {
+                    transaction.update(docRef, "likes", FieldValue.increment(1))
+                    transaction.update(docRef, "confirmedUserIds", FieldValue.arrayUnion(currentUserId))
                 }
-            }.await()
-        } catch (_: Exception) {
-            // Best effort network sync
-        }
+            }
+        }.await()
     }
 
     override suspend fun deleteIssue(ticketId: String): Result<Unit> = try {
@@ -256,22 +273,24 @@ class FirestoreIssueRemoteDataSource(
             val snapshot = docRef.get().await()
             val issueData = snapshot.data ?: emptyMap<String, Any?>()
             val reporterId = issueData["reporterId"] as? String ?: ""
-            val issueTitle = issueData["title"] as? String ?: "Civic Issue"
-            val activeMilestone = milestones.lastOrNull { it.isCompleted }
-            val milestoneDetail = activeMilestone?.title ?: "Status changed to ${status.name}"
+            if (reporterId.isNotBlank()) {
+                val issueTitle = issueData["title"] as? String ?: "Civic Issue"
+                val activeMilestone = milestones.lastOrNull { it.isCompleted }
+                val milestoneDetail = activeMilestone?.title ?: "Status changed to ${status.name}"
 
-            val notifDoc = mapOf(
-                "ticketId" to ticketId,
-                "userId" to reporterId,
-                "title" to issueTitle,
-                "issueTitle" to issueTitle,
-                "status" to status.name,
-                "kind" to "Status",
-                "message" to "Status updated: $milestoneDetail",
-                "createdAt" to Instant.now().toString(),
-                "isRead" to false
-            )
-            firestore.collection("notifications").add(notifDoc).await()
+                val notifDoc = mapOf(
+                    "ticketId" to ticketId,
+                    "userId" to reporterId,
+                    "title" to issueTitle,
+                    "issueTitle" to issueTitle,
+                    "status" to status.name,
+                    "kind" to "Status",
+                    "message" to "Status updated: $milestoneDetail",
+                    "createdAt" to Instant.now().toString(),
+                    "isRead" to false
+                )
+                firestore.collection("notifications").add(notifDoc).await()
+            }
         } catch (_: Exception) {
             // Notification creation is best-effort alongside issue update
         }
@@ -313,6 +332,9 @@ class FirestoreIssueRemoteDataSource(
             )
         } ?: emptyList()
 
+        @Suppress("UNCHECKED_CAST")
+        val confirmedUserIds = (data["confirmedUserIds"] as? List<String>) ?: emptyList()
+
         Issue(
             ticketId = ticketId,
             title = data["title"] as? String ?: "Civic Issue",
@@ -324,23 +346,47 @@ class FirestoreIssueRemoteDataSource(
             authorName = data["authorName"] as? String ?: "Civic Reporter",
             createdAt = createdAtInstant,
             likes = (data["likes"] as? Number)?.toInt() ?: 0,
+            isLikedByMe = currentUserId != null && confirmedUserIds.contains(currentUserId),
             photoUri = data["photoUri"] as? String,
             isMine = (currentUserId != null && reporterId == currentUserId),
             latitude = (data["latitude"] as? Number)?.toDouble() ?: 12.9716,
             longitude = (data["longitude"] as? Number)?.toDouble() ?: 77.5946,
             milestones = milestonesList,
-            authorUsername = data["authorUsername"] as? String
+            authorUsername = data["authorUsername"] as? String,
+            reporterId = reporterId
         )
     } catch (e: Exception) {
         null
     }
 
-    private fun readPhotoBytes(uriStr: String): ByteArray? = runCatching {
-        if (uriStr.startsWith("content://")) {
-            context.contentResolver.openInputStream(Uri.parse(uriStr))?.use { it.readBytes() }
-        } else {
-            val path = if (uriStr.startsWith("file://")) uriStr.removePrefix("file://") else uriStr
-            File(path).readBytes()
-        }
-    }.getOrNull()
+    private suspend fun readPhotoBytes(uriStr: String): ByteArray? = withContext(Dispatchers.IO) {
+        runCatching {
+            val rawBytes = if (uriStr.startsWith("content://")) {
+                context.contentResolver.openInputStream(Uri.parse(uriStr))?.use { it.readBytes() }
+            } else {
+                val path = if (uriStr.startsWith("file://")) uriStr.removePrefix("file://") else uriStr
+                File(path).readBytes()
+            } ?: return@runCatching null
+
+            val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            android.graphics.BitmapFactory.decodeByteArray(rawBytes, 0, rawBytes.size, bounds)
+            val maxDim = maxOf(bounds.outWidth, bounds.outHeight)
+            var sampleSize = 1
+            while (maxDim / sampleSize > 1280) {
+                sampleSize *= 2
+            }
+
+            val decodeOpts = android.graphics.BitmapFactory.Options().apply { inSampleSize = sampleSize }
+            val bitmap = android.graphics.BitmapFactory.decodeByteArray(rawBytes, 0, rawBytes.size, decodeOpts)
+                ?: return@runCatching rawBytes
+            try {
+                java.io.ByteArrayOutputStream().use { out ->
+                    bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, out)
+                    out.toByteArray()
+                }
+            } finally {
+                bitmap.recycle()
+            }
+        }.getOrNull()
+    }
 }

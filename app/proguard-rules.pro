@@ -10,6 +10,8 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 -keep,includedescriptorclasses class com.svce.issuegram.data.model.** { *; }
+-keep,includedescriptorclasses class com.svce.issuegram.data.local.ReportDraftStore** { *; }
+-keep,includedescriptorclasses class com.svce.issuegram.ui.navigation.** { *; }
 
 # Firebase & Firestore Models
 -keepattributes Signature

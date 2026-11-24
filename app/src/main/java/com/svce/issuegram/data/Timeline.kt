@@ -40,7 +40,10 @@ fun Issue.timeline(): List<TimelineEvent> {
         }
     }
 
-    val activeIndex = canonicalStatuses.indexOf(status).coerceAtLeast(0)
+    val activeIndex = when (status) {
+        IssueStatus.Reopened -> 1
+        else -> canonicalStatuses.indexOf(status).coerceAtLeast(0)
+    }
 
     return canonicalStatuses.mapIndexed { index, stepStatus ->
         val eventTime = when {

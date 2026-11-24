@@ -616,6 +616,7 @@ fun PixelCameraScreen(
 
                 fun fetchLocation() {
                     if (isLocationLoading) return
+                    locationJob?.cancel()
                     locationJob = scope.launch {
                         isLocationLoading = true
                         locationError = null
@@ -640,8 +641,12 @@ fun PixelCameraScreen(
 
                 val locationPermissionLauncher = rememberLauncherForActivityResult(
                     ActivityResultContracts.RequestMultiplePermissions()
-                ) { _ ->
-                    fetchLocation()
+                ) { permissions ->
+                    if (permissions.values.any { it }) {
+                        fetchLocation()
+                    } else {
+                        locationError = "Location permission denied. Choose it on the map or retry."
+                    }
                 }
 
                 LaunchedEffect(Unit) {

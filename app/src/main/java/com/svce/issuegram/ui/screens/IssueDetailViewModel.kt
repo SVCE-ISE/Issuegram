@@ -33,8 +33,11 @@ class IssueDetailViewModel(
         initialValue = null
     ) ?: MutableStateFlow(null).asStateFlow()
 
+    private var loadJob: kotlinx.coroutines.Job? = null
+
     fun loadIssue(ticketId: String) {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             getIssueDetailUseCase(ticketId).collect { issue ->
                 _uiState.value = IssueDetailUiState(
                     issue = issue,

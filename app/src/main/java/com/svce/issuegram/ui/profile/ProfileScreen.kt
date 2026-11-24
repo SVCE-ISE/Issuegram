@@ -396,9 +396,9 @@ fun ProfileScreen(
                         val sanitizedName = editedName.trim()
                         if (viewModel != null) {
                             viewModel.updateDisplayName(sanitizedName) { editingName = false }
+                        } else {
+                            onUpdateName(sanitizedName) { editingName = false }
                         }
-                        onUpdateName(sanitizedName) { editingName = false }
-                        editingName = false
                     },
                     enabled = !effectiveBusy && editedName.trim().length in 2..36
                 ) { Text("Save") }
@@ -1170,8 +1170,11 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(24.dp))
         androidx.compose.material3.OutlinedButton(
             onClick = {
-                viewModel?.signOut()
-                onSignOut()
+                if (viewModel != null) {
+                    viewModel.signOut()
+                } else {
+                    onSignOut()
+                }
             },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),

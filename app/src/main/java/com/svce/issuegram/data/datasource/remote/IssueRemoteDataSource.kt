@@ -4,6 +4,7 @@ import com.svce.issuegram.data.model.Issue
 import com.svce.issuegram.data.model.IssueMilestone
 
 interface IssueRemoteDataSource {
+    fun observeIssues(): kotlinx.coroutines.flow.Flow<List<Issue>> = kotlinx.coroutines.flow.emptyFlow()
     suspend fun fetchIssues(): List<Issue>
     suspend fun fetchIssueById(ticketId: String): Issue?
     suspend fun postIssue(issue: Issue): Issue

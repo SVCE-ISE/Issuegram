@@ -2,7 +2,10 @@ package com.svce.issuegram.di
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.svce.issuegram.ui.admin.AdminViewModel
+import com.svce.issuegram.ui.camera.CameraReportViewModel
 import com.svce.issuegram.ui.feed.FeedViewModel
+import com.svce.issuegram.ui.map.CivicMapViewModel
 import com.svce.issuegram.ui.profile.ProfileViewModel
 import com.svce.issuegram.ui.screens.AlertsViewModel
 import com.svce.issuegram.ui.screens.IssueDetailViewModel
@@ -42,6 +45,20 @@ class ViewModelFactory(private val appContainer: AppContainer) : ViewModelProvid
                 issueRepository = appContainer.issueRepository,
                 observeCurrentUserUseCase = appContainer.observeCurrentUserUseCase
             ) as T
+        }
+        modelClass.isAssignableFrom(CivicMapViewModel::class.java) -> {
+            CivicMapViewModel(
+                getFeedIssuesUseCase = appContainer.getFeedIssuesUseCase
+            ) as T
+        }
+        modelClass.isAssignableFrom(CameraReportViewModel::class.java) -> {
+            CameraReportViewModel(
+                createIssueUseCase = appContainer.createIssueUseCase,
+                observeCurrentUserUseCase = appContainer.observeCurrentUserUseCase
+            ) as T
+        }
+        modelClass.isAssignableFrom(AdminViewModel::class.java) -> {
+            AdminViewModel() as T
         }
         else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
