@@ -1,57 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">Issuegram</string>
 
-    <!-- Navigation -->
+    
     <string name="tab_feed">Feed</string>
-    <string name="tab_home">Home</string>
     <string name="tab_create">Camera</string>
     <string name="tab_map">Map</string>
     <string name="tab_my_issues">My issues</string>
     <string name="tab_notifications">Alerts</string>
     <string name="tab_profile">Profile</string>
 
-    <!-- Feed -->
-    <string name="feed_eyebrow">Your area</string>
-    <string name="feed_title">Issues near you</string>
-    <string name="feed_most_supported">Most supported</string>
-    <string name="feed_pulse">%1$d open · %2$d resolved</string>
-    <string name="feed_section_needs_attention">Needs attention</string>
-    <string name="feed_section_in_progress">In progress</string>
-    <string name="feed_section_resolved">Resolved</string>
-    <string name="feed_row_meta">%1$s · %2$s · %3$s</string>
-    <string name="search_placeholder">Search issues, areas or tickets</string>
-    <string name="search_clear">Clear search</string>
-    <string name="no_results_for">No issues match \“%1$s\”</string>
-    <string name="filter_all">All</string>
-    <string name="no_results_title">Nothing here right now</string>
-    <string name="no_results_body">No issues match this filter. Try another category or check back later.</string>
-    <string name="no_results_clear">Show all issues</string>
-
-    <!-- Feed v5: editorial board -->
-    <string name="feed_v5_live">Live</string>
-    <string name="feed_v5_dateline">%1$s · Anna Nagar</string>
-    <string name="feed_v5_title_line1">Your ward,</string>
-    <string name="feed_v5_title_line2">in focus.</string>
-    <string name="feed_v5_tagline">Local reports, public progress, one board.</string>
-    <string name="feed_v5_stat_open">Open</string>
-    <string name="feed_v5_stat_fixed">Fixed</string>
-    <string name="feed_v5_stat_voices">Voices</string>
-    <string name="feed_v5_index_all">All</string>
-    <string name="feed_v5_board_title">On the board</string>
-    <string name="feed_v5_search_results">Matches</string>
-    <plurals name="feed_v5_more_reports">
-        <item quantity="one">%1$d more report</item>
-        <item quantity="other">%1$d more reports</item>
-    </plurals>
-    <string name="feed_v5_end">That’s the whole board</string>
-    <string name="feed_v5_empty_title">Nothing on the board</string>
-    <string name="feed_v5_empty_body">No reports match this view. Try another category or a different search.</string>
-    <string name="feed_v5_clear_filters">Clear filters</string>
-    <string name="feed_v5_close_search">Close search</string>
-
-
-    <!-- Categories -->
+    
     <string name="category_pothole">Pothole</string>
     <string name="category_streetlight">Streetlight</string>
     <string name="category_garbage">Garbage</string>
@@ -61,7 +20,7 @@
     <string name="category_safety">Public safety</string>
     <string name="category_other">Other</string>
 
-    <!-- Statuses -->
+    
     <string name="status_open">Open</string>
     <string name="status_acknowledged">Acknowledged</string>
     <string name="status_assigned">Assigned</string>
@@ -69,7 +28,7 @@
     <string name="status_resolved">Resolved</string>
     <string name="status_reopened">Reopened</string>
 
-    <!-- Issue card -->
+    
     <string name="issue_meta">%1$s · %2$s</string>
     <string name="issue_footer">%1$s · %2$s</string>
     <plurals name="days_ago">
@@ -82,41 +41,9 @@
     <string name="share_issue">Share issue %1$s</string>
     <string name="share_issue_message">Issue %1$s: %2$s</string>
 
-    <!-- Report issue -->
-    <string name="fab_report">Report issue</string>
-    <string name="report_eyebrow">New report</string>
-    <string name="report_title">Report an issue</string>
-    <string name="report_photo_add">Add photo</string>
-    <string name="report_photo_change">Selected photo, tap to change</string>
-    <string name="report_photo_change_title">Change photo</string>
-    <string name="report_photo_helper">Required — reports with a photo get verified faster.</string>
-    <string name="report_photo_required">Add a photo so the issue can be verified.</string>
-    <string name="report_title_label">Title</string>
-    <string name="report_title_placeholder">Overflowing drain near bus stop</string>
-    <string name="report_title_error">Give the issue a short, specific title.</string>
-    <string name="report_category_label">Category</string>
-    <string name="report_category_error">Pick a category.</string>
-    <string name="report_location_label">Location</string>
-    <string name="report_location_placeholder">Street, landmark or area</string>
-    <string name="report_location_error">Where is it? Add a street or landmark.</string>
-    <string name="report_description_label">Description (optional)</string>
-    <string name="report_description_placeholder">How bad is it, since when, who is affected?</string>
-    <string name="report_description_counter">%1$d of 500</string>
-    <string name="report_post">Post report</string>
-    <string name="report_posted_snackbar">Reported · %1$s</string>
-
-    <!-- Issue detail -->
-    <string name="detail_back">Back</string>
-    <string name="detail_follow">Follow</string>
-    <string name="detail_following">Following</string>
+    
     <string name="detail_share">Share</string>
     <string name="detail_status_eyebrow">Status</string>
-    <string name="detail_location_eyebrow">Location</string>
-    <string name="detail_about_eyebrow">About</string>
-    <string name="detail_reported_by">Reported by %1$s</string>
-    <string name="detail_not_found">This issue is no longer available.</string>
-
-    <!-- My issues -->
     <string name="my_issues_eyebrow">Your reports</string>
     <string name="my_issues_title">My issues</string>
     <plurals name="my_issues_count">
@@ -126,7 +53,7 @@
     <string name="my_issues_empty_title">No reports yet</string>
     <string name="my_issues_empty_body">Issues you post will appear here with their status.</string>
 
-    <!-- Alerts -->
+    
     <string name="alerts_eyebrow">Activity</string>
     <string name="alerts_title">Alerts</string>
     <string name="alerts_mark_all_read">Mark all read</string>
@@ -139,93 +66,23 @@
     <string name="alerts_empty_body">We\'ll let you know when an issue you follow changes status.</string>
     <string name="alert_meta">%1$s · %2$s · %3$s</string>
 
-    <!-- Profile -->
-    <string name="profile_eyebrow">Account</string>
-    <string name="profile_title">Profile</string>
-    <string name="profile_role">Citizen · Anna Nagar</string>
-    <string name="profile_group_activity">Your activity</string>
-    <string name="profile_my_issues">My issues</string>
-    <string name="profile_following">Following</string>
-    <string name="profile_likes_given">Likes given</string>
-    <string name="profile_group_preferences">Preferences</string>
-    <string name="profile_notifications">Notifications</string>
-    <string name="profile_notifications_support">Status changes on issues you follow.</string>
-    <string name="profile_email_updates">Email updates</string>
-    <string name="profile_email_support">A weekly summary of your area.</string>
-    <string name="profile_group_feed">Home feed</string>
-    <string name="feed_version_cards">Cards</string>
-    <string name="feed_version_cards_support">Photo cards with category filters.</string>
-    <string name="feed_version_sections">Sections</string>
-    <string name="feed_version_sections_support">Search, category filters and status sections.</string>
-    <string name="feed_version_editorial">Editorial</string>
-    <string name="feed_version_editorial_support">Masthead, a spotlight and a two-column masonry board.</string>
-    <string name="feed_version_v4">Version 4</string>
-    <string name="feed_version_v4_support">Custom narrated feed layout.</string>
-    <string name="profile_group_about">About</string>
-    <string name="profile_version">Version</string>
-    <string name="profile_signed_in_as">Signed in as %1$s</string>
-
-    <!-- Authentication & Login -->
+    
     <string name="login_tagline">Report civic issues. Track real fixes.</string>
     <string name="login_google_sign_in">Sign in with Google</string>
     <string name="login_anonymous_disclaimer">Your reports are public. Your identity stays anonymous.</string>
 
-    <!-- Map Screen -->
+    
     <string name="map_tap_to_pick">Tap on the map to pick issue location</string>
-    <string name="map_selected_location">Selected Location</string>
     <string name="map_selected_coords">Selected: %1$.6f, %2$.6f</string>
     <string name="map_tap_anywhere">Tap anywhere on the map to place a pin</string>
     <string name="map_use_this_location">Use this location</string>
-    <string name="map_filter_all">All (%1$d)</string>
-    <string name="map_filter_active">Active (%1$d)</string>
-    <string name="map_filter_resolved">Resolved (%1$d)</string>
-    <string name="map_reported_prefix">Reported: %1$s • Category: %2$s</string>
     <string name="btn_cancel">Cancel</string>
-    <string name="btn_save">Save</string>
-
-    <!-- Profile Screen -->
     <string name="profile_reported_count">reported</string>
     <string name="profile_solved_count">solved</string>
     <string name="profile_posted_issues_title">Posted Issues</string>
     <string name="profile_swipe_hint">Swipe right to edit • Swipe left to delete</string>
     <string name="profile_empty_posted">You haven\'t posted any civic reports yet</string>
-    <string name="profile_edit_dialog_title">Edit report</string>
-    <string name="profile_edit_ticket_prefix">Ticket: %1$s</string>
-    <string name="profile_edit_title_label">Title</string>
-    <string name="profile_edit_caption_label">Description</string>
-    <string name="profile_edit_location_label">Location</string>
-    <string name="profile_your_name_title">Your name</string>
-    <string name="profile_name_label">Name</string>
-    <string name="profile_name_length_error">Name must be between 2 and 36 characters</string>
-    <string name="profile_remove_photo">Remove profile photo</string>
     <string name="profile_sign_out">Sign Out</string>
-    <string name="profile_action_edit">Edit</string>
-    <string name="profile_action_delete">Delete</string>
-    <string name="profile_moderation_title">Moderation Queue</string>
-    <string name="profile_moderation_pending">%1$d pending</string>
-    <string name="profile_moderation_empty">No pending community flags.</string>
-    <string name="profile_mod_keep">Keep Post</string>
-    <string name="profile_mod_actioned">Actioned</string>
-    <string name="profile_mod_dismiss">Dismiss</string>
-
-    <!-- Camera & Compose Report -->
-    <string name="camera_photo_retake">Retake</string>
-    <string name="camera_photo_use">Use Photo</string>
-    <string name="camera_btn_post">Post Report</string>
-    <string name="camera_shutter_desc">Take Photo</string>
-    <string name="camera_gallery_desc">Open Gallery</string>
-    <string name="camera_flip_desc">Switch Camera</string>
-    <string name="camera_flash_desc">Toggle Flash</string>
-    <string name="camera_permission_required">Camera permission is required to capture civic issues directly.</string>
-    <string name="camera_grant_permission">Grant Permission</string>
-    <string name="camera_or_pick_gallery">or pick from gallery</string>
-    <string name="camera_review_photo_title">Review Photo</string>
-    <string name="camera_location_detecting">Detecting GPS location…</string>
-    <string name="camera_pick_location_map">Pick on Map</string>
-    <string name="camera_location_picker_title">Select Issue Location</string>
-    <string name="camera_location_picker_confirm">Confirm Location</string>
-
-    <!-- Detail Screen -->
     <string name="detail_no_additional_details">No additional details provided for this issue report.</string>
     <string name="detail_btn_like">Like</string>
     <string name="detail_btn_unlike">Unlike</string>
